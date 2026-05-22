@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>⚡ Zap — Sign In</title>
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#3b82f6" />
+  <meta name="description" content="⚡ Zap — Next-gen real-time social messaging" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0f1e;
+      --bg2: #0f172a;
+      --card: #1e293b;
+      --card2: #162032;
+      --accent: #3b82f6;
+      --accent2: #60a5fa;
+      --accent-glow: rgba(59,130,246,0.35);
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --border: rgba(255,255,255,0.07);
+      --radius: 18px;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* ── Animated Background ── */
+    .bg-scene {
+      position: fixed; inset: 0; z-index: 0; overflow: hidden;
+    }
+    .bg-scene::before {
+      content: '';
+      position: absolute; width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(59,130,246,0.18) 0%, transparent 70%);
+      top: -200px; left: -200px;
+      animation: drift1 14s ease-in-out infinite alternate;
+    }
+    .bg-scene::after {
+      content: '';
+      position: absolute; width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(139,92,246,0.13) 0%, transparent 70%);
+      bottom: -150px; right: -100px;
+      animation: drift2 18s ease-in-out infinite alternate;
+    }
+    .bg-grid {
+      position: absolute; inset: 0;
+      background-image:
+        linear-gradient(rgba(59,130,246,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(59,130,246,0.04) 1px, transparent 1px);
+      background-size: 48px 48px;
+    }
+    @keyframes drift1 { from { transform: translate(0,0) scale(1); } to { transform: translate(80px,60px) scale(1.2); } }
+    @keyframes drift2 { from { transform: translate(0,0) scale(1); } to { transform: translate(-60px,-80px) scale(1.15); } }
+
+    /* ── Layout ── */
+    .page {
+      position: relative; z-index: 1;
+      min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      padding: 24px;
+    }
+
+    .login-card {
+      width: 100%; max-width: 440px;
+      background: rgba(30,41,59,0.7);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      padding: 48px 40px 44px;
+      box-shadow: 0 32px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04);
+      animation: cardIn 0.7s cubic-bezier(0.22,1,0.36,1) both;
+    }
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(32px) scale(0.97); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* ── Branding ── */
+    .brand {
+      text-align: center; margin-bottom: 36px;
+    }
+    .brand-logo {
+      font-size: 64px; line-height: 1;
+      filter: drop-shadow(0 0 24px rgba(59,130,246,0.6));
+      animation: zapPulse 2.5s ease-in-out infinite;
+    }
+    @keyframes zapPulse {
+      0%,100% { filter: drop-shadow(0 0 16px rgba(59,130,246,0.5)); }
+      50% { filter: drop-shadow(0 0 32px rgba(59,130,246,0.9)); }
+    }
+    .brand-name {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800; font-size: 2.6rem;
+      color: var(--text);
+      letter-spacing: -0.03em;
+      margin-top: 4px;
+    }
+    .brand-name span { color: var(--accent2); }
+    .brand-tagline {
+      font-size: 0.9rem; color: var(--muted);
+      margin-top: 6px; font-weight: 300; letter-spacing: 0.01em;
+    }
+
+    /* ── Form ── */
+    .form-group {
+      margin-bottom: 16px;
+    }
+    .form-label {
+      display: block; font-size: 0.8rem;
+      color: var(--muted); font-weight: 500;
+      margin-bottom: 8px; letter-spacing: 0.05em; text-transform: uppercase;
+    }
+    .form-input {
+      width: 100%; padding: 14px 18px;
+      background: rgba(15,23,42,0.8);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 1rem;
+      outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .form-input::placeholder { color: var(--muted); opacity: 0.6; }
+    .form-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    /* ── Divider ── */
+    .divider {
+      display: flex; align-items: center; gap: 12px;
+      margin: 24px 0;
+    }
+    .divider-line { flex: 1; height: 1px; background: var(--border); }
+    .divider-text { font-size: 0.78rem; color: var(--muted); white-space: nowrap; }
+
+    /* ── Google Button ── */
+    .btn-google {
+      width: 100%;
+      display: flex; align-items: center; justify-content: center; gap: 12px;
+      padding: 15px 24px;
+      background: var(--accent);
+      border: none; border-radius: 14px;
+      color: #fff; font-family: 'Syne', sans-serif;
+      font-weight: 700; font-size: 1rem; letter-spacing: 0.01em;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.2s, background 0.2s;
+      box-shadow: 0 4px 20px var(--accent-glow), 0 1px 0 rgba(255,255,255,0.1) inset;
+    }
+    .btn-google:hover {
+      background: var(--accent2);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(59,130,246,0.5);
+    }
+    .btn-google:active { transform: translateY(0); }
+    .btn-google svg { width: 20px; height: 20px; flex-shrink: 0; }
+    .btn-google.loading { pointer-events: none; opacity: 0.7; }
+
+    /* ── Status / Error ── */
+    #status-msg {
+      margin-top: 14px; text-align: center;
+      font-size: 0.87rem; color: var(--muted);
+      min-height: 22px;
+    }
+    #status-msg.error { color: #f87171; }
+    #status-msg.info  { color: var(--accent2); }
+
+    /* ── Footer ── */
+    .login-footer {
+      text-align: center; margin-top: 28px;
+      font-size: 0.78rem; color: var(--muted);
+    }
+    .login-footer a { color: var(--accent2); text-decoration: none; }
+    .login-footer a:hover { text-decoration: underline; }
+
+    /* ── Features row ── */
+    .features {
+      display: flex; gap: 8px; justify-content: center;
+      margin-top: 32px; flex-wrap: wrap;
+    }
+    .feat-badge {
+      padding: 5px 12px; border-radius: 100px;
+      background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.2);
+      font-size: 0.75rem; color: var(--accent2);
+      display: flex; align-items: center; gap: 5px;
+    }
+
+    /* ── Spinner ── */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner {
+      width: 18px; height: 18px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @media (max-width: 480px) {
+      .login-card { padding: 36px 24px 32px; border-radius: 20px; }
+      .brand-name { font-size: 2.2rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-scene"><div class="bg-grid"></div></div>
+
+  <main class="page">
+    <div class="login-card">
+      <div class="brand">
+        <div class="brand-logo">⚡</div>
+        <div class="brand-name">Z<span>a</span>p</div>
+        <div class="brand-tagline">Real-time messaging, reimagined.</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="username-input">Your Username</label>
+        <input
+          class="form-input"
+          type="text"
+          id="username-input"
+          placeholder="e.g. zapuser42"
+          maxlength="24"
+          autocomplete="off"
+          spellcheck="false"
+        />
+      </div>
+
+      <div class="divider">
+        <div class="divider-line"></div>
+        <div class="divider-text">then sign in with</div>
+        <div class="divider-line"></div>
+      </div>
+
+      <button class="btn-google" id="google-btn">
+        <!-- Google Icon -->
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path fill="#fff" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+          <path fill="rgba(255,255,255,0.85)" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+          <path fill="rgba(255,255,255,0.7)" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+          <path fill="rgba(255,255,255,0.9)" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+        </svg>
+        Continue with Google
+      </button>
+
+      <div id="status-msg"></div>
+
+      <div class="features">
+        <span class="feat-badge">🔒 Secure</span>
+        <span class="feat-badge">⚡ Real-time</span>
+        <span class="feat-badge">📱 Installable</span>
+        <span class="feat-badge">🌐 Global</span>
+      </div>
+
+      <div class="login-footer">
+        By signing in you agree to our
+        <a href="#">Terms</a> &amp; <a href="#">Privacy Policy</a>
+      </div>
+    </div>
+  </main>
+
+  <!-- Firebase v10 SDK -->
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+    import {
+      getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged
+    } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+    import {
+      getFirestore, doc, setDoc, getDoc, serverTimestamp
+    } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDeQip7FvQDyiSdiBjNlCJc9MT5fVQcnCc",
+      authDomain: "login-21af0.firebaseapp.com",
+      projectId: "login-21af0",
+      storageBucket: "login-21af0.appspot.com",
+      messagingSenderId: "121751642397",
+      appId: "1:121751642387:web:6e83c8f559dfb51f0dbae6"
+    };
+
+    const app  = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db   = getFirestore(app);
+
+    const btn       = document.getElementById('google-btn');
+    const statusMsg = document.getElementById('status-msg');
+    const usernameInput = document.getElementById('username-input');
+
+    // Auto-redirect if already signed in
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        const snap = await getDoc(doc(db, 'users', user.uid));
+        if (snap.exists()) {
+          window.location.href = 'dashboard.html';
+        }
+      }
+    });
+
+    function setStatus(msg, type = '') {
+      statusMsg.textContent = msg;
+      statusMsg.className = type;
+    }
+
+    function setLoading(loading) {
+      if (loading) {
+        btn.classList.add('loading');
+        btn.innerHTML = `<div class="spinner"></div> Signing in…`;
+      } else {
+        btn.classList.remove('loading');
+        btn.innerHTML = `
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" width="20" height="20">
+            <path fill="#fff" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="rgba(255,255,255,0.85)" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="rgba(255,255,255,0.7)" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+            <path fill="rgba(255,255,255,0.9)" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+          </svg>
+          Continue with Google`;
+      }
+    }
+
+    btn.addEventListener('click', async () => {
+      const username = usernameInput.value.trim();
+      if (!username) {
+        setStatus('⚠️ Please enter a username first.', 'error');
+        usernameInput.focus();
+        return;
+      }
+      if (username.length < 3) {
+        setStatus('⚠️ Username must be at least 3 characters.', 'error');
+        return;
+      }
+      if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+        setStatus('⚠️ Only letters, numbers, and underscores.', 'error');
+        return;
+      }
+
+      setLoading(true);
+      setStatus('Opening Google sign-in…', 'info');
+
+      try {
+        const provider = new GoogleAuthProvider();
+        provider.setCustomParameters({ prompt: 'select_account' });
+        const result = await signInWithPopup(auth, provider);
+        const user = result.user;
+
+        setStatus('Setting up your account…', 'info');
+
+        // Check if username is already taken by another user
+        // (simplified — in prod you'd use a transaction)
+        await setDoc(doc(db, 'users', user.uid), {
+          username,
+          displayName: user.displayName || username,
+          email: user.email,
+          photoURL: user.photoURL || '',
+          online: true,
+          lastSeen: serverTimestamp(),
+          joinedAt: serverTimestamp(),
+          uid: user.uid
+        }, { merge: true });
+
+        // Save username to localStorage for quick access
+        localStorage.setItem('zap_username', username);
+        localStorage.setItem('zap_uid', user.uid);
+
+        window.location.href = 'dashboard.html';
+      } catch (err) {
+        setLoading(false);
+        if (err.code === 'auth/popup-closed-by-user') {
+          setStatus('Sign-in cancelled.', '');
+        } else if (err.code === 'auth/popup-blocked') {
+          setStatus('⚠️ Popup blocked. Allow popups and try again.', 'error');
+        } else {
+          setStatus(`Error: ${err.message}`, 'error');
+          console.error(err);
+        }
+      }
+    });
+
+    // PWA install
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+    });
+
+    // Register service worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('firebase-messaging-sw.js').catch(console.warn);
+    }
+  </script>
+</body>
+</html>
