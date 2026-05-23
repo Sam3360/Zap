@@ -531,6 +531,16 @@
     * { scrollbar-width: thin; scrollbar-color: var(--border2) transparent; }
   </style>
 </head>
+  <script>
+
+if ("serviceWorker" in navigator) {
+
+  navigator.serviceWorker.register("./sw.js")
+    .then(() => console.log("SW registered"));
+
+}
+
+</script>
 <body>
 
 <!-- Loading Screen -->
