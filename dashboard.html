@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>⚡ Zap</title>
+  <title>⚡Zap⚡</title>
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#3b82f6" />
   <link rel="apple-touch-icon" href="icon-192.png" />
@@ -225,7 +225,74 @@
       padding: 0 4px;
     }
     .msg-time { font-size: 0.68rem; color: var(--muted); }
+    * {
+  box-sizing: border-box;
+}
 
+body {
+  margin: 0;
+  font-family: 'DM Sans', Arial;
+  overflow-x: hidden;
+}
+    .container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 15px;
+  padding: 15px;
+}
+    @media (max-width: 768px) {
+
+  body {
+    font-size: 14px;
+  }
+
+  .container {
+    grid-template-columns: 1fr;
+    padding: 10px;
+  }
+
+  .card {
+    padding: 15px;
+    border-radius: 12px;
+  }
+
+  input, button {
+    font-size: 16px;
+  }
+
+  #chatBox, #dmBox {
+    height: 250px;
+  }
+}
+
+
+    #chatBox, #dmBox {
+  overflow-y: auto;
+  max-height: 60vh;
+  scroll-behavior: smooth;
+}
+
+    .inputRow {
+  display: flex;
+  gap: 10px;
+}
+
+.inputRow input {
+  flex: 1;
+}
+
+.inputRow button {
+  width: auto;
+  padding: 12px 16px;
+}
+    button {
+  min-height: 44px;
+  cursor: pointer;
+}
+
+input {
+  min-height: 44px;
+}
     /* Context menu */
     .msg-actions {
       display: none; gap: 4px;
