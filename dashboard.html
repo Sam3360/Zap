@@ -532,15 +532,11 @@
   </style>
 </head>
   <script>
-
-if ("serviceWorker" in navigator) {
-
-  navigator.serviceWorker.register("./sw.js")
-    .then(() => console.log("SW registered"));
-
-}
-
-</script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("./sw.js")
+        .then(() => console.log("SW registered"));
+    }
+  </script>
 <body>
 
 <!-- Loading Screen -->
