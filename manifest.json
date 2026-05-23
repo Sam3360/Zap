@@ -2,33 +2,27 @@
   "name": "⚡ Zap",
   "short_name": "Zap",
   "description": "Next-generation real-time social messaging app",
-  "start_url": "/index.html",
+  "start_url": "dashboard.html",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#0f172a",
   "theme_color": "#3b82f6",
   "orientation": "portrait-primary",
   "icons": [
-  { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-  { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
-  { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-  { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
   ],
- "screenshots": [
-  {
-    "src": "icon-512.png",
-    "sizes": "512x512",
-    "type": "image/png",
-    "form_factor": "wide",
-    "label": "Zap Desktop"
-  },
-  {
-    "src": "icon-192.png",
-    "sizes": "192x192",
-    "type": "image/png",
-    "form_factor": "narrow",
-    "label": "Zap Mobile"
-  }
-],
+  "screenshots": [],
   "categories": ["social", "communication"],
   "lang": "en"
 }
