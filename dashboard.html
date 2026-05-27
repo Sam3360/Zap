@@ -2,7 +2,7 @@
 <html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>⚡Zap⚡</title>
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#3b82f6" />
@@ -99,7 +99,7 @@
 
     /* ══ MAIN BODY ══ */
     #main { display: flex; flex: 1; overflow: hidden; min-height: 0; }
-    #chat-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: var(--bg2); position: relative; min-width: 0; min-height: 0; }
+    
     #messages-container { flex: 1; min-height: 0; }
     .msg-row, .msg-bubble-wrap, .msg-bubble { min-width: 0; }
     .msg-bubble-wrap { max-width: 70%; }
@@ -609,6 +609,91 @@ input {
 
     /* Scrollbar */
     * { scrollbar-width: thin; scrollbar-color: var(--border2) transparent; }
+
+    /* ═════════ MOBILE FIX ═════════ */
+
+@media (max-width: 768px) {
+
+  html, body {
+    overflow: hidden;
+    width: 100%;
+  }
+
+  #main {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  /* Hide side panels by default on phone */
+  #sidebar,
+  #right-panel {
+    display: none;
+  }
+
+  /* Chat takes full width */
+  #chat-area {
+    width: 100%;
+    min-width: 0;
+    flex: 1;
+  }
+
+  #messages-container {
+    padding: 10px;
+  }
+
+  .msg-bubble-wrap {
+    max-width: 92%;
+  }
+
+  .msg-bubble {
+    font-size: 0.88rem;
+    padding: 8px 12px;
+  }
+
+  #chat-header {
+    padding: 10px 12px;
+  }
+
+  #chat-input-area {
+    padding: 10px;
+    gap: 8px;
+  }
+
+  #msg-input {
+    font-size: 16px;
+  }
+
+  .nav-btn {
+    padding: 6px 10px;
+    font-size: 0.72rem;
+  }
+
+  #navbar {
+    padding: 0 10px;
+    gap: 8px;
+  }
+
+  .nav-logo {
+    font-size: 1rem;
+  }
+
+  .profile-card {
+    width: calc(100% - 20px);
+    max-width: none;
+    padding: 20px;
+  }
+
+  #emoji-picker {
+    width: calc(100vw - 20px);
+    left: 10px;
+    right: 10px;
+  }
+
+  .msg-bubble img.msg-image {
+    max-width: 100%;
+    height: auto;
+  }
+}
   </style>
 </head>
   <script>
