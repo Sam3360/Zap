@@ -394,15 +394,8 @@
 
     // Register service worker
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('firebase-messaging-sw.js').catch(console.warn);
+      navigator.serviceWorker.register('sw.js').catch(console.warn);
     }
   </script>
-  <script>
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js")
-        .then(() => console.log("SW registered"));
-    }
-
-</script>
 </body>
 </html>
