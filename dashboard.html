@@ -705,38 +705,63 @@ input {
       });
     }
   </script>
-  <script>
+ <script>
 let deferredPrompt;
+
+const installBtn = document.getElementById('installBtn');
 
 window.addEventListener('beforeinstallprompt', (e) => {
 
-  // Stop automatic popup
+  // Prevent automatic mini-infobar
   e.preventDefault();
 
+  // Save event
   deferredPrompt = e;
 
-  // Show your custom install button
-  const installBtn = document.getElementById('installBtn');
-
-  if (installBtn) {
-    installBtn.style.display = 'flex';
-
-    installBtn.addEventListener('click', async () => {
-
-      installBtn.style.display = 'none';
-
-      // Show install popup
-      deferredPrompt.prompt();
-
-      // Wait for user response
-      const { outcome } = await deferredPrompt.userChoice;
-
-      console.log('Install result:', outcome);
-
-      deferredPrompt = null;
-    });
-  }
+  // Show button
+  installBtn.style.display = 'flex';
 });
+
+installBtn.addEventListener('click', async () => {
+
+  if (!deferredPrompt) return;
+
+  // Show install popup
+  deferredPrompt.prompt();
+
+  // Wait for user choice
+  const { outcome } = await deferredPrompt.userChoice;
+
+  console.log('Install outcome:', outcome);
+
+  // Clear saved prompt
+  deferredPrompt = null;
+
+  // Hide button
+  installBtn.style.display = 'none';
+});
+
+/* iPhone/iPad fallback */
+
+const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+
+if (isIOS) {
+
+  installBtn.style.display = 'flex';
+
+  installBtn.innerHTML = '📲 Add to Home Screen';
+
+  installBtn.addEventListener('click', () => {
+
+    alert(
+      'To install this app on iPhone:\n\n' +
+      '1. Tap the Share button\n' +
+      '2. Scroll down\n' +
+      '3. Tap "Add to Home Screen"'
+    );
+
+  });
+}
 </script>
 <body>
 
