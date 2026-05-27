@@ -1852,6 +1852,52 @@ function initApp() {
   subscribeOnlineUsers();
   requestNotificationPermission();
 }
+
+  window.addEventListener('DOMContentLoaded', () => {
+
+  let deferredPrompt = null;
+
+  const installBtn = document.getElementById('installBtn');
+
+  if (!installBtn) {
+    console.error("Install button not found in DOM");
+    return;
+  }
+
+  console.log("Install system loaded");
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+
+    console.log("beforeinstallprompt fired");
+
+    e.preventDefault();
+
+    deferredPrompt = e;
+
+    installBtn.style.display = 'flex';
+  });
+
+  installBtn.addEventListener('click', async () => {
+
+    console.log("Install clicked");
+
+    if (!deferredPrompt) {
+      console.warn("No install prompt available");
+      return;
+    }
+
+    deferredPrompt.prompt();
+
+    const { outcome } = await deferredPrompt.userChoice;
+
+    console.log("Install result:", outcome);
+
+    deferredPrompt = null;
+
+    installBtn.style.display = 'none';
+  });
+
+});
 </script>
 </body>
 </html>
