@@ -51,14 +51,22 @@ self.addEventListener('notificationclick', (event) => {
 });
 
 // Cache strategy for offline support
-const CACHE_NAME = 'zap-cache-v1';
+const CACHE_NAME = 'zap-cache-v2';
 const urlsToCache = ['/', '/index.html', '/dashboard.html', '/manifest.json'];
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(urlsToCache))
-  );
-  self.skipWaiting();
+  event.waitUntil((async () => {
+    const cache = await caches.open(CACHE_NAME);
+    await Promise.all(urlsToCache.map(async (url) => {
+      try {
+        const response = await fetch(url, { cache: 'reload' });
+        if (response.ok) await cache.put(url, response);
+      } catch (err) {
+        console.warn('[firebase-messaging-sw] Skipped cache asset:', url, err);
+      }
+    }));
+    await self.skipWaiting();
+  })());
 });
 
 self.addEventListener('activate', (event) => {
@@ -68,4 +76,21 @@ self.addEventListener('activate', (event) => {
     ))
   );
   self.clients.claim();
+});
+
+self.addEventListener('push', (event) => {
+  if (!event.data) return;
+  let payload = {};
+  try {
+    payload = event.data.json();
+  } catch {
+    payload = { body: event.data.text() };
+  }
+  event.waitUntil(self.registration.showNotification(payload.title || 'Zap', {
+    body: payload.body || 'You have a new message',
+    icon: payload.icon || 'icon-192.png',
+    badge: payload.badge || 'icon-192.png',
+    tag: payload.tag || 'zap-message',
+    data: payload.data || {}
+  }));
 });
