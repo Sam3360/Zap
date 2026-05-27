@@ -694,6 +694,75 @@ input {
     height: auto;
   }
 }
+    /* ═════════ DM MOBILE FIX ═════════ */
+
+@media (max-width: 768px) {
+
+  /* Fullscreen DM overlay */
+  .panel-overlay {
+    width: 100%;
+    height: 100%;
+    inset: 0;
+    overflow: hidden;
+  }
+
+  .panel-body {
+    width: 100%;
+    padding: 10px;
+    overflow-x: hidden;
+  }
+
+  /* DM rows scale correctly */
+  .dm-row {
+    width: 100%;
+    min-width: 0;
+    padding: 10px;
+    gap: 10px;
+  }
+
+  .dm-row-avatar {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+  }
+
+  .dm-row-name {
+    font-size: 0.9rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .dm-row-preview {
+    max-width: 100%;
+    width: 100%;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    font-size: 0.72rem;
+  }
+
+  /* Fix compose area */
+  #dm-compose {
+    width: 100%;
+    padding: 10px;
+  }
+
+  #dm-username-input {
+    width: 100%;
+    min-width: 0;
+    font-size: 16px;
+  }
+
+  /* Prevent horizontal overflow */
+  .dm-row > div {
+    min-width: 0;
+    flex: 1;
+  }
+
+}
   </style>
 </head>
   <script>
@@ -785,6 +854,7 @@ if (isIOS) {
       <img id="nav-avatar" src="https://ui-avatars.com/api/?name=User&background=3b82f6&color=fff" alt="avatar" />
       <span id="nav-username">Loading…</span>
     </button>
+    <button id="installBtn" class="nav-btn" style="display:none;"> 📲 Install App </button>
     <button class="nav-btn danger" id="logout-btn">⏻ Logout</button>
   </nav>
 
@@ -828,7 +898,7 @@ if (isIOS) {
         <div class="sidebar-item" data-view="notes" id="nav-notes">
           <span class="icon">📝</span> My Notes
         </div>
-        <button id="installBtn" class="nav-btn" style="display:none;"> 📲 Install App </button>
+        
       </div>
     </aside>
 
