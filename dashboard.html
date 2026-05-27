@@ -763,75 +763,61 @@ input {
   }
 
 }
+
+    .sidebar-section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 0 6px;
+      margin-bottom: 6px;
+    }
+    .sidebar-section-header .sidebar-label { padding: 0; margin: 0; }
+    .icon-mini-btn {
+      width: 28px; height: 28px; border-radius: 8px;
+      border: 1px solid var(--border2); background: transparent;
+      color: var(--text2); cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 1rem; line-height: 1;
+    }
+    .icon-mini-btn:hover { background: var(--card); color: var(--text); }
+    #rooms-list { display: flex; flex-direction: column; gap: 2px; }
+    .group-create {
+      display: none; gap: 6px; padding: 8px 6px 4px;
+      grid-template-columns: 44px minmax(0, 1fr) 36px;
+    }
+    .group-create.open { display: grid; }
+    .group-input {
+      min-width: 0; min-height: 36px; border-radius: 9px;
+      border: 1px solid var(--border2); background: var(--bg2);
+      color: var(--text); padding: 8px 10px; font: inherit;
+    }
+    .group-input:focus { outline: none; border-color: var(--accent); }
+    .group-leave {
+      margin-left: auto; opacity: 0; border: none; background: transparent;
+      color: var(--muted); cursor: pointer; padding: 2px 4px;
+    }
+    .sidebar-item:hover .group-leave { opacity: 1; }
+    #notify-toggle-btn.enabled { color: var(--green); border-color: rgba(34,197,94,0.45); }
+
+    @media (max-width: 768px) {
+      #app, #main, #chat-area, #chat-header, #chat-input-area,
+      .panel-overlay, .panel-body { min-width: 0; max-width: 100vw; }
+      #navbar { min-width: 0; overflow-x: hidden; }
+      #nav-username { display: none; }
+      #installBtn { width: 100%; justify-content: center; }
+      #dm-panel > div:nth-child(2) { flex-direction: column; min-width: 0; }
+      #dm-panel > div:nth-child(2) > div:first-child {
+        width: 100% !important; min-width: 0 !important; max-height: 38%;
+        border-right: 0 !important; border-bottom: 1px solid var(--border);
+      }
+      #dm-panel > div:nth-child(2) > div:last-child { min-width: 0; flex: 1; }
+      #dm-messages { padding: 10px !important; min-width: 0; }
+      #dm-input { min-width: 0; font-size: 16px !important; }
+      .msg-actions { right: 0; }
+    }
   </style>
 </head>
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js')
-          .then(() => console.log('SW registered'))
-          .catch(() => console.warn('SW registration failed'));
-      });
-    }
-  </script>
- <script>
-let deferredPrompt;
-
-const installBtn = document.getElementById('installBtn');
-
-window.addEventListener('beforeinstallprompt', (e) => {
-
-  // Prevent automatic mini-infobar
-  e.preventDefault();
-
-  // Save event
-  deferredPrompt = e;
-
-  // Show button
-  installBtn.style.display = 'flex';
-});
-
-installBtn.addEventListener('click', async () => {
-
-  if (!deferredPrompt) return;
-
-  // Show install popup
-  deferredPrompt.prompt();
-
-  // Wait for user choice
-  const { outcome } = await deferredPrompt.userChoice;
-
-  console.log('Install outcome:', outcome);
-
-  // Clear saved prompt
-  deferredPrompt = null;
-
-  // Hide button
-  installBtn.style.display = 'none';
-});
-
-/* iPhone/iPad fallback */
-
-const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
-
-if (isIOS) {
-
-  installBtn.style.display = 'flex';
-
-  installBtn.innerHTML = '📲 Add to Home Screen';
-
-  installBtn.addEventListener('click', () => {
-
-    alert(
-      'To install this app on iPhone:\n\n' +
-      '1. Tap the Share button\n' +
-      '2. Scroll down\n' +
-      '3. Tap "Add to Home Screen"'
-    );
-
-  });
-}
-</script>
 <body>
 
 <!-- Loading Screen -->
@@ -869,19 +855,16 @@ if (isIOS) {
           <span class="icon">#</span> Global Chat
         </div>
         <div class="sidebar-section" style="padding: 4px 0 0;">
-          <div class="sidebar-label" style="padding: 0 6px;">Rooms</div>
-          <div class="sidebar-item" data-view="room" data-room="general">
-            <span class="icon">#</span> general
+          <div class="sidebar-section-header">
+            <div class="sidebar-label">Rooms</div>
+            <button class="icon-mini-btn" id="group-create-toggle" type="button" title="Create room">+</button>
           </div>
-          <div class="sidebar-item" data-view="room" data-room="gaming">
-            <span class="icon">🎮</span> gaming
-          </div>
-          <div class="sidebar-item" data-view="room" data-room="school">
-            <span class="icon">📚</span> school
-          </div>
-          <div class="sidebar-item" data-view="room" data-room="music">
-            <span class="icon">🎵</span> music
-          </div>
+          <form class="group-create" id="group-create-form">
+            <input class="group-input" id="group-icon-input" maxlength="2" placeholder="#" aria-label="Room icon or emoji" />
+            <input class="group-input" id="group-name-input" maxlength="32" placeholder="New room" aria-label="Room name" />
+            <button class="icon-mini-btn" type="submit" title="Create room">✓</button>
+          </form>
+          <div id="rooms-list"></div>
         </div>
       </div>
       <div class="sidebar-divider"></div>
@@ -899,7 +882,9 @@ if (isIOS) {
           <span class="icon">📝</span> My Notes
         </div>
         <div class="sidebar-divider"></div>
-        <button id="installBtn" class="nav-btn"> 📲 Install App </button>
+        <button id="notify-toggle-btn" class="nav-btn" type="button">🔔 Notifications</button>
+        <button id="notify-groups-toggle-btn" class="nav-btn" type="button"># Room Alerts</button>
+        <button id="installBtn" class="nav-btn" type="button" style="display:none"> 📲 Install App </button>
       </div>
     </aside>
 
@@ -1080,6 +1065,17 @@ let pendingImageFile = null;
 let pendingImageDataUrl = null;
 let dmConversations = {};
 let dmUnreadCounts = {};
+let rooms = [];
+let unsubRooms = null;
+let notificationsEnabled = false;
+let notifyGroupMessages = true;
+let deferredInstallPrompt = null;
+const DEFAULT_ROOMS = [
+  { id: 'general', name: 'general', icon: '#' },
+  { id: 'gaming', name: 'gaming', icon: '🎮' },
+  { id: 'school', name: 'school', icon: '📚' },
+  { id: 'music', name: 'music', icon: '🎵' }
+];
 
 // ── DOM ──
 const loadingScreen       = document.getElementById('loading-screen');
@@ -1130,6 +1126,14 @@ const toastContainer      = document.getElementById('toast-container');
 const mobileSidebarOverlay= document.getElementById('mobile-sidebar-overlay');
 const mobileMenuBtn       = document.getElementById('mobile-menu-btn');
 const sidebar             = document.getElementById('sidebar');
+const roomsList           = document.getElementById('rooms-list');
+const groupCreateToggle   = document.getElementById('group-create-toggle');
+const groupCreateForm     = document.getElementById('group-create-form');
+const groupIconInput      = document.getElementById('group-icon-input');
+const groupNameInput      = document.getElementById('group-name-input');
+const installBtn          = document.getElementById('installBtn');
+const notifyToggleBtn     = document.getElementById('notify-toggle-btn');
+const notifyGroupsToggleBtn = document.getElementById('notify-groups-toggle-btn');
 
 // ── Utilities ──
 function toast(msg, type = 'info', duration = 3000) {
@@ -1247,34 +1251,209 @@ window.addEventListener('beforeunload', () => {
 });
 
 // ── Sidebar navigation ──
-document.querySelectorAll('.sidebar-item').forEach(item => {
-  item.addEventListener('click', () => {
-    const view = item.dataset.view;
-    const room = item.dataset.room;
-    document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
-    item.classList.add('active');
+sidebar.addEventListener('click', async (event) => {
+  const leaveBtn = event.target.closest('.group-leave');
+  if (leaveBtn) {
+    event.stopPropagation();
+    await leaveRoom(leaveBtn.dataset.room);
+    return;
+  }
 
-    if (view === 'dms') { openDmPanel(); return; }
-    if (view === 'notes') { openNotesPanel(); return; }
+  const item = event.target.closest('.sidebar-item');
+  if (!item) return;
 
-    // Close overlays
-    dmPanel.classList.remove('open');
-    notesPanel.classList.remove('open');
+  const view = item.dataset.view;
+  const room = item.dataset.room;
+  document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+  item.classList.add('active');
 
-    if (view === 'global') {
-      currentView = 'global'; currentRoom = '';
-      chatTitle.textContent = '# Global Chat';
-      chatSubtitle.textContent = 'All Zap users';
-    } else if (view === 'room') {
-      currentView = 'room'; currentRoom = room;
-      chatTitle.textContent = `# ${room}`;
-      chatSubtitle.textContent = `${room.charAt(0).toUpperCase()+room.slice(1)} room`;
-    }
-    subscribeMessages();
-    sidebar.classList.remove('mobile-open');
-    mobileSidebarOverlay.classList.remove('open');
-  });
+  if (view === 'dms') { openDmPanel(); closeMobileSidebar(); return; }
+  if (view === 'notes') { openNotesPanel(); closeMobileSidebar(); return; }
+
+  dmPanel.classList.remove('open');
+  notesPanel.classList.remove('open');
+
+  if (view === 'global') {
+    currentView = 'global'; currentRoom = '';
+    chatTitle.textContent = '# Global Chat';
+    chatSubtitle.textContent = 'All Zap users';
+  } else if (view === 'room') {
+    await joinRoom(room);
+    currentView = 'room'; currentRoom = room;
+    const activeRoom = rooms.find(r => r.id === room);
+    const roomName = activeRoom?.name || room;
+    chatTitle.textContent = `${activeRoom?.icon || '#'} ${roomName}`;
+    chatSubtitle.textContent = `${roomName.charAt(0).toUpperCase()+roomName.slice(1)} room`;
+  }
+  subscribeMessages();
+  closeMobileSidebar();
 });
+
+function closeMobileSidebar() {
+  sidebar.classList.remove('mobile-open');
+  mobileSidebarOverlay.classList.remove('open');
+}
+
+function slugifyRoomName(name) {
+  return name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40);
+}
+
+function readLocalRooms() {
+  try {
+    return JSON.parse(localStorage.getItem('zap_rooms') || '[]');
+  } catch {
+    return [];
+  }
+}
+
+function saveLocalRooms(nextRooms) {
+  localStorage.setItem('zap_rooms', JSON.stringify(nextRooms));
+}
+
+function mergeRooms(nextRooms) {
+  const byId = new Map();
+  [...DEFAULT_ROOMS, ...readLocalRooms(), ...nextRooms].forEach(room => {
+    if (room?.id) byId.set(room.id, { icon: '#', name: room.id, joined: true, ...room });
+  });
+  rooms = [...byId.values()].sort((a, b) => {
+    const ai = DEFAULT_ROOMS.findIndex(r => r.id === a.id);
+    const bi = DEFAULT_ROOMS.findIndex(r => r.id === b.id);
+    if (ai !== -1 || bi !== -1) return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
+    return (a.createdAt?.seconds || 0) - (b.createdAt?.seconds || 0) || a.name.localeCompare(b.name);
+  });
+  saveLocalRooms(rooms.filter(room => room.joined).map(({ id, name, icon, joined }) => ({ id, name, icon, joined })));
+  renderRooms();
+}
+
+function renderRooms() {
+  roomsList.replaceChildren();
+  rooms.forEach(room => {
+    const item = document.createElement('div');
+    item.className = `sidebar-item ${currentView === 'room' && currentRoom === room.id ? 'active' : ''}`;
+    item.dataset.view = 'room';
+    item.dataset.room = room.id;
+    if (!room.joined) item.title = 'Click to join this room';
+
+    const icon = document.createElement('span');
+    icon.className = 'icon';
+    icon.textContent = room.icon || '#';
+
+    const label = document.createElement('span');
+    label.textContent = room.name || room.id;
+    label.style.minWidth = '0';
+    label.style.overflow = 'hidden';
+    label.style.textOverflow = 'ellipsis';
+    label.style.whiteSpace = 'nowrap';
+
+    item.append(icon, label);
+    if (!room.joined) {
+      const join = document.createElement('span');
+      join.className = 'item-badge';
+      join.textContent = 'Join';
+      item.appendChild(join);
+    } else if (!DEFAULT_ROOMS.some(defaultRoom => defaultRoom.id === room.id)) {
+      const leave = document.createElement('button');
+      leave.className = 'group-leave';
+      leave.type = 'button';
+      leave.dataset.room = room.id;
+      leave.title = 'Leave room';
+      leave.textContent = '×';
+      item.appendChild(leave);
+    }
+    roomsList.appendChild(item);
+  });
+}
+
+async function initGroups() {
+  mergeRooms([]);
+  groupCreateToggle.addEventListener('click', () => {
+    groupCreateForm.classList.toggle('open');
+    if (groupCreateForm.classList.contains('open')) groupNameInput.focus();
+  });
+
+  groupCreateForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const name = groupNameInput.value.trim();
+    if (!name) return;
+    const id = slugifyRoomName(name);
+    if (!id) { toast('Use letters or numbers in the room name', 'error'); return; }
+    const room = {
+      id,
+      name,
+      icon: groupIconInput.value.trim() || '#',
+      createdBy: currentUser?.uid || '',
+      createdAt: serverTimestamp(),
+      members: currentUser ? { [currentUser.uid]: true } : {}
+    };
+    mergeRooms([{ id, name, icon: room.icon }]);
+    groupIconInput.value = '';
+    groupNameInput.value = '';
+    groupCreateForm.classList.remove('open');
+    try {
+      await setDoc(doc(db, 'roomsMeta', id), room, { merge: true });
+      toast('Room created', 'success');
+    } catch (e) {
+      toast('Room saved on this device', 'info');
+    }
+  });
+
+  try {
+    DEFAULT_ROOMS.forEach(defaultRoom => {
+      setDoc(doc(db, 'roomsMeta', defaultRoom.id), {
+        ...defaultRoom,
+        builtIn: true,
+        members: currentUser ? { [currentUser.uid]: true } : {}
+      }, { merge: true }).catch(() => {});
+    });
+    if (unsubRooms) unsubRooms();
+    unsubRooms = onSnapshot(collection(db, 'roomsMeta'), (snap) => {
+      const remoteRooms = [];
+      snap.forEach(d => {
+        const data = d.data();
+        const members = data.members || {};
+        remoteRooms.push({
+          id: d.id,
+          name: data.name || d.id,
+          icon: data.icon || '#',
+          createdAt: data.createdAt,
+          joined: Boolean(data.builtIn || !currentUser || members[currentUser.uid])
+        });
+      });
+      mergeRooms(remoteRooms);
+    });
+  } catch (e) {
+    mergeRooms([]);
+  }
+}
+
+async function leaveRoom(roomId) {
+  if (!roomId || DEFAULT_ROOMS.some(room => room.id === roomId)) return;
+  if (currentView === 'room' && currentRoom === roomId) {
+    document.getElementById('nav-global')?.click();
+  }
+  const remainingLocalRooms = readLocalRooms().filter(room => room.id !== roomId);
+  saveLocalRooms(remainingLocalRooms);
+  rooms = rooms.filter(room => room.id !== roomId);
+  renderRooms();
+  try {
+    await setDoc(doc(db, 'roomsMeta', roomId), {
+      members: { [currentUser.uid]: false }
+    }, { merge: true });
+  } catch {}
+}
+
+async function joinRoom(roomId) {
+  const room = rooms.find(r => r.id === roomId);
+  if (!room || room.joined) return;
+  room.joined = true;
+  saveLocalRooms(rooms.filter(r => r.joined).map(({ id, name, icon, joined }) => ({ id, name, icon, joined })));
+  renderRooms();
+  try {
+    await setDoc(doc(db, 'roomsMeta', roomId), {
+      members: { [currentUser.uid]: true }
+    }, { merge: true });
+  } catch {}
+}
 
 // ── Message Subscription ──
 function subscribeMessages() {
@@ -1291,6 +1470,7 @@ function subscribeMessages() {
 
   messagesContainer.innerHTML = '';
   let lastDate = '';
+  let initialLoad = true;
 
   unsubMessages = onSnapshot(q, (snapshot) => {
     snapshot.docChanges().forEach(change => {
@@ -1306,9 +1486,8 @@ function subscribeMessages() {
         renderMessage(change.doc.id, data, messagesContainer);
         scrollToBottom(messagesContainer);
 
-        // Notification
-        if (data.uid !== currentUser.uid && document.hidden) {
-          showBrowserNotification(data.username, data.text || '📷 Image');
+        if (!initialLoad) {
+          maybeNotifyMessage({ username: data.username, text: data.text || 'Image', uid: data.uid, type: currentView, room: currentRoom });
         }
       }
       if (change.type === 'removed') {
@@ -1316,6 +1495,7 @@ function subscribeMessages() {
         if (el) el.remove();
       }
     });
+    initialLoad = false;
   });
 
   // Typing indicator
@@ -1617,14 +1797,14 @@ function subscribeDmMessages() {
   const dmId = getDmId(currentUser.uid, currentDmUid);
   const q = query(collection(db, 'dms', dmId, 'messages'), orderBy('timestamp', 'asc'), limit(100));
   dmMessages.innerHTML = '';
+  let initialLoad = true;
   unsubDmMessages = onSnapshot(q, (snap) => {
     snap.docChanges().forEach(change => {
       if (change.type === 'added') {
         renderDmMessage(change.doc.id, change.doc.data());
         scrollToBottom(dmMessages);
-        // Notification
-        if (change.doc.data().uid !== currentUser.uid && document.hidden) {
-          showBrowserNotification(change.doc.data().username, change.doc.data().text || '📷 Image');
+        if (!initialLoad) {
+          maybeNotifyMessage({ username: change.doc.data().username, text: change.doc.data().text || 'Image', uid: change.doc.data().uid, type: 'direct' });
         }
       }
       if (change.type === 'removed') {
@@ -1632,6 +1812,7 @@ function subscribeDmMessages() {
         if (el) el.remove();
       }
     });
+    initialLoad = false;
   });
 
   // DM typing
@@ -1814,91 +1995,139 @@ logoutBtn.addEventListener('click', async () => {
 });
 
 // ── Browser Notifications ──
-function showBrowserNotification(username, text) {
-  if (Notification.permission === 'granted') {
-    new Notification('⚡ Zap', {
-      body: `${username}: ${text}`,
-      icon: 'icon-192.png',
-      badge: 'icon-192.png',
-      tag: 'zap-msg'
-    });
-  }
+function initNotifications() {
+  notificationsEnabled = localStorage.getItem('zap_notifications') === 'true';
+  notifyGroupMessages = localStorage.getItem('zap_notify_groups') !== 'false';
+  updateNotificationButton();
+  updateGroupNotificationButton();
+
+  notifyToggleBtn.addEventListener('click', async () => {
+    if (!('Notification' in window)) {
+      toast('Notifications are not supported in this browser', 'error');
+      return;
+    }
+    if (Notification.permission !== 'granted') {
+      const permission = await Notification.requestPermission();
+      if (permission !== 'granted') {
+        notificationsEnabled = false;
+        localStorage.setItem('zap_notifications', 'false');
+        updateNotificationButton();
+        return;
+      }
+    }
+    notificationsEnabled = !notificationsEnabled;
+    localStorage.setItem('zap_notifications', String(notificationsEnabled));
+    updateNotificationButton();
+    toast(notificationsEnabled ? 'Notifications enabled' : 'Notifications muted', 'success');
+  });
+
+  notifyGroupsToggleBtn.addEventListener('click', () => {
+    notifyGroupMessages = !notifyGroupMessages;
+    localStorage.setItem('zap_notify_groups', String(notifyGroupMessages));
+    updateGroupNotificationButton();
+  });
 }
 
-async function requestNotificationPermission() {
-  if (Notification.permission === 'default') {
-    await Notification.requestPermission();
-  }
+function updateNotificationButton() {
+  if (!notifyToggleBtn) return;
+  notifyToggleBtn.classList.toggle('enabled', notificationsEnabled);
+  notifyToggleBtn.textContent = notificationsEnabled ? '🔔 Notifications On' : '🔕 Notifications';
+}
+
+function updateGroupNotificationButton() {
+  if (!notifyGroupsToggleBtn) return;
+  notifyGroupsToggleBtn.classList.toggle('enabled', notifyGroupMessages);
+  notifyGroupsToggleBtn.textContent = notifyGroupMessages ? '# Room Alerts On' : '# Room Alerts Off';
+}
+
+async function maybeNotifyMessage({ username, text, uid, type, room }) {
+  if (!document.hidden || uid === currentUser?.uid || !notificationsEnabled) return;
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+
+  const isDirect = type === 'direct';
+  const isMention = currentUserData?.username && text.toLowerCase().includes(`@${currentUserData.username.toLowerCase()}`);
+  const isGroup = type === 'room';
+  if (!isDirect && !isMention && !(isGroup && notifyGroupMessages)) return;
+
+  const title = isDirect ? 'Zap direct message' : isMention ? 'Zap mention' : `Zap room: ${room || 'chat'}`;
+  const options = {
+    body: `${username || 'Someone'}: ${text}`,
+    icon: 'icon-192.png',
+    badge: 'icon-192.png',
+    tag: isDirect ? 'zap-dm' : `zap-${room || 'global'}`,
+    data: { url: 'dashboard.html', type, room }
+  };
+
+  try {
+    const reg = await navigator.serviceWorker?.ready;
+    if (reg?.showNotification) {
+      await reg.showNotification(title, options);
+      return;
+    }
+  } catch {}
+
+  new Notification(title, options);
 }
 
 // ── Lightbox ──
 lightbox.addEventListener('click', () => lightbox.classList.remove('open'));
 
-// ── PWA Install ──
-let deferredInstallPrompt;
-window.addEventListener('beforeinstallprompt', (e) => {
-  e.preventDefault();
-  deferredInstallPrompt = e;
-  // Show subtle install button in nav (optional)
-});
+// ── PWA Install + Service Worker ──
+function initPWA() {
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
 
-// ── Service Worker ──
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('firebase-messaging-sw.js').catch(console.warn);
+  if (installBtn) {
+    installBtn.style.display = isIOS && !isStandalone ? 'flex' : 'none';
+    installBtn.addEventListener('click', async () => {
+      if (isIOS && !deferredInstallPrompt) {
+        alert('To install Zap on iPhone or iPad:\n\n1. Tap the Share button\n2. Scroll down\n3. Tap Add to Home Screen');
+        return;
+      }
+      if (!deferredInstallPrompt) return;
+      deferredInstallPrompt.prompt();
+      const choice = await deferredInstallPrompt.userChoice.catch(() => ({ outcome: 'dismissed' }));
+      deferredInstallPrompt = null;
+      installBtn.style.display = 'none';
+      if (choice.outcome === 'accepted') toast('Zap is installing', 'success');
+    });
+  }
+
+  window.addEventListener('beforeinstallprompt', (event) => {
+    event.preventDefault();
+    deferredInstallPrompt = event;
+    if (installBtn && !isStandalone) installBtn.style.display = 'flex';
+  });
+
+  window.addEventListener('appinstalled', () => {
+    deferredInstallPrompt = null;
+    if (installBtn) installBtn.style.display = 'none';
+    toast('Zap installed', 'success');
+  });
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch((err) => console.warn('Service worker registration failed', err));
+  }
 }
 
 // ── Init ──
-function initApp() {
-  subscribeMessages();
-  subscribeOnlineUsers();
-  requestNotificationPermission();
+function initUI() {
+  initPWA();
+  initNotifications();
 }
 
-  window.addEventListener('DOMContentLoaded', () => {
+function initChat() {
+  subscribeMessages();
+  subscribeOnlineUsers();
+}
 
-  let deferredPrompt = null;
+function initApp() {
+  initGroups();
+  initChat();
+}
 
-  const installBtn = document.getElementById('installBtn');
-
-  if (!installBtn) {
-    console.error("Install button not found in DOM");
-    return;
-  }
-
-  console.log("Install system loaded");
-
-  window.addEventListener('beforeinstallprompt', (e) => {
-
-    console.log("beforeinstallprompt fired");
-
-    e.preventDefault();
-
-    deferredPrompt = e;
-
-    installBtn.style.display = 'flex';
-  });
-
-  installBtn.addEventListener('click', async () => {
-
-    console.log("Install clicked");
-
-    if (!deferredPrompt) {
-      console.warn("No install prompt available");
-      return;
-    }
-
-    deferredPrompt.prompt();
-
-    const { outcome } = await deferredPrompt.userChoice;
-
-    console.log("Install result:", outcome);
-
-    deferredPrompt = null;
-
-    installBtn.style.display = 'none';
-  });
-
-});
+window.addEventListener('DOMContentLoaded', initUI);
 </script>
 </body>
 </html>
+
