@@ -705,6 +705,39 @@ input {
       });
     }
   </script>
+  <script>
+let deferredPrompt;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+
+  // Stop automatic popup
+  e.preventDefault();
+
+  deferredPrompt = e;
+
+  // Show your custom install button
+  const installBtn = document.getElementById('installBtn');
+
+  if (installBtn) {
+    installBtn.style.display = 'flex';
+
+    installBtn.addEventListener('click', async () => {
+
+      installBtn.style.display = 'none';
+
+      // Show install popup
+      deferredPrompt.prompt();
+
+      // Wait for user response
+      const { outcome } = await deferredPrompt.userChoice;
+
+      console.log('Install result:', outcome);
+
+      deferredPrompt = null;
+    });
+  }
+});
+</script>
 <body>
 
 <!-- Loading Screen -->
