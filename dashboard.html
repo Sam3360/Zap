@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>⚡Zap⚡</title>
+  <title>⚡Zap </title>
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#3b82f6" />
   <link rel="apple-touch-icon" href="icon-192.png" />
@@ -799,6 +799,76 @@ input {
     }
     .sidebar-item:hover .group-leave { opacity: 1; }
     #notify-toggle-btn.enabled { color: var(--green); border-color: rgba(34,197,94,0.45); }
+    #group-manage-btn { display: none; margin-left: auto; }
+    #group-manage-btn.show { display: inline-flex; }
+    .group-type-row {
+      grid-column: 1 / -1;
+      display: flex; gap: 6px; padding-top: 2px;
+    }
+    .seg-btn {
+      flex: 1; min-height: 34px; border-radius: 9px;
+      border: 1px solid var(--border2); background: transparent;
+      color: var(--text2); cursor: pointer; font: inherit; font-size: 0.78rem;
+    }
+    .seg-btn.active { background: rgba(59,130,246,0.18); color: var(--accent2); border-color: rgba(59,130,246,0.4); }
+    .group-user-select {
+      grid-column: 1 / -1;
+      display: none; flex-direction: column; gap: 6px;
+      max-height: 150px; overflow-y: auto; padding: 6px;
+      border: 1px solid var(--border); border-radius: 10px;
+      background: rgba(0,0,0,0.08);
+    }
+    .group-user-select.open { display: flex; }
+    .check-row {
+      display: flex; align-items: center; gap: 8px;
+      min-width: 0; color: var(--text2); font-size: 0.84rem;
+    }
+    .check-row span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .room-lock { margin-left: auto; color: var(--muted); font-size: 0.78rem; }
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; z-index: 260;
+      background: rgba(0,0,0,0.62); align-items: center; justify-content: center;
+      padding: 16px;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-card {
+      width: min(480px, 100%); max-height: min(680px, calc(100vh - 32px));
+      overflow-y: auto; background: var(--card); border: 1px solid var(--border2);
+      border-radius: 18px; box-shadow: 0 24px 70px rgba(0,0,0,0.45);
+    }
+    .modal-head {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      padding: 16px 18px; border-bottom: 1px solid var(--border);
+    }
+    .modal-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.05rem; }
+    .modal-body { padding: 16px 18px; display: flex; flex-direction: column; gap: 14px; }
+    .modal-row { display: flex; gap: 8px; min-width: 0; }
+    .modal-field { display: flex; flex-direction: column; gap: 6px; min-width: 0; flex: 1; }
+    .modal-label { color: var(--muted); font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; }
+    .modal-input, .modal-select {
+      width: 100%; min-height: 40px; border-radius: 10px;
+      border: 1px solid var(--border2); background: var(--bg2);
+      color: var(--text); padding: 9px 11px; font: inherit;
+    }
+    .member-list { display: flex; flex-direction: column; gap: 6px; }
+    .member-row {
+      display: flex; align-items: center; gap: 10px; min-width: 0;
+      padding: 8px 10px; border: 1px solid var(--border); border-radius: 10px;
+    }
+    .member-row-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .danger-text { color: #f87171; }
+    .context-menu {
+      display: none; position: fixed; z-index: 320; width: 230px;
+      background: var(--card); border: 1px solid var(--border2);
+      border-radius: 12px; padding: 6px; box-shadow: 0 18px 42px rgba(0,0,0,0.45);
+    }
+    .context-menu.open { display: block; }
+    .context-menu button {
+      width: 100%; min-height: 38px; border: 0; border-radius: 8px;
+      background: transparent; color: var(--text2); text-align: left;
+      padding: 8px 10px; cursor: pointer; font: inherit;
+    }
+    .context-menu button:hover { background: var(--bg2); color: var(--text); }
 
     @media (max-width: 768px) {
       #app, #main, #chat-area, #chat-header, #chat-input-area,
@@ -815,6 +885,10 @@ input {
       #dm-messages { padding: 10px !important; min-width: 0; }
       #dm-input { min-width: 0; font-size: 16px !important; }
       .msg-actions { right: 0; }
+      .modal-overlay { align-items: flex-end; padding: 0; }
+      .modal-card { width: 100%; max-height: 88vh; border-radius: 18px 18px 0 0; }
+      .modal-row { flex-direction: column; }
+      .context-menu { width: min(250px, calc(100vw - 24px)); }
     }
   </style>
 </head>
@@ -863,6 +937,11 @@ input {
             <input class="group-input" id="group-icon-input" maxlength="2" placeholder="#" aria-label="Room icon or emoji" />
             <input class="group-input" id="group-name-input" maxlength="32" placeholder="New room" aria-label="Room name" />
             <button class="icon-mini-btn" type="submit" title="Create room">✓</button>
+            <div class="group-type-row" role="group" aria-label="Group type">
+              <button class="seg-btn active" id="group-public-btn" type="button" data-group-type="public">Public</button>
+              <button class="seg-btn" id="group-private-btn" type="button" data-group-type="private">Private</button>
+            </div>
+            <div class="group-user-select" id="group-user-select" aria-label="Invite users"></div>
           </form>
           <div id="rooms-list"></div>
         </div>
@@ -897,6 +976,7 @@ input {
           <div id="chat-title"># Global Chat</div>
           <div id="chat-subtitle">All Zap users</div>
         </div>
+        <button class="nav-btn" id="group-manage-btn" type="button">Manage</button>
         <div id="chat-online-count">● 0 online</div>
       </div>
 
@@ -1009,6 +1089,53 @@ input {
   </div>
 </div>
 
+<!-- Group Management Modal -->
+<div class="modal-overlay" id="group-manage-modal">
+  <div class="modal-card">
+    <div class="modal-head">
+      <div class="modal-title">Group Settings</div>
+      <button class="panel-back" id="group-manage-close" type="button">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-row">
+        <label class="modal-field">
+          <span class="modal-label">Icon</span>
+          <input class="modal-input" id="manage-group-icon" maxlength="2" />
+        </label>
+        <label class="modal-field">
+          <span class="modal-label">Name</span>
+          <input class="modal-input" id="manage-group-name" maxlength="32" />
+        </label>
+      </div>
+      <label class="modal-field">
+        <span class="modal-label">Disappearing messages</span>
+        <select class="modal-select" id="group-disappear-select">
+          <option value="0">Off</option>
+          <option value="86400000">24 hours</option>
+          <option value="604800000">7 days</option>
+          <option value="2592000000">30 days</option>
+        </select>
+      </label>
+      <button class="btn-primary" id="manage-group-save" type="button">Save Group</button>
+      <div class="modal-field">
+        <span class="modal-label">Members</span>
+        <div class="member-list" id="group-member-list"></div>
+      </div>
+      <div class="modal-row">
+        <input class="modal-input" id="group-add-username" placeholder="Add member by username" />
+        <button class="btn-primary" id="group-add-member" type="button">Add</button>
+      </div>
+      <button class="btn-secondary danger-text" id="group-delete-btn" type="button">Delete Group</button>
+    </div>
+  </div>
+</div>
+
+<!-- DM Context Menu -->
+<div class="context-menu" id="dm-context-menu">
+  <button type="button" data-action="mute">Mute Chat</button>
+  <button type="button" data-action="disappear">Enable Disappearing Messages</button>
+</div>
+
 <!-- Mobile Sidebar Overlay -->
 <div id="mobile-sidebar-overlay"></div>
 
@@ -1029,7 +1156,7 @@ import {
   getFirestore, collection, doc,
   addDoc, deleteDoc, setDoc, getDoc, getDocs,
   onSnapshot, query, where, orderBy, limit,
-  serverTimestamp, updateDoc
+  serverTimestamp, updateDoc, deleteField
 } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL }
                                         from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js';
@@ -1066,16 +1193,24 @@ let pendingImageDataUrl = null;
 let dmConversations = {};
 let dmUnreadCounts = {};
 let rooms = [];
-let unsubRooms = null;
+let unsubRooms = [];
+let allUsers = [];
+let groupCreateType = 'public';
 let notificationsEnabled = false;
 let notifyGroupMessages = true;
 let deferredInstallPrompt = null;
 const DEFAULT_ROOMS = [
-  { id: 'general', name: 'general', icon: '#' },
-  { id: 'gaming', name: 'gaming', icon: '🎮' },
-  { id: 'school', name: 'school', icon: '📚' },
-  { id: 'music', name: 'music', icon: '🎵' }
+  { id: 'general', name: 'general', icon: '#', type: 'public', builtIn: true },
+  { id: 'gaming', name: 'gaming', icon: '🎮', type: 'public', builtIn: true },
+  { id: 'school', name: 'school', icon: '📚', type: 'public', builtIn: true },
+  { id: 'music', name: 'music', icon: '🎵', type: 'public', builtIn: true }
 ];
+const DISAPPEAR_OPTIONS = {
+  0: 'Off',
+  86400000: '24 hours',
+  604800000: '7 days',
+  2592000000: '30 days'
+};
 
 // ── DOM ──
 const loadingScreen       = document.getElementById('loading-screen');
@@ -1131,6 +1266,21 @@ const groupCreateToggle   = document.getElementById('group-create-toggle');
 const groupCreateForm     = document.getElementById('group-create-form');
 const groupIconInput      = document.getElementById('group-icon-input');
 const groupNameInput      = document.getElementById('group-name-input');
+const groupPublicBtn      = document.getElementById('group-public-btn');
+const groupPrivateBtn     = document.getElementById('group-private-btn');
+const groupUserSelect     = document.getElementById('group-user-select');
+const groupManageBtn      = document.getElementById('group-manage-btn');
+const groupManageModal    = document.getElementById('group-manage-modal');
+const groupManageClose    = document.getElementById('group-manage-close');
+const manageGroupIcon     = document.getElementById('manage-group-icon');
+const manageGroupName     = document.getElementById('manage-group-name');
+const manageGroupSave     = document.getElementById('manage-group-save');
+const groupMemberList     = document.getElementById('group-member-list');
+const groupAddUsername    = document.getElementById('group-add-username');
+const groupAddMemberBtn   = document.getElementById('group-add-member');
+const groupDeleteBtn      = document.getElementById('group-delete-btn');
+const groupDisappearSelect= document.getElementById('group-disappear-select');
+const dmContextMenu       = document.getElementById('dm-context-menu');
 const installBtn          = document.getElementById('installBtn');
 const notifyToggleBtn     = document.getElementById('notify-toggle-btn');
 const notifyGroupsToggleBtn = document.getElementById('notify-groups-toggle-btn');
@@ -1168,6 +1318,48 @@ function scrollToBottom(container) {
 function autoResizeTextarea(el) {
   el.style.height = 'auto';
   el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+
+function timestampToMillis(ts) {
+  if (!ts) return 0;
+  if (typeof ts === 'number') return ts;
+  if (ts.toMillis) return ts.toMillis();
+  return new Date(ts).getTime() || 0;
+}
+
+function getDisappearMs(settings = {}) {
+  return Number(settings.disappearMs || settings.disappearingMs || 0);
+}
+
+function buildExpiresAt(disappearMs) {
+  const ms = Number(disappearMs || 0);
+  return ms > 0 ? new Date(Date.now() + ms) : null;
+}
+
+function isExpiredMessage(data) {
+  const expiresAt = timestampToMillis(data?.expiresAt);
+  return expiresAt > 0 && expiresAt <= Date.now();
+}
+
+function isRoomOwner(room) {
+  return Boolean(room && currentUser && room.owner === currentUser.uid);
+}
+
+function isRoomMember(room) {
+  if (!room || room.type !== 'private') return true;
+  return Boolean(currentUser && (room.owner === currentUser.uid || room.members?.[currentUser.uid]));
+}
+
+function findRoom(roomId) {
+  return rooms.find(room => room.id === roomId);
+}
+
+function updateRoomHeaderControls() {
+  const room = currentView === 'room' ? findRoom(currentRoom) : null;
+  groupManageBtn.classList.toggle('show', Boolean(room && room.joined));
+  if (room?.type === 'private') {
+    chatSubtitle.textContent = isRoomOwner(room) ? 'Private group · owner' : 'Private group';
+  }
 }
 
 // ── Emoji Setup ──
@@ -1277,13 +1469,15 @@ sidebar.addEventListener('click', async (event) => {
     currentView = 'global'; currentRoom = '';
     chatTitle.textContent = '# Global Chat';
     chatSubtitle.textContent = 'All Zap users';
+    updateRoomHeaderControls();
   } else if (view === 'room') {
     await joinRoom(room);
     currentView = 'room'; currentRoom = room;
     const activeRoom = rooms.find(r => r.id === room);
     const roomName = activeRoom?.name || room;
-    chatTitle.textContent = `${activeRoom?.icon || '#'} ${roomName}`;
+    chatTitle.textContent = `${activeRoom?.type === 'private' ? '🔒' : activeRoom?.icon || '#'} ${roomName}`;
     chatSubtitle.textContent = `${roomName.charAt(0).toUpperCase()+roomName.slice(1)} room`;
+    updateRoomHeaderControls();
   }
   subscribeMessages();
   closeMobileSidebar();
@@ -1313,16 +1507,17 @@ function saveLocalRooms(nextRooms) {
 function mergeRooms(nextRooms) {
   const byId = new Map();
   [...DEFAULT_ROOMS, ...readLocalRooms(), ...nextRooms].forEach(room => {
-    if (room?.id) byId.set(room.id, { icon: '#', name: room.id, joined: true, ...room });
+    if (room?.id) byId.set(room.id, { icon: '#', name: room.id, type: 'public', joined: true, settings: {}, members: {}, ...room });
   });
-  rooms = [...byId.values()].sort((a, b) => {
+  rooms = [...byId.values()].filter(room => room.type !== 'private' || room.joined).sort((a, b) => {
     const ai = DEFAULT_ROOMS.findIndex(r => r.id === a.id);
     const bi = DEFAULT_ROOMS.findIndex(r => r.id === b.id);
     if (ai !== -1 || bi !== -1) return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
     return (a.createdAt?.seconds || 0) - (b.createdAt?.seconds || 0) || a.name.localeCompare(b.name);
   });
-  saveLocalRooms(rooms.filter(room => room.joined).map(({ id, name, icon, joined }) => ({ id, name, icon, joined })));
+  saveLocalRooms(rooms.filter(room => room.joined).map(({ id, name, icon, type, joined, owner, members, settings }) => ({ id, name, icon, type, joined, owner, members, settings })));
   renderRooms();
+  updateRoomHeaderControls();
 }
 
 function renderRooms() {
@@ -1336,7 +1531,7 @@ function renderRooms() {
 
     const icon = document.createElement('span');
     icon.className = 'icon';
-    icon.textContent = room.icon || '#';
+    icon.textContent = room.type === 'private' ? (room.icon || '🔒') : (room.icon || '#');
 
     const label = document.createElement('span');
     label.textContent = room.name || room.id;
@@ -1346,6 +1541,12 @@ function renderRooms() {
     label.style.whiteSpace = 'nowrap';
 
     item.append(icon, label);
+    if (room.type === 'private') {
+      const lock = document.createElement('span');
+      lock.className = 'room-lock';
+      lock.textContent = 'Private';
+      item.appendChild(lock);
+    }
     if (!room.joined) {
       const join = document.createElement('span');
       join.className = 'item-badge';
@@ -1366,9 +1567,19 @@ function renderRooms() {
 
 async function initGroups() {
   mergeRooms([]);
+  await loadUsersForPrivateGroups();
   groupCreateToggle.addEventListener('click', () => {
     groupCreateForm.classList.toggle('open');
     if (groupCreateForm.classList.contains('open')) groupNameInput.focus();
+  });
+
+  [groupPublicBtn, groupPrivateBtn].forEach(btn => {
+    btn.addEventListener('click', () => {
+      groupCreateType = btn.dataset.groupType;
+      groupPublicBtn.classList.toggle('active', groupCreateType === 'public');
+      groupPrivateBtn.classList.toggle('active', groupCreateType === 'private');
+      groupUserSelect.classList.toggle('open', groupCreateType === 'private');
+    });
   });
 
   groupCreateForm.addEventListener('submit', async (event) => {
@@ -1377,17 +1588,28 @@ async function initGroups() {
     if (!name) return;
     const id = slugifyRoomName(name);
     if (!id) { toast('Use letters or numbers in the room name', 'error'); return; }
+    const selectedMembers = getSelectedPrivateGroupMembers();
+    const members = { [currentUser.uid]: true };
+    selectedMembers.forEach(uid => { members[uid] = true; });
     const room = {
       id,
       name,
       icon: groupIconInput.value.trim() || '#',
+      type: groupCreateType,
+      owner: currentUser?.uid || '',
       createdBy: currentUser?.uid || '',
       createdAt: serverTimestamp(),
-      members: currentUser ? { [currentUser.uid]: true } : {}
+      members,
+      settings: { disappearMs: 0 }
     };
-    mergeRooms([{ id, name, icon: room.icon }]);
+    mergeRooms([{ id, name, icon: room.icon, type: room.type, owner: room.owner, members, settings: room.settings, joined: true }]);
     groupIconInput.value = '';
     groupNameInput.value = '';
+    groupCreateType = 'public';
+    groupPublicBtn.classList.add('active');
+    groupPrivateBtn.classList.remove('active');
+    groupUserSelect.classList.remove('open');
+    groupUserSelect.querySelectorAll('input[type="checkbox"]').forEach(input => { input.checked = false; });
     groupCreateForm.classList.remove('open');
     try {
       await setDoc(doc(db, 'roomsMeta', id), room, { merge: true });
@@ -1402,32 +1624,90 @@ async function initGroups() {
       setDoc(doc(db, 'roomsMeta', defaultRoom.id), {
         ...defaultRoom,
         builtIn: true,
-        members: currentUser ? { [currentUser.uid]: true } : {}
+        owner: 'system',
+        members: currentUser ? { [currentUser.uid]: true } : {},
+        settings: { disappearMs: 0 }
       }, { merge: true }).catch(() => {});
     });
-    if (unsubRooms) unsubRooms();
-    unsubRooms = onSnapshot(collection(db, 'roomsMeta'), (snap) => {
-      const remoteRooms = [];
-      snap.forEach(d => {
-        const data = d.data();
-        const members = data.members || {};
-        remoteRooms.push({
-          id: d.id,
-          name: data.name || d.id,
-          icon: data.icon || '#',
-          createdAt: data.createdAt,
-          joined: Boolean(data.builtIn || !currentUser || members[currentUser.uid])
-        });
-      });
-      mergeRooms(remoteRooms);
-    });
+    subscribeRoomsMeta();
   } catch (e) {
     mergeRooms([]);
   }
 }
 
+function subscribeRoomsMeta() {
+  unsubRooms.forEach(unsub => unsub());
+  unsubRooms = [];
+  const remoteRoomsById = new Map();
+  const applySnapshot = (snap) => {
+    snap.forEach(d => {
+      const data = d.data();
+      const members = data.members || {};
+      remoteRoomsById.set(d.id, {
+        id: d.id,
+        name: data.name || d.id,
+        icon: data.icon || '#',
+        type: data.type || 'public',
+        owner: data.owner || data.createdBy || '',
+        members,
+        settings: data.settings || {},
+        builtIn: Boolean(data.builtIn),
+        createdAt: data.createdAt,
+        joined: Boolean(data.builtIn || data.type !== 'private' || !currentUser || data.owner === currentUser.uid || members[currentUser.uid])
+      });
+    });
+    mergeRooms([...remoteRoomsById.values()]);
+  };
+  unsubRooms.push(onSnapshot(query(collection(db, 'roomsMeta'), where('type', '==', 'public')), applySnapshot));
+  unsubRooms.push(onSnapshot(query(collection(db, 'roomsMeta'), where(`members.${currentUser.uid}`, '==', true)), applySnapshot));
+  unsubRooms.push(onSnapshot(query(collection(db, 'roomsMeta'), where('owner', '==', currentUser.uid)), applySnapshot));
+}
+
+async function loadUsersForPrivateGroups() {
+  try {
+    const snap = await getDocs(collection(db, 'users'));
+    allUsers = snap.docs.map(d => ({ uid: d.id, ...d.data() })).filter(u => u.uid !== currentUser?.uid);
+    renderPrivateInvitePicker();
+  } catch {
+    allUsers = [];
+    renderPrivateInvitePicker();
+  }
+}
+
+function renderPrivateInvitePicker() {
+  groupUserSelect.replaceChildren();
+  if (!allUsers.length) {
+    const empty = document.createElement('div');
+    empty.className = 'check-row';
+    empty.textContent = 'No users available yet';
+    groupUserSelect.appendChild(empty);
+    return;
+  }
+  allUsers.forEach(user => {
+    const label = document.createElement('label');
+    label.className = 'check-row';
+    const input = document.createElement('input');
+    input.type = 'checkbox';
+    input.value = user.uid;
+    const name = document.createElement('span');
+    name.textContent = user.username || user.displayName || user.email || 'User';
+    label.append(input, name);
+    groupUserSelect.appendChild(label);
+  });
+}
+
+function getSelectedPrivateGroupMembers() {
+  if (groupCreateType !== 'private') return [];
+  return [...groupUserSelect.querySelectorAll('input[type="checkbox"]:checked')].map(input => input.value);
+}
+
 async function leaveRoom(roomId) {
   if (!roomId || DEFAULT_ROOMS.some(room => room.id === roomId)) return;
+  const room = findRoom(roomId);
+  if (room?.type === 'private' && room.owner === currentUser.uid) {
+    toast('Transfer ownership or delete the group instead', 'error');
+    return;
+  }
   if (currentView === 'room' && currentRoom === roomId) {
     document.getElementById('nav-global')?.click();
   }
@@ -1436,15 +1716,19 @@ async function leaveRoom(roomId) {
   rooms = rooms.filter(room => room.id !== roomId);
   renderRooms();
   try {
-    await setDoc(doc(db, 'roomsMeta', roomId), {
-      members: { [currentUser.uid]: false }
-    }, { merge: true });
+    await updateDoc(doc(db, 'roomsMeta', roomId), {
+      [`members.${currentUser.uid}`]: deleteField()
+    });
   } catch {}
 }
 
 async function joinRoom(roomId) {
   const room = rooms.find(r => r.id === roomId);
   if (!room || room.joined) return;
+  if (room.type === 'private' && !isRoomMember(room)) {
+    toast('This private group is invite-only', 'error');
+    return;
+  }
   room.joined = true;
   saveLocalRooms(rooms.filter(r => r.joined).map(({ id, name, icon, joined }) => ({ id, name, icon, joined })));
   renderRooms();
@@ -1455,16 +1739,116 @@ async function joinRoom(roomId) {
   } catch {}
 }
 
+groupManageBtn.addEventListener('click', openGroupManageModal);
+groupManageClose.addEventListener('click', () => groupManageModal.classList.remove('open'));
+groupManageModal.addEventListener('click', (event) => {
+  if (event.target === groupManageModal) groupManageModal.classList.remove('open');
+});
+
+function openGroupManageModal() {
+  const room = findRoom(currentRoom);
+  if (!room || !room.joined) return;
+  const owner = isRoomOwner(room);
+  manageGroupIcon.value = room.icon || '';
+  manageGroupName.value = room.name || '';
+  groupDisappearSelect.value = String(getDisappearMs(room.settings));
+  manageGroupIcon.disabled = !owner;
+  manageGroupName.disabled = !owner;
+  manageGroupSave.disabled = !owner;
+  groupAddUsername.disabled = !owner;
+  groupAddMemberBtn.disabled = !owner;
+  groupDeleteBtn.style.display = owner && !room.builtIn ? 'block' : 'none';
+  renderGroupMembers(room);
+  groupManageModal.classList.add('open');
+}
+
+function renderGroupMembers(room) {
+  groupMemberList.replaceChildren();
+  const memberIds = new Set(Object.keys(room.members || {}).filter(uid => room.members[uid]));
+  if (room.owner) memberIds.add(room.owner);
+  if (!memberIds.size && currentUser) memberIds.add(currentUser.uid);
+  memberIds.forEach(uid => {
+    const user = uid === currentUser.uid
+      ? currentUserData
+      : allUsers.find(u => u.uid === uid) || { username: uid };
+    const row = document.createElement('div');
+    row.className = 'member-row';
+    const name = document.createElement('div');
+    name.className = 'member-row-name';
+    name.textContent = `${user.username || user.displayName || uid}${uid === room.owner ? ' · owner' : ''}`;
+    row.appendChild(name);
+    if (isRoomOwner(room) && uid !== room.owner) {
+      const remove = document.createElement('button');
+      remove.className = 'btn-secondary danger-text';
+      remove.type = 'button';
+      remove.textContent = 'Remove';
+      remove.addEventListener('click', () => removeGroupMember(room.id, uid));
+      row.appendChild(remove);
+    }
+    groupMemberList.appendChild(row);
+  });
+}
+
+manageGroupSave.addEventListener('click', async () => {
+  const room = findRoom(currentRoom);
+  if (!isRoomOwner(room)) return;
+  const name = manageGroupName.value.trim();
+  const icon = manageGroupIcon.value.trim() || '#';
+  if (!name) { toast('Group name required', 'error'); return; }
+  const settings = { ...(room.settings || {}), disappearMs: Number(groupDisappearSelect.value || 0) };
+  await setDoc(doc(db, 'roomsMeta', room.id), { name, icon, settings }, { merge: true });
+  toast('Group updated', 'success');
+});
+
+groupAddMemberBtn.addEventListener('click', async () => {
+  const room = findRoom(currentRoom);
+  if (!isRoomOwner(room)) return;
+  const username = groupAddUsername.value.trim();
+  if (!username) return;
+  const q = query(collection(db, 'users'), where('username', '==', username));
+  const snap = await getDocs(q);
+  if (snap.empty) { toast('User not found', 'error'); return; }
+  const user = { uid: snap.docs[0].id, ...snap.docs[0].data() };
+  await setDoc(doc(db, 'roomsMeta', room.id), { [`members.${user.uid}`]: true }, { merge: true });
+  groupAddUsername.value = '';
+  toast('Member added', 'success');
+});
+
+async function removeGroupMember(roomId, uid) {
+  if (!confirm('Remove this member from the group?')) return;
+  await updateDoc(doc(db, 'roomsMeta', roomId), { [`members.${uid}`]: deleteField() });
+  toast('Member removed', 'success');
+}
+
+groupDeleteBtn.addEventListener('click', async () => {
+  const room = findRoom(currentRoom);
+  if (!isRoomOwner(room) || room.builtIn) return;
+  if (!confirm('Delete this group for everyone? Messages may remain until Firestore cleanup runs.')) return;
+  await deleteDoc(doc(db, 'roomsMeta', room.id));
+  groupManageModal.classList.remove('open');
+  document.getElementById('nav-global')?.click();
+  toast('Group deleted', 'success');
+});
+
 // ── Message Subscription ──
 function subscribeMessages() {
   if (unsubMessages) unsubMessages();
   if (unsubTyping) unsubTyping();
 
-  const coll = currentView === 'global' ? 'messages' : `rooms`;
   let q;
   if (currentView === 'global') {
     q = query(collection(db, 'messages'), orderBy('timestamp', 'asc'), limit(100));
   } else {
+    const room = findRoom(currentRoom);
+    if (room?.type === 'private' && !isRoomMember(room)) {
+      messagesContainer.innerHTML = '';
+      msgInput.disabled = true;
+      sendBtn.disabled = true;
+      toast('You are not a member of this private group', 'error');
+      return;
+    }
+    msgInput.disabled = false;
+    sendBtn.disabled = false;
     q = query(collection(db, 'rooms', currentRoom, 'messages'), orderBy('timestamp', 'asc'), limit(100));
   }
 
@@ -1476,6 +1860,13 @@ function subscribeMessages() {
     snapshot.docChanges().forEach(change => {
       if (change.type === 'added') {
         const data = change.doc.data();
+        if (isExpiredMessage(data)) {
+          const ref = currentView === 'global'
+            ? doc(db, 'messages', change.doc.id)
+            : doc(db, 'rooms', currentRoom, 'messages', change.doc.id);
+          deleteDoc(ref).catch(() => {});
+          return;
+        }
         const msgDate = formatDate(data.timestamp);
         if (msgDate && msgDate !== lastDate) {
           lastDate = msgDate;
@@ -1639,16 +2030,25 @@ document.addEventListener('click', () => {
 async function sendMessage() {
   const text = msgInput.value.trim();
   if (!text && !pendingImageFile) return;
+  const room = currentView === 'room' ? findRoom(currentRoom) : null;
+  if (room?.type === 'private' && !isRoomMember(room)) {
+    toast('You are not a member of this private group', 'error');
+    return;
+  }
+  const expiresAt = buildExpiresAt(currentView === 'room' ? getDisappearMs(room?.settings) : 0);
 
   const msgData = {
     uid: currentUser.uid,
+    sender: currentUser.uid,
     username: currentUserData.username,
     displayName: currentUserData.displayName,
     photoURL: currentUserData.photoURL || '',
     text: text,
     timestamp: serverTimestamp(),
-    reactions: {}
+    reactions: {},
+    roomId: currentView === 'room' ? currentRoom : 'global'
   };
+  if (expiresAt) msgData.expiresAt = expiresAt;
 
   // Upload image if pending
   if (pendingImageFile) {
@@ -1795,16 +2195,26 @@ function subscribeDmMessages() {
   if (unsubDmMessages) unsubDmMessages();
   if (!currentDmUid) return;
   const dmId = getDmId(currentUser.uid, currentDmUid);
+  let dmMuted = false;
+  getDoc(doc(db, 'dms', dmId)).then(snap => {
+    dmMuted = Boolean(snap.data()?.mutedBy?.[currentUser.uid]);
+  }).catch(() => {});
+  cleanupExpiredMessages(collection(db, 'dms', dmId, 'messages'));
   const q = query(collection(db, 'dms', dmId, 'messages'), orderBy('timestamp', 'asc'), limit(100));
   dmMessages.innerHTML = '';
   let initialLoad = true;
   unsubDmMessages = onSnapshot(q, (snap) => {
     snap.docChanges().forEach(change => {
       if (change.type === 'added') {
-        renderDmMessage(change.doc.id, change.doc.data());
+        const data = change.doc.data();
+        if (isExpiredMessage(data)) {
+          deleteDoc(doc(db, 'dms', dmId, 'messages', change.doc.id)).catch(() => {});
+          return;
+        }
+        renderDmMessage(change.doc.id, data);
         scrollToBottom(dmMessages);
-        if (!initialLoad) {
-          maybeNotifyMessage({ username: change.doc.data().username, text: change.doc.data().text || 'Image', uid: change.doc.data().uid, type: 'direct' });
+        if (!initialLoad && !dmMuted) {
+          maybeNotifyMessage({ username: data.username, text: data.text || 'Image', uid: data.uid, type: 'direct' });
         }
       }
       if (change.type === 'removed') {
@@ -1851,26 +2261,42 @@ function renderDmMessage(id, data) {
   });
 }
 
+async function cleanupExpiredMessages(messagesColl) {
+  try {
+    const snap = await getDocs(query(messagesColl, orderBy('timestamp', 'asc'), limit(100)));
+    snap.forEach(d => {
+      if (isExpiredMessage(d.data())) deleteDoc(d.ref).catch(() => {});
+    });
+  } catch {}
+}
+
 async function sendDmMessage() {
   const text = dmInput.value.trim();
   if (!text || !currentDmUid) return;
   const dmId = getDmId(currentUser.uid, currentDmUid);
+  const dmMeta = await getDoc(doc(db, 'dms', dmId)).catch(() => null);
+  const settings = dmMeta?.exists?.() ? (dmMeta.data().settings || {}) : {};
+  const expiresAt = buildExpiresAt(getDisappearMs(settings));
   dmInput.value = '';
-  await addDoc(collection(db, 'dms', dmId, 'messages'), {
+  const msgData = {
     uid: currentUser.uid,
+    sender: currentUser.uid,
     username: currentUserData.username,
     photoURL: currentUserData.photoURL || '',
     text,
     timestamp: serverTimestamp()
-  });
+  };
+  if (expiresAt) msgData.expiresAt = expiresAt;
 
-  // Store DM metadata
   await setDoc(doc(db, 'dms', dmId), {
     participants: [currentUser.uid, currentDmUid],
     lastMessage: text,
     lastSender: currentUser.uid,
+    mutedBy: dmMeta?.exists?.() ? (dmMeta.data().mutedBy || {}) : {},
+    settings,
     updatedAt: serverTimestamp()
   }, { merge: true });
+  await addDoc(collection(db, 'dms', dmId, 'messages'), msgData);
 }
 
 dmSendBtn.addEventListener('click', sendDmMessage);
@@ -1907,14 +2333,91 @@ async function loadDmList() {
         <img class="dm-row-avatar" src="${avatarSrc}" alt="${u.username}" />
         <div style="min-width:0;">
           <div class="dm-row-name">${u.username}</div>
-          <div class="dm-row-preview">${data.lastMessage||''}</div>
+          <div class="dm-row-preview">${data.mutedBy?.[currentUser.uid] ? 'Muted · ' : ''}${data.lastMessage||''}</div>
         </div>`;
       row.addEventListener('click', () => openDmWithUser(u));
+      attachDmLongPress(row, d.id, u);
       dmList.appendChild(row);
     }
   } catch(e) {
     dmList.innerHTML = '<p style="font-size:0.82rem;color:var(--muted);padding:8px 6px;">Start a new DM above.</p>';
   }
+}
+
+function attachDmLongPress(row, dmId, user) {
+  let timer = null;
+  let startX = 0;
+  let startY = 0;
+  const clear = () => {
+    clearTimeout(timer);
+    timer = null;
+  };
+  const open = (event) => {
+    event.preventDefault();
+    row.dataset.dmId = dmId;
+    row.dataset.uid = user.uid;
+    openDmContextMenu(event, dmId, user);
+  };
+  row.addEventListener('pointerdown', (event) => {
+    if (event.button !== undefined && event.button !== 0) return;
+    startX = event.clientX;
+    startY = event.clientY;
+    clear();
+    timer = setTimeout(() => open(event), 3000);
+  });
+  row.addEventListener('pointermove', (event) => {
+    if (Math.abs(event.clientX - startX) > 12 || Math.abs(event.clientY - startY) > 12) clear();
+  });
+  row.addEventListener('pointerup', clear);
+  row.addEventListener('pointercancel', clear);
+  row.addEventListener('contextmenu', (event) => open(event));
+}
+
+function openDmContextMenu(event, dmId, user) {
+  dmContextMenu.dataset.dmId = dmId;
+  dmContextMenu.dataset.uid = user.uid;
+  const x = Math.min(event.clientX || 16, window.innerWidth - 250);
+  const y = Math.min(event.clientY || 16, window.innerHeight - 130);
+  dmContextMenu.style.left = `${Math.max(12, x)}px`;
+  dmContextMenu.style.top = `${Math.max(12, y)}px`;
+  dmContextMenu.classList.add('open');
+}
+
+document.addEventListener('click', (event) => {
+  if (!dmContextMenu.contains(event.target)) dmContextMenu.classList.remove('open');
+});
+
+dmContextMenu.addEventListener('click', async (event) => {
+  const action = event.target.closest('button')?.dataset.action;
+  if (!action) return;
+  const dmId = dmContextMenu.dataset.dmId;
+  dmContextMenu.classList.remove('open');
+  if (action === 'mute') {
+    await toggleDmMute(dmId);
+  } else if (action === 'disappear') {
+    await setDmDisappearMode(dmId);
+  }
+});
+
+async function toggleDmMute(dmId) {
+  const ref = doc(db, 'dms', dmId);
+  const snap = await getDoc(ref);
+  const muted = Boolean(snap.data()?.mutedBy?.[currentUser.uid]);
+  if (muted) await updateDoc(ref, { [`mutedBy.${currentUser.uid}`]: deleteField() });
+  else await setDoc(ref, { [`mutedBy.${currentUser.uid}`]: true }, { merge: true });
+  toast(muted ? 'Chat unmuted' : 'Chat muted', 'success');
+  loadDmList();
+}
+
+async function setDmDisappearMode(dmId) {
+  const current = await getDoc(doc(db, 'dms', dmId));
+  const existing = String(getDisappearMs(current.data()?.settings || {}));
+  const choice = prompt('Disappearing messages: 0 = Off, 24h, 7d, or 30d', DISAPPEAR_OPTIONS[existing] || 'Off');
+  const normalized = String(choice || '').toLowerCase().replace(/\s+/g, '');
+  const map = { '0': 0, off: 0, '24h': 86400000, '24hours': 86400000, '7d': 604800000, '7days': 604800000, '30d': 2592000000, '30days': 2592000000 };
+  if (!(normalized in map)) return;
+  await setDoc(doc(db, 'dms', dmId), { 'settings.disappearMs': map[normalized] }, { merge: true });
+  toast(`Disappearing messages: ${DISAPPEAR_OPTIONS[map[normalized]]}`, 'success');
 }
 
 // ── Notes ──
@@ -2018,6 +2521,7 @@ function initNotifications() {
     notificationsEnabled = !notificationsEnabled;
     localStorage.setItem('zap_notifications', String(notificationsEnabled));
     updateNotificationButton();
+    if (notificationsEnabled) await registerPhoneNotificationTarget();
     toast(notificationsEnabled ? 'Notifications enabled' : 'Notifications muted', 'success');
   });
 
@@ -2026,6 +2530,19 @@ function initNotifications() {
     localStorage.setItem('zap_notify_groups', String(notifyGroupMessages));
     updateGroupNotificationButton();
   });
+}
+
+async function registerPhoneNotificationTarget() {
+  if (!('serviceWorker' in navigator)) return;
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    const subscription = await reg.pushManager?.getSubscription?.();
+    if (subscription && currentUser) {
+      await setDoc(doc(db, 'users', currentUser.uid), {
+        pushSubscriptions: { [btoa(subscription.endpoint).slice(0, 32)]: subscription.toJSON() }
+      }, { merge: true });
+    }
+  } catch {}
 }
 
 function updateNotificationButton() {
@@ -2114,6 +2631,8 @@ function initPWA() {
 function initUI() {
   initPWA();
   initNotifications();
+  initContextMenus();
+  initDisappearMode();
 }
 
 function initChat() {
@@ -2121,9 +2640,22 @@ function initChat() {
   subscribeOnlineUsers();
 }
 
+function initDMs() {
+  loadDmList();
+}
+
+function initContextMenus() {
+  dmContextMenu.classList.remove('open');
+}
+
+function initDisappearMode() {
+  cleanupExpiredMessages(collection(db, 'messages'));
+}
+
 function initApp() {
   initGroups();
   initChat();
+  initDMs();
 }
 
 window.addEventListener('DOMContentLoaded', initUI);
