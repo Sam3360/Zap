@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Terms & Conditions and Privacy Notice</title>
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial,Helvetica,sans-serif;
+}
+
+body{
+    background:#ececec;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    padding:40px;
+}
+
+.container{
+    width:900px;
+    background:white;
+    border-radius:12px;
+    box-shadow:0 10px 30px rgba(0,0,0,.15);
+    overflow:hidden;
+}
+
+header{
+    background:#1565C0;
+    color:white;
+    padding:25px;
+}
+
+header h1{
+    margin-bottom:8px;
+}
+
+.terms{
+    height:500px;
+    overflow-y:auto;
+    padding:30px;
+    line-height:1.7;
+}
+
+h2{
+    margin-top:30px;
+    margin-bottom:10px;
+}
+
+.footer{
+    border-top:1px solid #ddd;
+    padding:25px;
+}
+
+label{
+    font-size:16px;
+}
+
+button{
+    margin-top:20px;
+    width:100%;
+    padding:16px;
+    border:none;
+    border-radius:8px;
+    font-size:17px;
+    background:#2d7ef7;
+    color:white;
+    cursor:pointer;
+    transition:.3s;
+}
+
+button:disabled{
+    background:#999;
+    cursor:not-allowed;
+}
+
+p{
+    margin-bottom:15px;
+    text-align:justify;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<header>
+<h1>Terms & Conditions</h1>
+<p>User Agreement & Privacy Notice</p>
+<p>Last Updated: July 2026</p>
+</header>
+
+<div class="terms" id="terms">
+
+<h2>1. Introduction</h2>
+<p>Welcome to our application platform. By accessing or using our services, you agree to be bound by these Terms and Conditions. Please read them carefully before continuing.</p>
+
+<h2>2. Acceptance of Terms</h2>
+<p>By creating an account, accessing, or using any part of the service, you confirm that you have read, understood, and agree to comply with all applicable terms, privacy policies, and guidelines.</p>
+
+<h2>3. Account Security & Credentials</h2>
+<p>Users are responsible for maintaining the confidentiality of their account credentials, login details, and access tokens. You agree to take full responsibility for all activities occurring under your registered account.</p>
+
+<h2>4. User Content & Uploads</h2>
+<p>Users retain ownership of any text, data, media, or images submitted through the application. By uploading content, you grant the platform a non-exclusive license to process, display, and store this data as needed to deliver core services.</p>
+
+<h2>5. Data Privacy & Permissions</h2>
+<p>To provide optimal functionality, the application may request device permissions such as internet access, location services, or camera controls. Data collected will be processed strictly in accordance with operational requirements and privacy practices.</p>
+
+<h2>6. Acceptable Use Policy</h2>
+<p>You agree not to misuse the platform. Prohibited activities include submitting false or harmful data, attempting unauthorized access, disrupting server infrastructure, or violating any applicable local or international laws.</p>
+
+<h2>7. Service Availability & Modifications</h2>
+<p>We reserve the right to modify, update, suspend, or discontinue any feature or part of the application at any time without prior notice. Continuous, uninterrupted access is not guaranteed.</p>
+
+<h2>8. Limitation of Liability</h2>
+<p>The application and its services are provided on an "as is" and "as available" basis. To the maximum extent permitted by law, the platform disclaims all warranties, express or implied, and shall not be held liable for any indirect damages, data loss, or system disruptions.</p>
+
+<h2>9. Changes to Terms</h2>
+<p>We reserve the right to update these Terms and Conditions periodically. Continued use of the platform following any modifications constitutes your acceptance of the updated terms.</p>
+
+<h2>10. Contact & Acknowledgment</h2>
+<p>Thank you for taking the time to review our terms. By checking the agreement box below, you acknowledge your consent to these policies.</p>
+
+</div>
+
+<div class="footer">
+
+<label>
+<input type="checkbox" id="agree" disabled>
+I have read and agree to the Terms & Conditions.
+</label>
+
+<button id="continue" disabled>Continue</button>
+
+</div>
+
+</div>
+
+<script>
+
+const terms = document.getElementById("terms");
+const checkbox = document.getElementById("agree");
+const button = document.getElementById("continue");
+
+terms.addEventListener("scroll", () => {
+    if (terms.scrollTop + terms.clientHeight >= terms.scrollHeight - 5) {
+        checkbox.disabled = false;
+    }
+});
+
+checkbox.addEventListener("change", () => {
+    button.disabled = !checkbox.checked;
+});
+
+button.onclick = () => {
+    window.location.href = "https://sam3360.github.io/Zap";
+};
+
+</script>
+
+</body>
+</html>
