@@ -1,1 +1,1 @@
-# [Zap ⚡](https://Sam3360.github.io/Zap)
+# Try out - [Zap ⚡](https://Sam3360.github.io/Zap)
