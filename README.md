@@ -29,6 +29,10 @@ I wanted to challenge myself by building a complete web application from scratch
 
 The project is actively being developed and updated regularly.
 
-## Feedback
+## Made By
 
-If you find a bug or have an idea for a feature, feel free to open an issue or contribute.
+Samarth Chugh
+
+GitHub: [https://github.com/Sam3360](https://github.com/Sam3360)
+
+If you have any suggestions or find a bug, feel free to open an issue or contribute.
