@@ -1,4 +1,4 @@
-# Zap
+# Zap ⚡
 
 ![Zap Banner](ZapBanner.png)
 
