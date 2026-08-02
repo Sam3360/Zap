@@ -1,4 +1,3 @@
-![Status](https://img.shields.io/badge/Zap-22C55E?style=for-the-badge)
 # Zap ⚡
 
 ![Zap Banner](ZapBanner.png)
