@@ -1,4 +1,4 @@
-# Zap ⚡
+# [Zap ⚡](https://Sam3360.github.io/Zap)
 
 ![Zap Banner](ZapBanner.png)
 
