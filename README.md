@@ -1,5 +1,10 @@
 # [Zap ⚡](https://Sam3360.github.io/Zap/UserPolicyZap.html)
 
+
+## Not the latest version ⚠️
+> For the latest version click -> https://github.com/Sam3360/Zap_v2
+
+
 ![Zap Banner](ZapBanner.png)
 
 Try it here: [https://Sam3360.github.io/Zap](https://Sam3360.github.io/Zap)
