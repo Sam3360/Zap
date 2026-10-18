@@ -2,7 +2,7 @@
 
 
 ## Not the latest version ⚠️
-> For the latest version click -> https://github.com/Sam3360/Zap_v2
+> For the latest version click -> https://github.com/Sam3360/ZapWeb
 
 
 ![Zap Banner](ZapBanner.png)
