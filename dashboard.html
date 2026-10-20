@@ -1,1168 +1,595 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
 <head>
-  <meta charset="UTF-8" />
-   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>⚡Zap </title>
-  <link rel="manifest" href="manifest.json" />
-  <meta name="theme-color" content="#3b82f6" />
-  <link rel="icon" type="image/png" href="favicon.png">
-  <link rel="apple-touch-icon" href="icon-192.png" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
-
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Zap</title>
+  <link rel="manifest" href="manifest.json"/>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>"/>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    /* ══ CSS Variables ══ */
     :root {
-      --bg:      #0a0f1e;
-      --bg2:     #0f172a;
-      --sidebar: #111827;
-      --card:    #1e293b;
-      --card2:   #162032;
-      --panel:   #172033;
-      --accent:  #3b82f6;
-      --accent2: #60a5fa;
-      --accent-glow: rgba(59,130,246,0.3);
-      --green:   #22c55e;
-      --red:     #ef4444;
-      --yellow:  #f59e0b;
-      --text:    #f1f5f9;
-      --text2:   #cbd5e1;
-      --muted:   #64748b;
-      --border:  rgba(255,255,255,0.07);
-      --border2: rgba(255,255,255,0.12);
-      --radius:  14px;
-      --msg-me:  #1d4ed8;
-      --msg-them:#1e293b;
-      --nav-h:   60px;
-      --sidebar-w: 260px;
-      --right-w: 220px;
+      --bg: #080e1a;
+      --bg2: #0f172a;
+      --card: #1e293b;
+      --card2: #162032;
+      --card3: rgba(30,41,59,0.6);
+      --border: rgba(59,130,246,0.15);
+      --border2: rgba(255,255,255,0.06);
+      --accent: #3b82f6;
+      --accent2: #6366f1;
+      --accent3: #06b6d4;
+      --green: #22c55e;
+      --red: #ef4444;
+      --yellow: #f59e0b;
+      --text: #f1f5f9;
+      --text2: #cbd5e1;
+      --muted: #64748b;
+      --glow: rgba(59,130,246,0.3);
+      --nav-h: 64px;
+      --sidebar-w: 280px;
+      --panel-w: 220px;
+      --transition: 0.2s cubic-bezier(0.4,0,0.2,1);
     }
     [data-theme="light"] {
-      --bg:      #f0f4ff;
-      --bg2:     #e8eef8;
-      --sidebar: #dde5f5;
-      --card:    #ffffff;
-      --card2:   #f5f7ff;
-      --panel:   #edf1fc;
-      --text:    #0f172a;
-      --text2:   #334155;
-      --muted:   #64748b;
-      --border:  rgba(0,0,0,0.08);
-      --border2: rgba(0,0,0,0.14);
-      --msg-me:  #3b82f6;
-      --msg-them:#e2e8f0;
-      --sidebar: #dde5f5;
+      --bg: #f0f4ff;
+      --bg2: #e8eeff;
+      --card: #ffffff;
+      --card2: #f8faff;
+      --card3: rgba(255,255,255,0.9);
+      --border: rgba(59,130,246,0.2);
+      --border2: rgba(0,0,0,0.06);
+      --text: #0f172a;
+      --text2: #334155;
+      --muted: #64748b;
     }
+    html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; }
 
-    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; overflow: hidden; }
-
-    /* ══ Layout Shell ══ */
-    #app { display: flex; flex-direction: column; height: 100vh; }
-
-    /* ══ TOP NAVBAR ══ */
-    #navbar {
-      height: var(--nav-h); min-height: var(--nav-h);
-      background: var(--sidebar);
+    /* ===== NAVBAR ===== */
+    .navbar {
+      position: fixed; top: 0; left: 0; right: 0; height: var(--nav-h); z-index: 100;
+      background: rgba(8,14,26,0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
       border-bottom: 1px solid var(--border);
-      display: flex; align-items: center;
-      padding: 0 18px; gap: 12px;
-      z-index: 100;
-      backdrop-filter: blur(12px);
+      display: flex; align-items: center; padding: 0 20px; gap: 12px;
     }
-    .nav-logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.25rem; color: var(--text); display: flex; align-items: center; gap: 6px; }
-    .nav-logo span { font-size: 1.4rem; }
+    [data-theme="light"] .navbar { background: rgba(240,244,255,0.9); }
+    .nav-logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 20px;
+      background: linear-gradient(135deg, #60a5fa, #818cf8); -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent; background-clip: text; display: flex; align-items: center; gap: 6px; }
+    .nav-logo span { -webkit-text-fill-color: initial; color: initial; }
     .nav-spacer { flex: 1; }
-    .nav-btn {
-      padding: 7px 14px; border-radius: 10px;
-      border: 1px solid var(--border2); background: transparent;
-      color: var(--text2); font-size: 0.82rem; cursor: pointer;
-      transition: background 0.15s, color 0.15s;
-      font-family: 'DM Sans', sans-serif;
-      display: flex; align-items: center; gap: 6px;
-    }
-    .nav-btn:hover { background: var(--card); color: var(--text); }
-    .nav-btn.danger:hover { background: rgba(239,68,68,0.15); border-color: rgba(239,68,68,0.4); color: #f87171; }
-    #nav-avatar {
-      width: 34px; height: 34px; border-radius: 50%;
-      object-fit: cover; border: 2px solid var(--accent);
-      background: var(--card); cursor: pointer;
-    }
-    #nav-username { font-weight: 600; font-size: 0.9rem; }
-    .unread-badge {
-      background: var(--red); color: #fff;
-      font-size: 0.65rem; font-weight: 700;
-      padding: 2px 6px; border-radius: 100px;
-      min-width: 18px; text-align: center;
+    .nav-actions { display: flex; align-items: center; gap: 10px; }
+    .nav-profile { display: flex; align-items: center; gap: 10px; }
+    .nav-avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover;
+      border: 2px solid var(--accent); cursor: pointer; }
+    .nav-username { font-size: 14px; font-weight: 600; color: var(--text2); max-width: 120px;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .btn-icon { background: rgba(255,255,255,0.05); border: 1px solid var(--border2); border-radius: 10px;
+      padding: 8px; cursor: pointer; color: var(--text2); font-size: 16px; transition: all var(--transition);
+      display: flex; align-items: center; }
+    .btn-icon:hover { background: rgba(59,130,246,0.15); border-color: var(--accent); color: var(--accent); }
+    .btn-logout { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.25);
+      border-radius: 10px; padding: 8px 14px; cursor: pointer; color: #f87171; font-size: 13px;
+      font-weight: 600; transition: all var(--transition); }
+    .btn-logout:hover { background: rgba(239,68,68,0.2); }
+    .unread-badge { position: absolute; top: -4px; right: -4px; background: var(--red);
+      color: white; border-radius: 50%; width: 16px; height: 16px; font-size: 9px;
+      font-weight: 700; display: flex; align-items: center; justify-content: center; }
+    .rel { position: relative; }
+
+    /* Mobile nav toggle */
+    .mobile-menu-btn { display: none; background: none; border: none; color: var(--text); font-size: 22px; cursor: pointer; }
+
+    /* ===== LAYOUT ===== */
+    .app-layout {
+      display: flex; height: 100vh; padding-top: var(--nav-h);
     }
 
-    /* ══ MAIN BODY ══ */
-    #main { display: flex; flex: 1; overflow: hidden; min-height: 0; }
-    
-    #messages-container { flex: 1; min-height: 0; }
-    .msg-row, .msg-bubble-wrap, .msg-bubble { min-width: 0; }
-    .msg-bubble-wrap { max-width: 70%; }
-    .msg-bubble img.msg-image { max-width: 100%; height: auto; }
-
-    @media (max-width: 1024px) {
-      :root { --sidebar-w: 220px; --right-w: 180px; }
-    }
-
-    @media (max-width: 860px) {
-      .msg-bubble-wrap { max-width: 100%; }
-    }
-
-    /* ══ LEFT SIDEBAR ══ */
-    #sidebar {
-      width: var(--sidebar-w); min-width: var(--sidebar-w);
-      background: var(--sidebar);
+    /* ===== SIDEBAR ===== */
+    .sidebar {
+      width: var(--sidebar-w); flex-shrink: 0;
+      background: var(--card2);
       border-right: 1px solid var(--border);
       display: flex; flex-direction: column;
-      overflow-y: auto; overflow-x: hidden;
+      overflow: hidden; transition: transform 0.3s;
     }
-    #sidebar::-webkit-scrollbar { width: 4px; }
-    #sidebar::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
 
-    .sidebar-section { padding: 14px 12px 6px; }
-    .sidebar-label {
-      font-size: 0.68rem; font-weight: 700; letter-spacing: 0.1em;
-      text-transform: uppercase; color: var(--muted);
-      padding: 0 6px; margin-bottom: 6px;
-    }
-    .sidebar-item {
+    .sidebar-section { padding: 16px 14px 8px; }
+    .sidebar-label { font-size: 10px; font-weight: 700; letter-spacing: 1.2px;
+      text-transform: uppercase; color: var(--muted); padding: 0 6px 8px; }
+
+    .room-btn {
       display: flex; align-items: center; gap: 10px;
-      padding: 9px 12px; border-radius: 10px;
-      cursor: pointer; transition: background 0.15s, color 0.15s;
-      font-size: 0.9rem; color: var(--text2);
-      position: relative;
+      padding: 10px 12px; border-radius: 10px; cursor: pointer;
+      font-size: 14px; font-weight: 500; color: var(--text2);
+      transition: all var(--transition); position: relative;
+      border: 1px solid transparent; user-select: none;
     }
-    .sidebar-item:hover { background: var(--card); color: var(--text); }
-    .sidebar-item.active { background: rgba(59,130,246,0.18); color: var(--accent2); font-weight: 600; }
-    .sidebar-item .icon { font-size: 1.1rem; width: 22px; text-align: center; }
-    .sidebar-item .item-badge {
-      margin-left: auto; background: var(--red);
-      color: #fff; font-size: 0.62rem; font-weight: 700;
-      padding: 2px 6px; border-radius: 100px;
-    }
-    .sidebar-divider { height: 1px; background: var(--border); margin: 8px 14px; }
+    .room-btn:hover { background: rgba(59,130,246,0.08); color: var(--text); }
+    .room-btn.active { background: rgba(59,130,246,0.15); border-color: rgba(59,130,246,0.25); color: var(--accent); }
+    .room-btn .room-icon { font-size: 18px; width: 24px; text-align: center; }
+    .room-btn .room-badge { margin-left: auto; background: var(--accent); color: white;
+      border-radius: 10px; padding: 1px 7px; font-size: 10px; font-weight: 700; display: none; }
+    .room-btn.has-badge .room-badge { display: block; }
 
-    /* ══ CENTER CHAT AREA ══ */
-    #chat-area {
-      flex: 1; display: flex; flex-direction: column;
-      overflow: hidden; background: var(--bg2);
-      position: relative;
+    .dm-section { flex: 1; overflow-y: auto; padding: 8px 14px; }
+    .dm-header { display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 6px; margin-bottom: 4px; }
+    .dm-header-label { font-size: 10px; font-weight: 700; letter-spacing: 1.2px;
+      text-transform: uppercase; color: var(--muted); }
+    .dm-add-btn { background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.3);
+      border-radius: 6px; padding: 3px 8px; font-size: 11px; color: var(--accent); cursor: pointer;
+      font-weight: 600; transition: all var(--transition); }
+    .dm-add-btn:hover { background: var(--accent); color: white; }
+
+    .dm-user-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 10px; border-radius: 10px; cursor: pointer;
+      transition: all var(--transition); position: relative;
+    }
+    .dm-user-item:hover { background: rgba(59,130,246,0.08); }
+    .dm-user-item.active { background: rgba(59,130,246,0.15); }
+    .dm-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover;
+      border: 1.5px solid var(--border); flex-shrink: 0; background: var(--card); }
+    .dm-username { font-size: 13px; font-weight: 500; color: var(--text2); flex: 1;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .online-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green);
+      border: 2px solid var(--card2); flex-shrink: 0; }
+    .online-dot.offline { background: var(--muted); }
+
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(148,163,184,0.2); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(148,163,184,0.4); }
+
+    /* ===== MAIN CHAT AREA ===== */
+    .main-area {
+      flex: 1; display: flex; flex-direction: column; min-width: 0; overflow: hidden;
     }
 
-    /* Chat Header */
-    #chat-header {
-      padding: 14px 20px; background: var(--card);
-      border-bottom: 1px solid var(--border);
+    .chat-header {
+      padding: 14px 20px; border-bottom: 1px solid var(--border);
       display: flex; align-items: center; gap: 12px;
+      background: rgba(8,14,26,0.4); backdrop-filter: blur(8px);
+      flex-shrink: 0;
     }
-    #chat-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.05rem; }
-    #chat-subtitle { font-size: 0.78rem; color: var(--muted); margin-top: 1px; }
-    #chat-online-count { margin-left: auto; font-size: 0.8rem; color: var(--green); font-weight: 500; }
-
-    /* Messages */
-    #messages-container {
-      flex: 1; overflow-y: auto; overflow-x: hidden;
-      padding: 16px;
-      display: flex; flex-direction: column; gap: 4px;
-    }
-    #messages-container::-webkit-scrollbar { width: 5px; }
-    #messages-container::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
-
-    .msg-day-divider {
-      text-align: center; font-size: 0.72rem; color: var(--muted);
-      margin: 10px 0; position: relative;
-    }
-    .msg-day-divider::before, .msg-day-divider::after {
-      content: ''; position: absolute; top: 50%; height: 1px;
-      background: var(--border); width: 38%;
-    }
-    .msg-day-divider::before { left: 0; }
-    .msg-day-divider::after { right: 0; }
-
-    .msg-row {
-      display: flex; gap: 10px; align-items: flex-end;
-      animation: msgIn 0.25s cubic-bezier(0.22,1,0.36,1) both;
-    }
-    .msg-row.mine { flex-direction: row-reverse; }
-    @keyframes msgIn { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform:none; } }
-
-    .msg-avatar {
-      width: 30px; height: 30px; border-radius: 50%;
-      object-fit: cover; flex-shrink: 0; background: var(--card);
-      align-self: flex-end;
-    }
-
-    .msg-bubble-wrap { max-width: 70%; display: flex; flex-direction: column; gap: 3px; }
-    .msg-row.mine .msg-bubble-wrap { align-items: flex-end; }
-
-    .msg-sender-name { font-size: 0.72rem; color: var(--accent2); font-weight: 600; margin-bottom: 2px; padding: 0 4px; }
-    .msg-row.mine .msg-sender-name { display: none; }
-
-    .msg-bubble {
-      padding: 9px 14px; border-radius: 18px;
-      background: var(--msg-them); color: var(--text);
-      font-size: 0.92rem; line-height: 1.5;
-      word-break: break-word; position: relative;
-      border: 1px solid var(--border);
-      transition: background 0.15s;
-    }
-    .msg-row.mine .msg-bubble {
-      background: var(--msg-me); border-color: transparent;
-      color: #fff;
-    }
-    .msg-bubble img.msg-image {
-      max-width: 240px; max-height: 180px;
-      border-radius: 10px; display: block; margin-top: 6px;
-      cursor: zoom-in;
-    }
-
-    /* Reactions */
-    .msg-reactions { display: flex; gap: 4px; flex-wrap: wrap; padding: 2px 4px; }
-    .reaction-chip {
-      background: var(--card); border: 1px solid var(--border2);
-      border-radius: 100px; padding: 2px 8px;
-      font-size: 0.78rem; cursor: pointer;
-      transition: transform 0.1s, background 0.15s;
-      display: flex; align-items: center; gap: 3px;
-    }
-    .reaction-chip:hover { background: var(--card2); transform: scale(1.1); }
-    .reaction-chip.mine-reaction { background: rgba(59,130,246,0.2); border-color: var(--accent); }
-
-    .msg-meta {
-      display: flex; align-items: center; gap: 8px;
-      padding: 0 4px;
-    }
-    .msg-time { font-size: 0.68rem; color: var(--muted); }
-    * {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-  font-family: 'DM Sans', Arial;
-  overflow-x: hidden;
-}
-    .container {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 15px;
-  padding: 15px;
-}
-    @media (max-width: 768px) {
-
-  body {
-    font-size: 14px;
-  }
-
-  .container {
-    grid-template-columns: 1fr;
-    padding: 10px;
-  }
-
-  .card {
-    padding: 15px;
-    border-radius: 12px;
-  }
-
-  input, button {
-    font-size: 16px;
-  }
-
-  #chatBox, #dmBox {
-    height: 250px;
-  }
-}
-
-
-    #chatBox, #dmBox {
-  overflow-y: auto;
-  max-height: 60vh;
-  scroll-behavior: smooth;
-}
-
-    .inputRow {
-  display: flex;
-  gap: 10px;
-}
-
-.inputRow input {
-  flex: 1;
-}
-
-.inputRow button {
-  width: auto;
-  padding: 12px 16px;
-}
-    button {
-  min-height: 44px;
-  cursor: pointer;
-}
-
-input {
-  min-height: 44px;
-}
-    /* Context menu */
-    .msg-actions {
-      display: none; gap: 4px;
-      position: absolute; right: -8px; top: -36px;
-      background: var(--card); border: 1px solid var(--border2);
-      border-radius: 10px; padding: 4px;
-      z-index: 10; white-space: nowrap;
-    }
-    .msg-bubble-wrap:hover .msg-actions { display: flex; }
-    .msg-action-btn {
-      padding: 4px 8px; border-radius: 6px;
-      border: none; background: transparent;
-      color: var(--text2); cursor: pointer; font-size: 0.82rem;
-      transition: background 0.1s;
-    }
-    .msg-action-btn:hover { background: var(--bg2); }
-    .msg-action-btn.del { color: #f87171; }
-
-    /* Reaction picker */
-    .reaction-picker {
-      display: none; gap: 4px;
-      padding: 6px 8px;
-      background: var(--card); border: 1px solid var(--border2);
-      border-radius: 14px; position: absolute;
-      right: 0; top: -60px; z-index: 20;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
-    }
-    .reaction-picker button {
-      font-size: 1.2rem; background: none; border: none;
-      cursor: pointer; padding: 2px 4px; border-radius: 6px;
-      transition: transform 0.1s, background 0.1s;
-    }
-    .reaction-picker button:hover { transform: scale(1.3); background: var(--bg2); }
-    .show-picker .reaction-picker { display: flex; }
-
-    /* Typing indicator */
-    #typing-area {
-      padding: 4px 20px; min-height: 22px;
-      font-size: 0.78rem; color: var(--muted); font-style: italic;
-    }
-    .typing-dots { display: inline-flex; gap: 3px; align-items: center; margin-left: 4px; }
-    .typing-dots span {
-      width: 5px; height: 5px; background: var(--muted);
-      border-radius: 50%; display: inline-block;
-      animation: typingBounce 1.2s ease-in-out infinite;
-    }
+    .chat-header-icon { font-size: 20px; }
+    .chat-header-name { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 16px; }
+    .chat-header-desc { font-size: 12px; color: var(--muted); margin-top: 1px; }
+    .typing-indicator { font-size: 12px; color: var(--accent3); margin-left: auto;
+      display: flex; align-items: center; gap: 6px; min-height: 20px; }
+    .typing-dots { display: flex; gap: 3px; }
+    .typing-dots span { width: 5px; height: 5px; background: var(--accent3); border-radius: 50%;
+      animation: typingBounce 1.4s ease-in-out infinite; }
     .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
     .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
-    @keyframes typingBounce {
-      0%,60%,100% { transform: translateY(0); opacity:0.4; }
-      30% { transform: translateY(-5px); opacity:1; }
+    @keyframes typingBounce { 0%,60%,100% { transform: translateY(0); } 30% { transform: translateY(-6px); } }
+
+    .messages-area {
+      flex: 1; overflow-y: auto; padding: 16px 20px;
+      display: flex; flex-direction: column; gap: 2px;
     }
 
-    /* Input bar */
-    #chat-input-area {
-      padding: 12px 16px;
-      background: var(--card);
-      border-top: 1px solid var(--border);
-      display: flex; align-items: flex-end; gap: 10px;
-    }
-    #msg-input {
-      flex: 1; min-height: 40px; max-height: 120px;
-      padding: 10px 16px; border-radius: 22px;
-      border: 1px solid var(--border2);
-      background: var(--bg2); color: var(--text);
-      font-family: 'DM Sans', sans-serif; font-size: 0.93rem;
-      outline: none; resize: none; line-height: 1.4;
-      transition: border-color 0.2s;
-    }
-    #msg-input:focus { border-color: var(--accent); }
-    #msg-input::placeholder { color: var(--muted); }
+    /* Messages */
+    .msg-day-divider { text-align: center; margin: 12px 0; position: relative; }
+    .msg-day-divider::before { content: ''; position: absolute; left: 0; right: 0; top: 50%;
+      height: 1px; background: var(--border); }
+    .msg-day-divider span { background: var(--bg); padding: 0 12px; font-size: 11px;
+      color: var(--muted); position: relative; z-index: 1; }
 
+    .msg {
+      display: flex; gap: 10px; padding: 4px 8px; border-radius: 12px;
+      transition: background 0.15s; position: relative; group max-width: 100%;
+    }
+    .msg:hover { background: rgba(255,255,255,0.03); }
+    .msg:hover .msg-actions { opacity: 1; }
+
+    .msg-avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover;
+      flex-shrink: 0; border: 1.5px solid var(--border); background: var(--card); margin-top: 2px; }
+    .msg-body { flex: 1; min-width: 0; }
+    .msg-meta { display: flex; align-items: baseline; gap: 8px; margin-bottom: 3px; }
+    .msg-author { font-size: 13px; font-weight: 600; color: var(--accent); }
+    .msg-author.is-me { color: var(--accent3); }
+    .msg-time { font-size: 10px; color: var(--muted); }
+    .msg-text { font-size: 14px; color: var(--text2); line-height: 1.5; word-break: break-word; }
+    .msg-image { max-width: 280px; max-height: 220px; border-radius: 10px; margin-top: 6px;
+      object-fit: cover; cursor: pointer; border: 1px solid var(--border); }
+
+    .msg-actions {
+      position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+      display: flex; gap: 4px; opacity: 0; transition: opacity 0.2s;
+      background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+      padding: 4px 6px;
+    }
+    .msg-action-btn { background: none; border: none; cursor: pointer; font-size: 14px;
+      padding: 2px 4px; border-radius: 4px; transition: background 0.15s; color: var(--text2); }
+    .msg-action-btn:hover { background: rgba(255,255,255,0.1); }
+
+    .reactions-row { display: flex; gap: 4px; margin-top: 4px; flex-wrap: wrap; }
+    .reaction-chip {
+      display: flex; align-items: center; gap: 3px;
+      background: rgba(255,255,255,0.06); border: 1px solid var(--border);
+      border-radius: 20px; padding: 2px 8px; font-size: 13px; cursor: pointer;
+      transition: all 0.15s;
+    }
+    .reaction-chip:hover { background: rgba(59,130,246,0.15); border-color: var(--accent); }
+    .reaction-chip.mine { background: rgba(59,130,246,0.15); border-color: rgba(59,130,246,0.4); }
+    .reaction-chip span { font-size: 11px; color: var(--muted); font-weight: 600; }
+
+    .emoji-picker {
+      position: absolute; right: 8px; bottom: calc(100% + 8px);
+      background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+      padding: 8px; display: flex; gap: 4px; z-index: 50; box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+      animation: popIn 0.15s ease;
+    }
+    @keyframes popIn { from { opacity: 0; transform: scale(0.9) translateY(4px); } to { opacity: 1; transform: scale(1); } }
+    .emoji-opt { font-size: 20px; cursor: pointer; padding: 4px; border-radius: 6px;
+      transition: background 0.15s; }
+    .emoji-opt:hover { background: rgba(255,255,255,0.1); }
+
+    /* Chat input */
+    .chat-input-area {
+      padding: 12px 16px 16px; border-top: 1px solid var(--border);
+      background: rgba(8,14,26,0.6); backdrop-filter: blur(8px);
+      flex-shrink: 0;
+    }
+    .input-row {
+      display: flex; gap: 8px; align-items: flex-end;
+      background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+      padding: 8px 10px; transition: border-color 0.2s;
+    }
+    .input-row:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
+    .msg-input {
+      flex: 1; background: none; border: none; outline: none; color: var(--text);
+      font-family: 'DM Sans', sans-serif; font-size: 14px; resize: none;
+      max-height: 120px; min-height: 24px; line-height: 1.5;
+    }
+    .msg-input::placeholder { color: var(--muted); }
+    .input-btns { display: flex; gap: 6px; align-items: center; }
     .input-btn {
-      width: 40px; height: 40px; border-radius: 50%;
-      border: none; background: var(--card2); cursor: pointer;
-      color: var(--muted); font-size: 1.1rem;
-      display: flex; align-items: center; justify-content: center;
-      transition: background 0.15s, color 0.15s, transform 0.1s;
-      flex-shrink: 0;
+      background: none; border: none; cursor: pointer; font-size: 18px; padding: 4px;
+      border-radius: 8px; transition: all 0.15s; color: var(--muted); line-height: 1;
     }
-    .input-btn:hover { background: var(--border2); color: var(--text); }
-    #send-btn {
-      width: 40px; height: 40px; border-radius: 50%;
-      border: none; background: var(--accent); cursor: pointer;
-      color: #fff; font-size: 1rem;
-      display: flex; align-items: center; justify-content: center;
-      transition: background 0.15s, transform 0.1s;
-      flex-shrink: 0;
+    .input-btn:hover { background: rgba(255,255,255,0.08); color: var(--text); transform: scale(1.1); }
+    .send-btn {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border: none; border-radius: 10px; padding: 8px 14px; cursor: pointer;
+      color: white; font-size: 16px; transition: all 0.2s; display: flex; align-items: center;
     }
-    #send-btn:hover { background: var(--accent2); transform: scale(1.08); }
-    #send-btn:active { transform: scale(0.95); }
+    .send-btn:hover { transform: scale(1.05); box-shadow: 0 4px 16px var(--glow); }
+    .send-btn:active { transform: scale(0.97); }
+    #imageUploadInput { display: none; }
+    .emoji-tray {
+      display: flex; gap: 6px; padding: 6px 2px 2px; flex-wrap: wrap;
+      max-height: 0; overflow: hidden; transition: max-height 0.3s;
+    }
+    .emoji-tray.open { max-height: 60px; }
+    .emoji-tray-btn { font-size: 20px; cursor: pointer; padding: 4px; border-radius: 6px;
+      transition: background 0.15s; }
+    .emoji-tray-btn:hover { background: rgba(255,255,255,0.08); }
 
-    /* Emoji picker */
-    #emoji-picker {
-      display: none; position: absolute;
-      bottom: 72px; left: 16px; z-index: 50;
-      background: var(--card); border: 1px solid var(--border2);
-      border-radius: 16px; padding: 12px;
-      box-shadow: 0 16px 48px rgba(0,0,0,0.4);
-      width: 300px; max-height: 260px; overflow-y: auto;
+    /* ===== RIGHT PANEL — online users / notes ===== */
+    .right-panel {
+      width: var(--panel-w); flex-shrink: 0;
+      background: var(--card2); border-left: 1px solid var(--border);
+      display: flex; flex-direction: column; overflow: hidden;
     }
-    #emoji-picker.open { display: block; animation: fadeUp 0.18s ease; }
-    @keyframes fadeUp { from { opacity:0; transform: translateY(8px); } to { opacity:1; transform:none; } }
-    .emoji-grid { display: grid; grid-template-columns: repeat(8,1fr); gap: 2px; }
-    .emoji-btn { font-size: 1.3rem; padding: 5px; border: none; background: none; cursor: pointer; border-radius: 6px; transition: background 0.1s, transform 0.1s; }
-    .emoji-btn:hover { background: var(--bg2); transform: scale(1.2); }
-
-    /* Image preview */
-    #img-preview-wrap {
-      display: none; padding: 8px 16px 0;
-      background: var(--card); border-top: 1px solid var(--border);
-    }
-    #img-preview-wrap.show { display: flex; align-items: center; gap: 10px; }
-    #img-preview { width: 64px; height: 64px; object-fit: cover; border-radius: 10px; }
-    #img-cancel { background: none; border: none; color: var(--red); font-size: 1.2rem; cursor: pointer; }
-
-    /* ══ RIGHT PANEL ══ */
-    #right-panel {
-      width: var(--right-w); min-width: var(--right-w);
-      background: var(--sidebar);
-      border-left: 1px solid var(--border);
-      display: flex; flex-direction: column;
-      overflow-y: auto;
-    }
-    #right-panel::-webkit-scrollbar { width: 4px; }
-    #right-panel::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
-
-    .panel-title { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); padding: 14px 16px 8px; }
+    .panel-tabs { display: flex; border-bottom: 1px solid var(--border); }
+    .panel-tab { flex: 1; padding: 14px 0; text-align: center; font-size: 11px; font-weight: 700;
+      letter-spacing: 0.8px; text-transform: uppercase; color: var(--muted); cursor: pointer;
+      transition: all var(--transition); border-bottom: 2px solid transparent; }
+    .panel-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .panel-content { flex: 1; overflow-y: auto; padding: 12px; }
 
     .online-user {
-      display: flex; align-items: center; gap: 10px;
-      padding: 8px 14px; border-radius: 10px;
-      cursor: pointer; transition: background 0.15s;
-      margin: 0 6px;
+      display: flex; align-items: center; gap: 10px; padding: 8px 10px;
+      border-radius: 10px; transition: background 0.15s;
     }
-    .online-user:hover { background: var(--card); }
-    .online-avatar-wrap { position: relative; flex-shrink: 0; }
-    .online-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; background: var(--card); }
-    .online-dot {
-      position: absolute; bottom: 0; right: 0;
-      width: 10px; height: 10px; border-radius: 50%;
-      background: var(--green); border: 2px solid var(--sidebar);
-    }
-    .online-dot.offline { background: var(--muted); }
-    .online-name { font-size: 0.85rem; font-weight: 500; truncate: ellipsis; }
-
-    /* ══ PANELS (Notes, DMs overlay) ══ */
-    .panel-overlay {
-      display: none; position: absolute; inset: 0;
-      background: var(--bg2); z-index: 30;
-      flex-direction: column;
-    }
-    .panel-overlay.open { display: flex; }
-
-    .panel-header {
-      padding: 14px 20px; background: var(--card);
-      border-bottom: 1px solid var(--border);
-      display: flex; align-items: center; gap: 12px;
-    }
-    .panel-back {
-      background: none; border: none; color: var(--muted);
-      font-size: 1.2rem; cursor: pointer;
-      display: flex; align-items: center;
-    }
-    .panel-back:hover { color: var(--text); }
-    .panel-body { flex: 1; overflow-y: auto; padding: 16px; }
-    .panel-body::-webkit-scrollbar { width: 4px; }
-    .panel-body::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+    .online-user:hover { background: rgba(255,255,255,0.04); }
+    .online-user-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover;
+      border: 2px solid var(--green); background: var(--card); }
+    .online-user-name { font-size: 13px; font-weight: 500; flex: 1; overflow: hidden;
+      text-overflow: ellipsis; white-space: nowrap; }
+    .online-count { font-size: 11px; color: var(--muted); text-align: center; padding: 8px; }
 
     /* Notes */
+    .note-add-area { margin-bottom: 12px; }
+    .note-input {
+      width: 100%; background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+      padding: 10px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 13px;
+      outline: none; resize: none; min-height: 72px; transition: border-color 0.2s;
+    }
+    .note-input:focus { border-color: var(--accent); }
+    .note-add-btn {
+      width: 100%; margin-top: 6px; background: rgba(59,130,246,0.15);
+      border: 1px solid rgba(59,130,246,0.3); border-radius: 10px; padding: 8px;
+      color: var(--accent); font-size: 13px; font-weight: 600; cursor: pointer;
+      transition: all 0.2s;
+    }
+    .note-add-btn:hover { background: var(--accent); color: white; }
     .note-card {
-      background: var(--card); border: 1px solid var(--border);
-      border-radius: 14px; padding: 14px;
-      margin-bottom: 10px; position: relative;
-      animation: msgIn 0.2s ease both;
+      background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+      padding: 12px; margin-bottom: 8px; position: relative;
+      animation: noteIn 0.3s ease;
     }
-    .note-text { font-size: 0.9rem; line-height: 1.5; color: var(--text2); white-space: pre-wrap; }
-    .note-time { font-size: 0.7rem; color: var(--muted); margin-top: 8px; }
-    .note-del { position: absolute; top: 10px; right: 10px; background: none; border: none; color: var(--muted); cursor: pointer; font-size: 0.9rem; }
-    .note-del:hover { color: var(--red); }
-    .note-input-row { display: flex; gap: 8px; }
-    #note-input {
-      flex: 1; padding: 10px 14px; border-radius: 12px;
-      border: 1px solid var(--border2); background: var(--card);
-      color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 0.9rem;
-      outline: none; resize: none; min-height: 44px;
-    }
-    #note-input:focus { border-color: var(--accent); }
-    .btn-primary {
-      padding: 10px 18px; border-radius: 12px;
-      border: none; background: var(--accent);
-      color: #fff; font-weight: 600; cursor: pointer;
-      transition: background 0.15s; font-family: 'DM Sans', sans-serif;
-    }
-    .btn-primary:hover { background: var(--accent2); }
+    @keyframes noteIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+    .note-text { font-size: 13px; color: var(--text2); line-height: 1.5; white-space: pre-wrap; }
+    .note-del-btn { position: absolute; top: 8px; right: 8px; background: none; border: none;
+      color: var(--muted); cursor: pointer; font-size: 14px; padding: 2px 5px; border-radius: 5px;
+      transition: all 0.15s; }
+    .note-del-btn:hover { background: rgba(239,68,68,0.2); color: var(--red); }
+    .note-ts { font-size: 10px; color: var(--muted); margin-top: 6px; }
 
-    /* DM Panel */
-    .dm-row {
-      display: flex; align-items: center; gap: 10px;
-      padding: 10px 14px; border-radius: 12px;
-      cursor: pointer; transition: background 0.15s; margin-bottom: 4px;
+    /* ===== MODALS ===== */
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 200;
+      background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+      display: flex; align-items: center; justify-content: center; padding: 20px;
+      animation: fadeIn 0.2s ease;
     }
-    .dm-row:hover { background: var(--card); }
-    .dm-row.active { background: rgba(59,130,246,0.15); }
-    .dm-row-avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; background: var(--card); }
-    .dm-row-name { font-weight: 600; font-size: 0.88rem; }
-    .dm-row-preview { font-size: 0.75rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 130px; }
-    .dm-unread { margin-left: auto; background: var(--red); color: #fff; font-size: 0.65rem; font-weight: 700; padding: 2px 6px; border-radius: 100px; }
-    #dm-compose { padding: 12px 16px; border-top: 1px solid var(--border); }
-    #dm-username-input {
-      width: 100%; padding: 9px 14px; border-radius: 12px;
-      border: 1px solid var(--border2); background: var(--card);
-      color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 0.85rem;
-      outline: none; margin-bottom: 8px;
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .modal {
+      background: var(--card); border: 1px solid var(--border); border-radius: 20px;
+      padding: 28px; width: 100%; max-width: 420px;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.5); animation: slideUp 0.3s ease;
     }
-    #dm-username-input:focus { border-color: var(--accent); }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(20px) scale(0.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
+    .modal-title { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; margin-bottom: 16px; }
+    .modal-input {
+      width: 100%; background: var(--bg2); border: 1px solid var(--border); border-radius: 10px;
+      padding: 12px 14px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px;
+      outline: none; transition: border-color 0.2s; margin-bottom: 12px;
+    }
+    .modal-input:focus { border-color: var(--accent); }
+    .modal-btns { display: flex; gap: 8px; }
+    .modal-btn {
+      flex: 1; padding: 12px; border-radius: 10px; font-size: 14px; font-weight: 600;
+      cursor: pointer; border: none; transition: all 0.2s;
+    }
+    .modal-btn.primary { background: var(--accent); color: white; }
+    .modal-btn.primary:hover { background: #2563eb; }
+    .modal-btn.ghost { background: rgba(255,255,255,0.06); color: var(--text2); }
+    .modal-btn.ghost:hover { background: rgba(255,255,255,0.1); }
 
-    /* Profile Modal */
-    #profile-modal {
-      display: none; position: fixed; inset: 0; z-index: 200;
-      background: rgba(0,0,0,0.6); align-items: center; justify-content: center;
-    }
-    #profile-modal.open { display: flex; }
-    .profile-card {
-      background: var(--card); border: 1px solid var(--border2);
-      border-radius: 24px; padding: 32px;
-      width: 100%; max-width: 380px;
-      box-shadow: 0 24px 60px rgba(0,0,0,0.5);
-      animation: cardIn 0.3s ease;
-    }
-    @keyframes cardIn { from { opacity:0; transform: scale(0.95); } to { opacity:1; transform:none; } }
-    .profile-card h2 { font-family: 'Syne', sans-serif; font-size: 1.3rem; margin-bottom: 20px; }
-    .profile-avatar-wrap { text-align: center; margin-bottom: 20px; }
-    .profile-avatar-big { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid var(--accent); }
-    .profile-field { margin-bottom: 12px; }
-    .profile-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); margin-bottom: 5px; }
-    .profile-input {
-      width: 100%; padding: 10px 14px; border-radius: 10px;
-      border: 1px solid var(--border2); background: var(--bg2);
-      color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 0.9rem;
-      outline: none;
-    }
-    .profile-input:focus { border-color: var(--accent); }
-    .profile-btns { display: flex; gap: 10px; margin-top: 20px; }
-    .btn-secondary {
-      flex: 1; padding: 10px; border-radius: 12px;
-      border: 1px solid var(--border2); background: transparent;
-      color: var(--text2); cursor: pointer; font-family: 'DM Sans', sans-serif;
-    }
-    .btn-secondary:hover { background: var(--bg2); }
+    /* Profile modal */
+    .profile-edit-avatar { width: 80px; height: 80px; border-radius: 50%; object-fit: cover;
+      border: 3px solid var(--accent); display: block; margin: 0 auto 16px; }
 
     /* Toast */
-    #toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 500; display: flex; flex-direction: column; gap: 8px; }
     .toast {
-      padding: 12px 18px; border-radius: 12px;
-      background: var(--card); border: 1px solid var(--border2);
-      font-size: 0.88rem; color: var(--text);
-      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
-      animation: toastIn 0.25s ease;
-      display: flex; align-items: center; gap: 8px;
-      max-width: 300px;
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px);
+      background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+      padding: 12px 20px; font-size: 14px; z-index: 999; opacity: 0;
+      transition: all 0.3s; white-space: nowrap; box-shadow: 0 8px 32px rgba(0,0,0,0.4);
     }
-    @keyframes toastIn { from { opacity:0; transform: translateX(20px); } to { opacity:1; transform:none; } }
-    .toast.success { border-left: 3px solid var(--green); }
-    .toast.error { border-left: 3px solid var(--red); }
-    .toast.info { border-left: 3px solid var(--accent); }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-    /* Image lightbox */
-    #lightbox { display: none; position: fixed; inset: 0; z-index: 300; background: rgba(0,0,0,0.9); align-items: center; justify-content: center; cursor: zoom-out; }
-    #lightbox.open { display: flex; }
-    #lightbox img { max-width: 90vw; max-height: 90vh; border-radius: 12px; }
+    /* Section hidden */
+    .panel-section { display: none; }
+    .panel-section.active { display: block; }
 
-    /* Loading overlay */
-    #loading-screen {
-      position: fixed; inset: 0; z-index: 400;
-      background: var(--bg);
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      gap: 16px;
-    }
-    #loading-screen.hidden { display: none; }
-    .load-logo { font-size: 64px; animation: zapPulse 1.5s ease-in-out infinite; }
-    .load-text { font-family: 'Syne', sans-serif; font-size: 1.8rem; font-weight: 800; }
-    .load-bar { width: 180px; height: 3px; background: var(--border2); border-radius: 3px; overflow: hidden; }
-    .load-bar-fill { height: 100%; background: var(--accent); border-radius: 3px; animation: loadBar 1.5s ease infinite; }
-    @keyframes loadBar { 0%{ width:0%; } 100%{ width:100%; } }
-    @keyframes zapPulse { 0%,100%{ filter: drop-shadow(0 0 12px rgba(59,130,246,0.4)); } 50%{ filter: drop-shadow(0 0 28px rgba(59,130,246,0.9)); } }
-
-    /* ══ MOBILE RESPONSIVE ══ */
+    /* Mobile responsive */
     @media (max-width: 768px) {
-      :root { --sidebar-w: 0px; --right-w: 0px; }
-      #sidebar, #right-panel { display: none; }
-      .mobile-nav-toggle { display: flex !important; }
-      #mobile-sidebar-overlay {
-        display: none; position: fixed; inset: 0; z-index: 150;
-        background: rgba(0,0,0,0.5);
-      }
-      #mobile-sidebar-overlay.open { display: block; }
-      #sidebar.mobile-open { display: flex; position: fixed; left: 0; top: 0; bottom: 0; z-index: 160; width: 260px !important; min-width: 260px !important; }
+      :root { --sidebar-w: 100%; --panel-w: 0px; }
+      .sidebar { position: fixed; left: 0; top: var(--nav-h); bottom: 0;
+        z-index: 90; transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); }
+      .right-panel { display: none; }
+      .mobile-menu-btn { display: block; }
+      .nav-username { display: none; }
+      .msg-actions { opacity: 1; position: static; transform: none; background: none; border: none; padding: 0; }
     }
-    .mobile-nav-toggle { display: none; background: none; border: none; color: var(--text); font-size: 1.3rem; cursor: pointer; padding: 4px 6px; }
-
-    /* Scrollbar */
-    * { scrollbar-width: thin; scrollbar-color: var(--border2) transparent; }
-
-    /* ═════════ MOBILE FIX ═════════ */
-
-@media (max-width: 768px) {
-
-  html, body {
-    overflow: hidden;
-    width: 100%;
-  }
-
-  #main {
-    flex-direction: column;
-    width: 100%;
-  }
-
-  /* Hide side panels by default on phone */
-  #sidebar,
-  #right-panel {
-    display: none;
-  }
-
-  /* Chat takes full width */
-  #chat-area {
-    width: 100%;
-    min-width: 0;
-    flex: 1;
-  }
-
-  #messages-container {
-    padding: 10px;
-  }
-
-  .msg-bubble-wrap {
-    max-width: 92%;
-  }
-
-  .msg-bubble {
-    font-size: 0.88rem;
-    padding: 8px 12px;
-  }
-
-  #chat-header {
-    padding: 10px 12px;
-  }
-
-  #chat-input-area {
-    padding: 10px;
-    gap: 8px;
-  }
-
-  #msg-input {
-    font-size: 16px;
-  }
-
-  .nav-btn {
-    padding: 6px 10px;
-    font-size: 0.72rem;
-  }
-
-  #navbar {
-    padding: 0 10px;
-    gap: 8px;
-  }
-
-  .nav-logo {
-    font-size: 1rem;
-  }
-
-  .profile-card {
-    width: calc(100% - 20px);
-    max-width: none;
-    padding: 20px;
-  }
-
-  #emoji-picker {
-    width: calc(100vw - 20px);
-    left: 10px;
-    right: 10px;
-  }
-
-  .msg-bubble img.msg-image {
-    max-width: 100%;
-    height: auto;
-  }
-}
-    /* ═════════ DM MOBILE FIX ═════════ */
-
-@media (max-width: 768px) {
-
-  /* Fullscreen DM overlay */
-  .panel-overlay {
-    width: 100%;
-    height: 100%;
-    inset: 0;
-    overflow: hidden;
-  }
-
-  .panel-body {
-    width: 100%;
-    padding: 10px;
-    overflow-x: hidden;
-  }
-
-  /* DM rows scale correctly */
-  .dm-row {
-    width: 100%;
-    min-width: 0;
-    padding: 10px;
-    gap: 10px;
-  }
-
-  .dm-row-avatar {
-    width: 40px;
-    height: 40px;
-    flex-shrink: 0;
-  }
-
-  .dm-row-name {
-    font-size: 0.9rem;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .dm-row-preview {
-    max-width: 100%;
-    width: 100%;
-
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-
-    font-size: 0.72rem;
-  }
-
-  /* Fix compose area */
-  #dm-compose {
-    width: 100%;
-    padding: 10px;
-  }
-
-  #dm-username-input {
-    width: 100%;
-    min-width: 0;
-    font-size: 16px;
-  }
-
-  /* Prevent horizontal overflow */
-  .dm-row > div {
-    min-width: 0;
-    flex: 1;
-  }
-
-}
-
-    .sidebar-section-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      padding: 0 6px;
-      margin-bottom: 6px;
+    @media (max-width: 480px) {
+      .chat-header { padding: 10px 14px; }
+      .messages-area { padding: 12px 10px; }
+      .chat-input-area { padding: 8px 10px 12px; }
     }
-    .sidebar-section-header .sidebar-label { padding: 0; margin: 0; }
-    .icon-mini-btn {
-      width: 28px; height: 28px; border-radius: 8px;
-      border: 1px solid var(--border2); background: transparent;
-      color: var(--text2); cursor: pointer;
-      display: inline-flex; align-items: center; justify-content: center;
-      font-size: 1rem; line-height: 1;
-    }
-    .icon-mini-btn:hover { background: var(--card); color: var(--text); }
-    #rooms-list { display: flex; flex-direction: column; gap: 2px; }
-    .group-create {
-      display: none; gap: 6px; padding: 8px 6px 4px;
-      grid-template-columns: 44px minmax(0, 1fr) 36px;
-    }
-    .group-create.open { display: grid; }
-    .group-input {
-      min-width: 0; min-height: 36px; border-radius: 9px;
-      border: 1px solid var(--border2); background: var(--bg2);
-      color: var(--text); padding: 8px 10px; font: inherit;
-    }
-    .group-input:focus { outline: none; border-color: var(--accent); }
-    .group-leave {
-      margin-left: auto; opacity: 0; border: none; background: transparent;
-      color: var(--muted); cursor: pointer; padding: 2px 4px;
-    }
-    .sidebar-item:hover .group-leave { opacity: 1; }
-    #notify-toggle-btn.enabled { color: var(--green); border-color: rgba(34,197,94,0.45); }
-    #group-manage-btn { display: none; margin-left: auto; }
-    #group-manage-btn.show { display: inline-flex; }
-    .group-type-row {
-      grid-column: 1 / -1;
-      display: flex; gap: 6px; padding-top: 2px;
-    }
-    .seg-btn {
-      flex: 1; min-height: 34px; border-radius: 9px;
-      border: 1px solid var(--border2); background: transparent;
-      color: var(--text2); cursor: pointer; font: inherit; font-size: 0.78rem;
-    }
-    .seg-btn.active { background: rgba(59,130,246,0.18); color: var(--accent2); border-color: rgba(59,130,246,0.4); }
-    .group-user-select {
-      grid-column: 1 / -1;
-      display: none; flex-direction: column; gap: 6px;
-      max-height: 150px; overflow-y: auto; padding: 6px;
-      border: 1px solid var(--border); border-radius: 10px;
-      background: rgba(0,0,0,0.08);
-    }
-    .group-user-select.open { display: flex; }
-    .check-row {
-      display: flex; align-items: center; gap: 8px;
-      min-width: 0; color: var(--text2); font-size: 0.84rem;
-    }
-    .check-row span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .room-lock { margin-left: auto; color: var(--muted); font-size: 0.78rem; }
-    .modal-overlay {
-      display: none; position: fixed; inset: 0; z-index: 260;
-      background: rgba(0,0,0,0.62); align-items: center; justify-content: center;
-      padding: 16px;
-    }
-    .modal-overlay.open { display: flex; }
-    .modal-card {
-      width: min(480px, 100%); max-height: min(680px, calc(100vh - 32px));
-      overflow-y: auto; background: var(--card); border: 1px solid var(--border2);
-      border-radius: 18px; box-shadow: 0 24px 70px rgba(0,0,0,0.45);
-    }
-    .modal-head {
-      display: flex; align-items: center; justify-content: space-between; gap: 12px;
-      padding: 16px 18px; border-bottom: 1px solid var(--border);
-    }
-    .modal-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.05rem; }
-    .modal-body { padding: 16px 18px; display: flex; flex-direction: column; gap: 14px; }
-    .modal-row { display: flex; gap: 8px; min-width: 0; }
-    .modal-field { display: flex; flex-direction: column; gap: 6px; min-width: 0; flex: 1; }
-    .modal-label { color: var(--muted); font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; }
-    .modal-input, .modal-select {
-      width: 100%; min-height: 40px; border-radius: 10px;
-      border: 1px solid var(--border2); background: var(--bg2);
-      color: var(--text); padding: 9px 11px; font: inherit;
-    }
-    .member-list { display: flex; flex-direction: column; gap: 6px; }
-    .member-row {
-      display: flex; align-items: center; gap: 10px; min-width: 0;
-      padding: 8px 10px; border: 1px solid var(--border); border-radius: 10px;
-    }
-    .member-row-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .danger-text { color: #f87171; }
-    .context-menu {
-      display: none; position: fixed; z-index: 320; width: 230px;
-      background: var(--card); border: 1px solid var(--border2);
-      border-radius: 12px; padding: 6px; box-shadow: 0 18px 42px rgba(0,0,0,0.45);
-    }
-    .context-menu.open { display: block; }
-    .context-menu button {
-      width: 100%; min-height: 38px; border: 0; border-radius: 8px;
-      background: transparent; color: var(--text2); text-align: left;
-      padding: 8px 10px; cursor: pointer; font: inherit;
-    }
-    .context-menu button:hover { background: var(--bg2); color: var(--text); }
 
-    @media (max-width: 768px) {
-      #app, #main, #chat-area, #chat-header, #chat-input-area,
-      .panel-overlay, .panel-body { min-width: 0; max-width: 100vw; }
-      #navbar { min-width: 0; overflow-x: hidden; }
-      #nav-username { display: none; }
-      #installBtn { width: 100%; justify-content: center; }
-      #dm-panel > div:nth-child(2) { flex-direction: column; min-width: 0; }
-      #dm-panel > div:nth-child(2) > div:first-child {
-        width: 100% !important; min-width: 0 !important; max-height: 38%;
-        border-right: 0 !important; border-bottom: 1px solid var(--border);
-      }
-      #dm-panel > div:nth-child(2) > div:last-child { min-width: 0; flex: 1; }
-      #dm-messages { padding: 10px !important; min-width: 0; }
-      #dm-input { min-width: 0; font-size: 16px !important; }
-      .msg-actions { right: 0; }
-      .modal-overlay { align-items: flex-end; padding: 0; }
-      .modal-card { width: 100%; max-height: 88vh; border-radius: 18px 18px 0 0; }
-      .modal-row { flex-direction: column; }
-      .context-menu { width: min(250px, calc(100vw - 24px)); }
-    }
+    /* Smooth message entry */
+    .msg { animation: msgIn 0.25s ease; }
+    @keyframes msgIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Loading state */
+    .loading-msgs { display: flex; flex-direction: column; gap: 12px; padding: 12px 0; }
+    .msg-skeleton { display: flex; gap: 10px; }
+    .skel { background: linear-gradient(90deg, var(--card) 25%, rgba(255,255,255,0.05) 50%, var(--card) 75%);
+      background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 8px; }
+    .skel-avatar { width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0; }
+    .skel-body { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+    .skel-line { height: 12px; border-radius: 4px; }
+    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+    /* Image modal */
+    .img-modal-overlay { position: fixed; inset: 0; z-index: 300; background: rgba(0,0,0,0.85);
+      display: flex; align-items: center; justify-content: center; cursor: pointer; }
+    .img-modal-overlay img { max-width: 90vw; max-height: 90vh; border-radius: 12px; object-fit: contain; }
   </style>
 </head>
 <body>
 
-<!-- Loading Screen -->
-<div id="loading-screen">
-  <div class="load-logo">⚡</div>
-  <div class="load-text">Zap</div>
-  <div class="load-bar"><div class="load-bar-fill"></div></div>
-</div>
+<!-- NAVBAR -->
+<nav class="navbar">
+  <button class="mobile-menu-btn" id="mobileMenuBtn">☰</button>
+  <div class="nav-logo"><span>⚡</span> Zap</div>
+  <div class="nav-spacer"></div>
+  <div class="nav-actions">
+    <div class="rel">
+      <button class="btn-icon" id="dmNotifBtn" title="DM Notifications">💬</button>
+      <div class="unread-badge" id="dmBadge" style="display:none">0</div>
+    </div>
+    <button class="btn-icon" id="themeToggle" title="Toggle theme">🌙</button>
+    <div class="nav-profile" id="navProfile">
+      <img class="nav-avatar" id="navAvatar" src="" alt="avatar" onclick="openProfileModal()"/>
+      <span class="nav-username" id="navUsername">Loading…</span>
+    </div>
+    <button class="btn-logout" onclick="handleLogout()">Sign out</button>
+  </div>
+</nav>
 
-<!-- App Shell -->
-<div id="app">
+<!-- LAYOUT -->
+<div class="app-layout">
 
-  <!-- NAVBAR -->
-  <nav id="navbar">
-    <button class="mobile-nav-toggle" id="mobile-menu-btn">☰</button>
-    <div class="nav-logo"><span>⚡</span> Zap</div>
-    <div class="nav-spacer"></div>
-    <button class="nav-btn" id="theme-toggle-btn" title="Toggle theme">🌙 Theme</button>
-    <button class="nav-btn" id="profile-btn">
-      <img id="nav-avatar" src="https://ui-avatars.com/api/?name=User&background=3b82f6&color=fff" alt="avatar" />
-      <span id="nav-username">Loading…</span>
-    </button>
-    
-    <button class="nav-btn danger" id="logout-btn">⏻ Logout</button>
-  </nav>
-
-  <!-- MAIN -->
-  <div id="main">
-
-    <!-- SIDEBAR -->
-    <aside id="sidebar">
-      <div class="sidebar-section">
-        <div class="sidebar-label">Channels</div>
-        <div class="sidebar-item active" data-view="global" id="nav-global">
-          <span class="icon">#</span> Global Chat
-        </div>
-        <div class="sidebar-section" style="padding: 4px 0 0;">
-          <div class="sidebar-section-header">
-            <div class="sidebar-label">Rooms</div>
-            <button class="icon-mini-btn" id="group-create-toggle" type="button" title="Create room">+</button>
-          </div>
-          <form class="group-create" id="group-create-form">
-            <input class="group-input" id="group-icon-input" maxlength="2" placeholder="#" aria-label="Room icon or emoji" />
-            <input class="group-input" id="group-name-input" maxlength="32" placeholder="New room" aria-label="Room name" />
-            <button class="icon-mini-btn" type="submit" title="Create room">✓</button>
-            <div class="group-type-row" role="group" aria-label="Group type">
-              <button class="seg-btn active" id="group-public-btn" type="button" data-group-type="public">Public</button>
-              <button class="seg-btn" id="group-private-btn" type="button" data-group-type="private">Private</button>
-            </div>
-            <div class="group-user-select" id="group-user-select" aria-label="Invite users"></div>
-          </form>
-          <div id="rooms-list"></div>
-        </div>
-      </div>
-      <div class="sidebar-divider"></div>
-      <div class="sidebar-section">
-        <div class="sidebar-label">Messaging</div>
-        <div class="sidebar-item" data-view="dms" id="nav-dms">
-          <span class="icon">💬</span> Direct Messages
-          <span class="item-badge" id="dm-badge" style="display:none">0</span>
-        </div>
-      </div>
-      <div class="sidebar-divider"></div>
-      <div class="sidebar-section">
-        <div class="sidebar-label">Personal</div>
-        <div class="sidebar-item" data-view="notes" id="nav-notes">
-          <span class="icon">📝</span> My Notes
-        </div>
-        <div class="sidebar-divider"></div>
-        <button id="notify-toggle-btn" class="nav-btn" type="button">🔔 Notifications</button>
-        <button id="notify-groups-toggle-btn" class="nav-btn" type="button"># Room Alerts</button>
-        <button id="installBtn" class="nav-btn" type="button" style="display:none"> 📲 Install App </button>
-      </div>
-    </aside>
-
-    <!-- CHAT AREA -->
-    <div id="chat-area" style="position:relative;">
-
-      <!-- Chat Header -->
-      <div id="chat-header">
-        <div>
-          <div id="chat-title"># Global Chat</div>
-          <div id="chat-subtitle">All Zap users</div>
-        </div>
-        <button class="nav-btn" id="group-manage-btn" type="button">Manage</button>
-        <div id="chat-online-count">● 0 online</div>
-      </div>
-
-      <!-- Messages -->
-      <div id="messages-container"></div>
-
-      <!-- Typing -->
-      <div id="typing-area"></div>
-
-      <!-- Image preview -->
-      <div id="img-preview-wrap">
-        <img id="img-preview" src="" alt="preview" />
-        <span style="font-size:0.82rem; color:var(--muted)">Image attached</span>
-        <button id="img-cancel">✕</button>
-      </div>
-
-      <!-- Emoji Picker -->
-      <div id="emoji-picker">
-        <div class="emoji-grid" id="emoji-grid"></div>
-      </div>
-
-      <!-- Input -->
-      <div id="chat-input-area">
-        <button class="input-btn" id="emoji-btn" title="Emoji">😊</button>
-        <label class="input-btn" title="Image" style="cursor:pointer;">
-          📷
-          <input type="file" id="img-file-input" accept="image/*" style="display:none" />
-        </label>
-        <textarea id="msg-input" placeholder="Message…" rows="1"></textarea>
-        <button id="send-btn" title="Send">➤</button>
-      </div>
-
-      <!-- DM Panel Overlay -->
-      <div class="panel-overlay" id="dm-panel">
-        <div class="panel-header">
-          <button class="panel-back" id="dm-back">‹</button>
-          <div>
-            <div id="dm-panel-title" style="font-family:'Syne',sans-serif;font-weight:700;font-size:1.05rem;">Direct Messages</div>
-          </div>
-        </div>
-        <div style="display:flex;flex:1;overflow:hidden;">
-          <!-- DM list -->
-          <div style="width:220px;min-width:220px;border-right:1px solid var(--border);display:flex;flex-direction:column;">
-            <div style="flex:1;overflow-y:auto;padding:12px 8px;" id="dm-list"></div>
-            <div id="dm-compose">
-              <input type="text" id="dm-username-input" placeholder="Start DM by username…" />
-              <button class="btn-primary" id="dm-start-btn" style="width:100%;">Open DM</button>
-            </div>
-          </div>
-          <!-- DM messages -->
-          <div style="flex:1;display:flex;flex-direction:column;">
-            <div id="dm-messages" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:4px;"></div>
-            <div id="dm-typing-area" style="padding:4px 16px;min-height:22px;font-size:0.78rem;color:var(--muted);font-style:italic;"></div>
-            <div style="padding:12px 16px;background:var(--card);border-top:1px solid var(--border);display:flex;gap:8px;">
-              <textarea id="dm-input" placeholder="Message…" rows="1"
-                style="flex:1;padding:10px 14px;border-radius:20px;border:1px solid var(--border2);background:var(--bg2);color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.9rem;outline:none;resize:none;"></textarea>
-              <button id="dm-send-btn" style="width:38px;height:38px;border-radius:50%;border:none;background:var(--accent);color:#fff;cursor:pointer;font-size:0.9rem;display:flex;align-items:center;justify-content:center;">➤</button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Notes Panel Overlay -->
-      <div class="panel-overlay" id="notes-panel">
-        <div class="panel-header">
-          <button class="panel-back" id="notes-back">‹</button>
-          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:1.05rem;">📝 My Notes</div>
-        </div>
-        <div class="panel-body">
-          <div class="note-input-row" style="margin-bottom:16px;">
-            <textarea id="note-input" placeholder="Write a note…"></textarea>
-            <button class="btn-primary" id="note-add-btn">Add</button>
-          </div>
-          <div id="notes-list"></div>
-        </div>
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Global Chat</div>
+      <div class="room-btn active" id="room-global" onclick="switchRoom('global','🌍','Global Chat','Open to everyone')">
+        <span class="room-icon">🌍</span> Global
+        <div class="room-badge">0</div>
       </div>
     </div>
 
-    <!-- RIGHT PANEL -->
-    <aside id="right-panel">
-      <div class="panel-title">Online Now</div>
-      <div id="online-users-list"></div>
-    </aside>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Group Rooms</div>
+      <div class="room-btn" id="room-general" onclick="switchRoom('general','💬','General','Anything goes')">
+        <span class="room-icon">💬</span> General
+        <div class="room-badge">0</div>
+      </div>
+      <div class="room-btn" id="room-gaming" onclick="switchRoom('gaming','🎮','Gaming','Games, streams & more')">
+        <span class="room-icon">🎮</span> Gaming
+        <div class="room-badge">0</div>
+      </div>
+      <div class="room-btn" id="room-school" onclick="switchRoom('school','📚','School','Study & collaborate')">
+        <span class="room-icon">📚</span> School
+        <div class="room-badge">0</div>
+      </div>
+      <div class="room-btn" id="room-music" onclick="switchRoom('music','🎵','Music','Beats, artists & vibes')">
+        <span class="room-icon">🎵</span> Music
+        <div class="room-badge">0</div>
+      </div>
+    </div>
+
+    <div class="dm-section">
+      <div class="dm-header">
+        <span class="dm-header-label">Direct Messages</span>
+        <button class="dm-add-btn" onclick="openDMModal()">+ New DM</button>
+      </div>
+      <div id="dmList"></div>
+    </div>
+  </aside>
+
+  <!-- MAIN CHAT -->
+  <main class="main-area">
+    <div class="chat-header">
+      <span class="chat-header-icon" id="chatIcon">🌍</span>
+      <div>
+        <div class="chat-header-name" id="chatName">Global Chat</div>
+        <div class="chat-header-desc" id="chatDesc">Open to everyone</div>
+      </div>
+      <div class="typing-indicator" id="typingIndicator" style="display:none">
+        <div class="typing-dots"><span></span><span></span><span></span></div>
+        <span id="typingText"></span>
+      </div>
+    </div>
+
+    <div class="messages-area" id="messagesArea">
+      <div class="loading-msgs" id="loadingMsgs">
+        <div class="msg-skeleton"><div class="skel skel-avatar"></div><div class="skel-body"><div class="skel skel-line" style="width:60%"></div><div class="skel skel-line" style="width:40%"></div></div></div>
+        <div class="msg-skeleton"><div class="skel skel-avatar"></div><div class="skel-body"><div class="skel skel-line" style="width:80%"></div><div class="skel skel-line" style="width:50%"></div></div></div>
+        <div class="msg-skeleton"><div class="skel skel-avatar"></div><div class="skel-body"><div class="skel skel-line" style="width:50%"></div><div class="skel skel-line" style="width:70%"></div></div></div>
+      </div>
+    </div>
+
+    <div class="chat-input-area">
+      <div class="emoji-tray" id="emojiTray">
+        <span class="emoji-tray-btn" onclick="insertEmoji('😀')">😀</span>
+        <span class="emoji-tray-btn" onclick="insertEmoji('😂')">😂</span>
+        <span class="emoji-tray-btn" onclick="insertEmoji('❤️')">❤️</span>
+        <span class="emoji-tray-btn" onclick="insertEmoji('🔥')">🔥</span>
+        <span class="emoji-tray-btn" onclick="insertEmoji('👍')">👍</span>
+        <span class="emoji-tray-btn" onclick="insertEmoji('🎉')">🎉</span>
+        <span class="emoji-tray-btn" onclick="insertEmoji('😎')">😎</span>
+        <span class="emoji-tray-btn" onclick="insertEmoji('🤔')">🤔</span>
+        <span class="emoji-tray-btn" onclick="insertEmoji('😭')">😭</span>
+        <span class="emoji-tray-btn" onclick="insertEmoji('💯')">💯</span>
+        <span class="emoji-tray-btn" onclick="insertEmoji('⚡')">⚡</span>
+        <span class="emoji-tray-btn" onclick="insertEmoji('🚀')">🚀</span>
+        <span class="emoji-tray-btn" onclick="insertEmoji('✨')">✨</span>
+        <span class="emoji-tray-btn" onclick="insertEmoji('😅')">😅</span>
+        <span class="emoji-tray-btn" onclick="insertEmoji('🙏')">🙏</span>
+        <span class="emoji-tray-btn" onclick="insertEmoji('👀')">👀</span>
+      </div>
+      <div class="input-row">
+        <div class="input-btns">
+          <button class="input-btn" id="emojiToggleBtn" onclick="toggleEmojiTray()" title="Emoji">😊</button>
+          <label class="input-btn" title="Upload image">
+            📎
+            <input type="file" id="imageUploadInput" accept="image/*" onchange="handleImageUpload(event)"/>
+          </label>
+        </div>
+        <textarea class="msg-input" id="msgInput" placeholder="Type a message…" rows="1"
+          onkeydown="handleInputKey(event)" oninput="handleTyping()"></textarea>
+        <button class="send-btn" onclick="sendMessage()">➤</button>
+      </div>
+    </div>
+  </main>
+
+  <!-- RIGHT PANEL -->
+  <aside class="right-panel">
+    <div class="panel-tabs">
+      <div class="panel-tab active" onclick="switchPanel('online')">Online</div>
+      <div class="panel-tab" onclick="switchPanel('notes')">Notes</div>
+    </div>
+    <div class="panel-content">
+      <div class="panel-section active" id="panel-online">
+        <div class="online-count" id="onlineCount">Loading…</div>
+        <div id="onlineList"></div>
+      </div>
+      <div class="panel-section" id="panel-notes">
+        <div class="note-add-area">
+          <textarea class="note-input" id="noteInput" placeholder="Write a note…"></textarea>
+          <button class="note-add-btn" onclick="addNote()">+ Add Note</button>
+        </div>
+        <div id="notesList"></div>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- DM Modal -->
+<div class="modal-overlay" id="dmModal" style="display:none" onclick="closeDMModal(event)">
+  <div class="modal">
+    <div class="modal-title">💬 New Direct Message</div>
+    <input class="modal-input" type="text" id="dmUsernameInput" placeholder="Enter username…" autocomplete="off"/>
+    <div class="modal-btns">
+      <button class="modal-btn ghost" onclick="closeDMModalDirect()">Cancel</button>
+      <button class="modal-btn primary" onclick="startDM()">Open DM</button>
+    </div>
   </div>
 </div>
 
 <!-- Profile Modal -->
-<div id="profile-modal">
-  <div class="profile-card">
-    <h2>✏️ Edit Profile</h2>
-    <div class="profile-avatar-wrap">
-      <img class="profile-avatar-big" id="profile-avatar-big" src="" alt="avatar" />
-    </div>
-    <div class="profile-field">
-      <div class="profile-label">Username</div>
-      <input type="text" class="profile-input" id="profile-username-input" />
-    </div>
-    <div class="profile-field">
-      <div class="profile-label">Display Name</div>
-      <input type="text" class="profile-input" id="profile-displayname-input" />
-    </div>
-    <div class="profile-field">
-      <div class="profile-label">Email</div>
-      <input type="text" class="profile-input" id="profile-email-input" disabled style="opacity:0.5;" />
-    </div>
-    <div class="profile-btns">
-      <button class="btn-secondary" id="profile-cancel-btn">Cancel</button>
-      <button class="btn-primary" id="profile-save-btn" style="flex:1;">Save Changes</button>
+<div class="modal-overlay" id="profileModal" style="display:none" onclick="closeProfileModal(event)">
+  <div class="modal">
+    <div class="modal-title">👤 Edit Profile</div>
+    <img class="profile-edit-avatar" id="profileEditAvatar" src="" alt="avatar"/>
+    <input class="modal-input" type="text" id="profileUsernameInput" placeholder="Username"/>
+    <input class="modal-input" type="text" id="profileDisplayInput" placeholder="Display name"/>
+    <div class="modal-btns">
+      <button class="modal-btn ghost" onclick="closeProfileModalDirect()">Cancel</button>
+      <button class="modal-btn primary" onclick="saveProfile()">Save</button>
     </div>
   </div>
 </div>
 
-<!-- Group Management Modal -->
-<div class="modal-overlay" id="group-manage-modal">
-  <div class="modal-card">
-    <div class="modal-head">
-      <div class="modal-title">Group Settings</div>
-      <button class="panel-back" id="group-manage-close" type="button">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="modal-row">
-        <label class="modal-field">
-          <span class="modal-label">Icon</span>
-          <input class="modal-input" id="manage-group-icon" maxlength="2" />
-        </label>
-        <label class="modal-field">
-          <span class="modal-label">Name</span>
-          <input class="modal-input" id="manage-group-name" maxlength="32" />
-        </label>
-      </div>
-      <label class="modal-field">
-        <span class="modal-label">Disappearing messages</span>
-        <select class="modal-select" id="group-disappear-select">
-          <option value="0">Off</option>
-          <option value="86400000">24 hours</option>
-          <option value="604800000">7 days</option>
-          <option value="2592000000">30 days</option>
-        </select>
-      </label>
-      <button class="btn-primary" id="manage-group-save" type="button">Save Group</button>
-      <div class="modal-field">
-        <span class="modal-label">Members</span>
-        <div class="member-list" id="group-member-list"></div>
-      </div>
-      <div class="modal-row">
-        <input class="modal-input" id="group-add-username" placeholder="Add member by username" />
-        <button class="btn-primary" id="group-add-member" type="button">Add</button>
-      </div>
-      <button class="btn-secondary danger-text" id="group-delete-btn" type="button">Delete Group</button>
-    </div>
-  </div>
-</div>
-
-<!-- DM Context Menu -->
-<div class="context-menu" id="dm-context-menu">
-  <button type="button" data-action="mute">Mute Chat</button>
-  <button type="button" data-action="disappear">Enable Disappearing Messages</button>
-</div>
-
-<!-- Mobile Sidebar Overlay -->
-<div id="mobile-sidebar-overlay"></div>
-
-<!-- Image Lightbox -->
-<div id="lightbox"><img id="lightbox-img" src="" alt="" /></div>
-
-<!-- Toast Container -->
-<div id="toast-container"></div>
-
-<!-- ══════════════════════════════════════
-     FIREBASE + APP LOGIC
-══════════════════════════════════════ -->
+<!-- Firebase -->
 <script type="module">
-import { initializeApp }               from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getAuth, onAuthStateChanged, signOut }
-                                        from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import {
-  getFirestore, collection, doc,
-  addDoc, deleteDoc, setDoc, getDoc, getDocs,
-  onSnapshot, query, where, orderBy, limit,
-  serverTimestamp, updateDoc, deleteField
-} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
-import { getStorage, ref as storageRef, uploadBytes, getDownloadURL }
-                                        from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js';
+  getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import {
+  getFirestore, doc, setDoc, getDoc, addDoc, deleteDoc, updateDoc,
+  collection, query, orderBy, limit, where, onSnapshot, serverTimestamp,
+  getDocs
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-// ── Config ──
 const firebaseConfig = {
   apiKey: "AIzaSyDeQip7FvQDyiSdiBjNlCJc9MT5fVQcnCc",
   authDomain: "login-21af0.firebaseapp.com",
@@ -1172,127 +599,57 @@ const firebaseConfig = {
   appId: "1:121751642387:web:6e83c8f559dfb51f0dbae6"
 };
 
-const firebaseApp = initializeApp(firebaseConfig);
-const auth        = getAuth(firebaseApp);
-const db          = getFirestore(firebaseApp);
-const storage     = getStorage(firebaseApp);
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-// ── State ──
 let currentUser = null;
 let currentUserData = null;
-let currentView = 'global';
-let currentRoom = '';
-let currentDmUid = null;
-let currentDmUsername = '';
+let currentRoom = 'global';
+let currentDMUser = null;
 let unsubMessages = null;
-let unsubDmMessages = null;
 let unsubTyping = null;
-let unsubOnline = null;
 let typingTimeout = null;
-let pendingImageFile = null;
-let pendingImageDataUrl = null;
-let dmConversations = {};
-let dmUnreadCounts = {};
-let rooms = [];
-let unsubRooms = [];
-let allUsers = [];
-let groupCreateType = 'public';
-let notificationsEnabled = false;
-let notifyGroupMessages = true;
-let deferredInstallPrompt = null;
-const DEFAULT_ROOMS = [
-  { id: 'general', name: 'general', icon: '#', type: 'public', builtIn: true },
-  { id: 'gaming', name: 'gaming', icon: '🎮', type: 'public', builtIn: true },
-  { id: 'school', name: 'school', icon: '📚', type: 'public', builtIn: true },
-  { id: 'music', name: 'music', icon: '🎵', type: 'public', builtIn: true }
-];
-const DISAPPEAR_OPTIONS = {
-  0: 'Off',
-  86400000: '24 hours',
-  604800000: '7 days',
-  2592000000: '30 days'
-};
+let isTyping = false;
+let dmUnreads = {};
+let dmListeners = {};
+let activePanel = 'online';
 
-// ── DOM ──
-const loadingScreen       = document.getElementById('loading-screen');
-const navAvatar           = document.getElementById('nav-avatar');
-const navUsername         = document.getElementById('nav-username');
-const messagesContainer   = document.getElementById('messages-container');
-const msgInput            = document.getElementById('msg-input');
-const sendBtn             = document.getElementById('send-btn');
-const typingArea          = document.getElementById('typing-area');
-const chatTitle           = document.getElementById('chat-title');
-const chatSubtitle        = document.getElementById('chat-subtitle');
-const chatOnlineCount     = document.getElementById('chat-online-count');
-const onlineUsersList     = document.getElementById('online-users-list');
-const emojiBtn            = document.getElementById('emoji-btn');
-const emojiPicker         = document.getElementById('emoji-picker');
-const emojiGrid           = document.getElementById('emoji-grid');
-const imgFileInput        = document.getElementById('img-file-input');
-const imgPreviewWrap      = document.getElementById('img-preview-wrap');
-const imgPreview          = document.getElementById('img-preview');
-const imgCancelBtn        = document.getElementById('img-cancel');
-const dmPanel             = document.getElementById('dm-panel');
-const dmBack              = document.getElementById('dm-back');
-const dmList              = document.getElementById('dm-list');
-const dmUsernameInput     = document.getElementById('dm-username-input');
-const dmStartBtn          = document.getElementById('dm-start-btn');
-const dmMessages          = document.getElementById('dm-messages');
-const dmInput             = document.getElementById('dm-input');
-const dmSendBtn           = document.getElementById('dm-send-btn');
-const dmTypingArea        = document.getElementById('dm-typing-area');
-const dmBadge             = document.getElementById('dm-badge');
-const notesPanel          = document.getElementById('notes-panel');
-const noteInput           = document.getElementById('note-input');
-const noteAddBtn          = document.getElementById('note-add-btn');
-const notesList           = document.getElementById('notes-list');
-const profileModal        = document.getElementById('profile-modal');
-const profileBtn          = document.getElementById('profile-btn');
-const profileCancelBtn    = document.getElementById('profile-cancel-btn');
-const profileSaveBtn      = document.getElementById('profile-save-btn');
-const profileAvatarBig    = document.getElementById('profile-avatar-big');
-const profileUsernameInput= document.getElementById('profile-username-input');
-const profileDisplayInput = document.getElementById('profile-displayname-input');
-const profileEmailInput   = document.getElementById('profile-email-input');
-const logoutBtn           = document.getElementById('logout-btn');
-const themeToggleBtn      = document.getElementById('theme-toggle-btn');
-const lightbox            = document.getElementById('lightbox');
-const lightboxImg         = document.getElementById('lightbox-img');
-const toastContainer      = document.getElementById('toast-container');
-const mobileSidebarOverlay= document.getElementById('mobile-sidebar-overlay');
-const mobileMenuBtn       = document.getElementById('mobile-menu-btn');
-const sidebar             = document.getElementById('sidebar');
-const roomsList           = document.getElementById('rooms-list');
-const groupCreateToggle   = document.getElementById('group-create-toggle');
-const groupCreateForm     = document.getElementById('group-create-form');
-const groupIconInput      = document.getElementById('group-icon-input');
-const groupNameInput      = document.getElementById('group-name-input');
-const groupPublicBtn      = document.getElementById('group-public-btn');
-const groupPrivateBtn     = document.getElementById('group-private-btn');
-const groupUserSelect     = document.getElementById('group-user-select');
-const groupManageBtn      = document.getElementById('group-manage-btn');
-const groupManageModal    = document.getElementById('group-manage-modal');
-const groupManageClose    = document.getElementById('group-manage-close');
-const manageGroupIcon     = document.getElementById('manage-group-icon');
-const manageGroupName     = document.getElementById('manage-group-name');
-const manageGroupSave     = document.getElementById('manage-group-save');
-const groupMemberList     = document.getElementById('group-member-list');
-const groupAddUsername    = document.getElementById('group-add-username');
-const groupAddMemberBtn   = document.getElementById('group-add-member');
-const groupDeleteBtn      = document.getElementById('group-delete-btn');
-const groupDisappearSelect= document.getElementById('group-disappear-select');
-const dmContextMenu       = document.getElementById('dm-context-menu');
-const installBtn          = document.getElementById('installBtn');
-const notifyToggleBtn     = document.getElementById('notify-toggle-btn');
-const notifyGroupsToggleBtn = document.getElementById('notify-groups-toggle-btn');
+// ──────────────────────────────────────────────────
+// AUTH
+// ──────────────────────────────────────────────────
+onAuthStateChanged(auth, async (user) => {
+  if (!user) { window.location.href = 'index.html'; return; }
+  currentUser = user;
 
-// ── Utilities ──
-function toast(msg, type = 'info', duration = 3000) {
-  const t = document.createElement('div');
-  t.className = `toast ${type}`;
-  t.innerHTML = `<span>${type==='success'?'✓':type==='error'?'✕':'ℹ'}</span> ${msg}`;
-  toastContainer.appendChild(t);
-  setTimeout(() => t.remove(), duration);
+  const snap = await getDoc(doc(db, 'users', user.uid));
+  if (!snap.exists()) { window.location.href = 'index.html'; return; }
+  currentUserData = snap.data();
+
+  await setDoc(doc(db, 'users', user.uid), { online: true, lastSeen: serverTimestamp() }, { merge: true });
+
+  document.getElementById('navAvatar').src = currentUserData.photoURL || genAvatar(currentUserData.username);
+  document.getElementById('navUsername').textContent = '@' + currentUserData.username;
+  document.getElementById('profileEditAvatar').src = currentUserData.photoURL || genAvatar(currentUserData.username);
+  document.getElementById('profileUsernameInput').value = currentUserData.username;
+  document.getElementById('profileDisplayInput').value = currentUserData.displayName || '';
+
+  initTheme();
+  subscribeRoom('global');
+  subscribeOnlineUsers();
+  loadNotes();
+  subscribeDMList();
+});
+
+window.addEventListener('beforeunload', () => {
+  if (currentUser) setDoc(doc(db, 'users', currentUser.uid), { online: false, lastSeen: serverTimestamp() }, { merge: true });
+});
+
+// ──────────────────────────────────────────────────
+// HELPERS
+// ──────────────────────────────────────────────────
+function genAvatar(username) {
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=3b82f6&color=fff&bold=true&rounded=true`;
 }
 
 function formatTime(ts) {
@@ -1304,1363 +661,712 @@ function formatTime(ts) {
 function formatDate(ts) {
   if (!ts) return '';
   const d = ts.toDate ? ts.toDate() : new Date(ts);
-  const today = new Date(); today.setHours(0,0,0,0);
-  const msgDay = new Date(d); msgDay.setHours(0,0,0,0);
-  if (msgDay.getTime() === today.getTime()) return 'Today';
-  const yesterday = new Date(today); yesterday.setDate(today.getDate()-1);
-  if (msgDay.getTime() === yesterday.getTime()) return 'Yesterday';
-  return d.toLocaleDateString([], { month:'short', day:'numeric' });
+  const today = new Date();
+  if (d.toDateString() === today.toDateString()) return 'Today';
+  const yest = new Date(); yest.setDate(yest.getDate()-1);
+  if (d.toDateString() === yest.toDateString()) return 'Yesterday';
+  return d.toLocaleDateString();
 }
 
-function scrollToBottom(container) {
-  if (container) container.scrollTop = container.scrollHeight;
+function showToast(msg, duration = 2500) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), duration);
 }
 
-function autoResizeTextarea(el) {
+function scrollToBottom() {
+  const area = document.getElementById('messagesArea');
+  area.scrollTop = area.scrollHeight;
+}
+
+function autoResize(el) {
   el.style.height = 'auto';
   el.style.height = Math.min(el.scrollHeight, 120) + 'px';
 }
 
-function timestampToMillis(ts) {
-  if (!ts) return 0;
-  if (typeof ts === 'number') return ts;
-  if (ts.toMillis) return ts.toMillis();
-  return new Date(ts).getTime() || 0;
+// Notify
+async function requestNotifPermission() {
+  if (Notification.permission === 'default') await Notification.requestPermission();
 }
 
-function getDisappearMs(settings = {}) {
-  return Number(settings.disappearMs || settings.disappearingMs || 0);
-}
-
-function buildExpiresAt(disappearMs) {
-  const ms = Number(disappearMs || 0);
-  return ms > 0 ? new Date(Date.now() + ms) : null;
-}
-
-function isExpiredMessage(data) {
-  const expiresAt = timestampToMillis(data?.expiresAt);
-  return expiresAt > 0 && expiresAt <= Date.now();
-}
-
-function isRoomOwner(room) {
-  return Boolean(room && currentUser && room.owner === currentUser.uid);
-}
-
-function isRoomMember(room) {
-  if (!room || room.type !== 'private') return true;
-  return Boolean(currentUser && (room.owner === currentUser.uid || room.members?.[currentUser.uid]));
-}
-
-function findRoom(roomId) {
-  return rooms.find(room => room.id === roomId);
-}
-
-function updateRoomHeaderControls() {
-  const room = currentView === 'room' ? findRoom(currentRoom) : null;
-  groupManageBtn.classList.toggle('show', Boolean(room && room.joined));
-  if (room?.type === 'private') {
-    chatSubtitle.textContent = isRoomOwner(room) ? 'Private group · owner' : 'Private group';
+function sendNotification(title, body) {
+  if (Notification.permission === 'granted' && document.hidden) {
+    new Notification('⚡ Zap', {
+      body: `${title}: ${body}`,
+      icon: 'https://sam3360.github.io/Zap/icon-192.png'
+    });
   }
 }
 
-// ── Emoji Setup ──
-const EMOJIS = ['😀','😂','🥲','😍','🤩','😎','🤔','😅','🙏','👍','👎','❤️','🔥','⚡','💯','🎉','😭','😤','🤯','👀','💀','🫡','🤌','✨','🌟','💪','🎮','🎵','🍕','☕','😴','🤝','🫶','💬','📱','🚀','🎯','💡','🔑','🌈'];
-EMOJIS.forEach(e => {
-  const btn = document.createElement('button');
-  btn.className = 'emoji-btn'; btn.textContent = e;
-  btn.addEventListener('click', () => {
-    msgInput.value += e;
-    msgInput.focus();
-    emojiPicker.classList.remove('open');
-    autoResizeTextarea(msgInput);
-  });
-  emojiGrid.appendChild(btn);
-});
+requestNotifPermission();
 
-// ── Theme ──
-function applyTheme(theme) {
-  document.documentElement.setAttribute('data-theme', theme);
-  themeToggleBtn.textContent = theme === 'dark' ? '☀️ Theme' : '🌙 Theme';
-  localStorage.setItem('zap_theme', theme);
+// ──────────────────────────────────────────────────
+// THEME
+// ──────────────────────────────────────────────────
+function initTheme() {
+  const saved = localStorage.getItem('zap-theme') || 'dark';
+  document.documentElement.setAttribute('data-theme', saved);
+  document.getElementById('themeToggle').textContent = saved === 'dark' ? '🌙' : '☀️';
 }
-const savedTheme = localStorage.getItem('zap_theme') || 'dark';
-applyTheme(savedTheme);
-themeToggleBtn.addEventListener('click', () => {
+
+window.toggleTheme = () => {
   const current = document.documentElement.getAttribute('data-theme');
-  applyTheme(current === 'dark' ? 'light' : 'dark');
-});
+  const next = current === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('zap-theme', next);
+  document.getElementById('themeToggle').textContent = next === 'dark' ? '🌙' : '☀️';
+};
 
-// ── Mobile sidebar ──
-mobileMenuBtn.addEventListener('click', () => {
-  sidebar.classList.toggle('mobile-open');
-  mobileSidebarOverlay.classList.toggle('open');
-});
-mobileSidebarOverlay.addEventListener('click', () => {
-  sidebar.classList.remove('mobile-open');
-  mobileSidebarOverlay.classList.remove('open');
-});
+document.getElementById('themeToggle').addEventListener('click', window.toggleTheme);
 
-// ── Auth Guard ──
-onAuthStateChanged(auth, async (user) => {
-  if (!user) {
-    window.location.href = 'index.html';
-    return;
-  }
-  currentUser = user;
-  await loadUserData();
-  initApp();
-  loadingScreen.classList.add('hidden');
-});
+// ──────────────────────────────────────────────────
+// ROOMS & CHAT
+// ──────────────────────────────────────────────────
+window.switchRoom = (roomId, icon, name, desc) => {
+  if (currentRoom === roomId && !currentDMUser) return;
+  closeSidebar();
 
-async function loadUserData() {
-  const snap = await getDoc(doc(db, 'users', currentUser.uid));
-  if (snap.exists()) {
-    currentUserData = snap.data();
-    const storedUsername = localStorage.getItem('zap_username');
-    if (storedUsername && currentUserData.username !== storedUsername) {
-      currentUserData.username = storedUsername;
-    }
-  } else {
-    currentUserData = {
-      username: localStorage.getItem('zap_username') || currentUser.displayName || 'zapuser',
-      displayName: currentUser.displayName || 'Zap User',
-      email: currentUser.email,
-      photoURL: currentUser.photoURL || '',
-      uid: currentUser.uid
-    };
-  }
-  navAvatar.src = currentUserData.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUserData.username)}&background=3b82f6&color=fff`;
-  navUsername.textContent = currentUserData.username || 'User';
-  await setDoc(doc(db, 'users', currentUser.uid), {
-    ...currentUserData, online: true, lastSeen: serverTimestamp()
-  }, { merge: true });
-}
+  currentDMUser = null;
+  currentRoom = roomId;
 
-// Set offline on tab close
-window.addEventListener('beforeunload', () => {
-  if (currentUser) {
-    setDoc(doc(db, 'users', currentUser.uid), { online: false, lastSeen: serverTimestamp() }, { merge: true });
-  }
-});
-
-// ── Sidebar navigation ──
-sidebar.addEventListener('click', async (event) => {
-  const leaveBtn = event.target.closest('.group-leave');
-  if (leaveBtn) {
-    event.stopPropagation();
-    await leaveRoom(leaveBtn.dataset.room);
-    return;
+  document.querySelectorAll('.room-btn').forEach(b => b.classList.remove('active'));
+  const btn = document.getElementById('room-' + roomId);
+  if (btn) {
+    btn.classList.add('active');
+    btn.classList.remove('has-badge');
+    btn.querySelector('.room-badge').textContent = '0';
   }
 
-  const item = event.target.closest('.sidebar-item');
-  if (!item) return;
+  document.getElementById('chatIcon').textContent = icon;
+  document.getElementById('chatName').textContent = name;
+  document.getElementById('chatDesc').textContent = desc;
+  document.getElementById('msgInput').placeholder = `Message #${name.toLowerCase()}…`;
 
-  const view = item.dataset.view;
-  const room = item.dataset.room;
-  document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
-  item.classList.add('active');
+  document.getElementById('loadingMsgs').style.display = 'flex';
+  subscribeRoom(roomId);
+};
 
-  if (view === 'dms') { openDmPanel(); closeMobileSidebar(); return; }
-  if (view === 'notes') { openNotesPanel(); closeMobileSidebar(); return; }
-
-  dmPanel.classList.remove('open');
-  notesPanel.classList.remove('open');
-
-  if (view === 'global') {
-    currentView = 'global'; currentRoom = '';
-    chatTitle.textContent = '# Global Chat';
-    chatSubtitle.textContent = 'All Zap users';
-    updateRoomHeaderControls();
-  } else if (view === 'room') {
-    await joinRoom(room);
-    currentView = 'room'; currentRoom = room;
-    const activeRoom = rooms.find(r => r.id === room);
-    const roomName = activeRoom?.name || room;
-    chatTitle.textContent = `${activeRoom?.type === 'private' ? '🔒' : activeRoom?.icon || '#'} ${roomName}`;
-    chatSubtitle.textContent = `${roomName.charAt(0).toUpperCase()+roomName.slice(1)} room`;
-    updateRoomHeaderControls();
-  }
-  subscribeMessages();
-  closeMobileSidebar();
-});
-
-function closeMobileSidebar() {
-  sidebar.classList.remove('mobile-open');
-  mobileSidebarOverlay.classList.remove('open');
-}
-
-function slugifyRoomName(name) {
-  return name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40);
-}
-
-function readLocalRooms() {
-  try {
-    return JSON.parse(localStorage.getItem('zap_rooms') || '[]');
-  } catch {
-    return [];
-  }
-}
-
-function saveLocalRooms(nextRooms) {
-  localStorage.setItem('zap_rooms', JSON.stringify(nextRooms));
-}
-
-function mergeRooms(nextRooms) {
-  const byId = new Map();
-  [...DEFAULT_ROOMS, ...readLocalRooms(), ...nextRooms].forEach(room => {
-    if (room?.id) byId.set(room.id, { icon: '#', name: room.id, type: 'public', joined: true, settings: {}, members: {}, ...room });
-  });
-  rooms = [...byId.values()].filter(room => room.type !== 'private' || room.joined).sort((a, b) => {
-    const ai = DEFAULT_ROOMS.findIndex(r => r.id === a.id);
-    const bi = DEFAULT_ROOMS.findIndex(r => r.id === b.id);
-    if (ai !== -1 || bi !== -1) return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
-    return (a.createdAt?.seconds || 0) - (b.createdAt?.seconds || 0) || a.name.localeCompare(b.name);
-  });
-  saveLocalRooms(rooms.filter(room => room.joined).map(({ id, name, icon, type, joined, owner, members, settings }) => ({ id, name, icon, type, joined, owner, members, settings })));
-  renderRooms();
-  updateRoomHeaderControls();
-}
-
-function renderRooms() {
-  roomsList.replaceChildren();
-  rooms.forEach(room => {
-    const item = document.createElement('div');
-    item.className = `sidebar-item ${currentView === 'room' && currentRoom === room.id ? 'active' : ''}`;
-    item.dataset.view = 'room';
-    item.dataset.room = room.id;
-    if (!room.joined) item.title = 'Click to join this room';
-
-    const icon = document.createElement('span');
-    icon.className = 'icon';
-    icon.textContent = room.type === 'private' ? (room.icon || '🔒') : (room.icon || '#');
-
-    const label = document.createElement('span');
-    label.textContent = room.name || room.id;
-    label.style.minWidth = '0';
-    label.style.overflow = 'hidden';
-    label.style.textOverflow = 'ellipsis';
-    label.style.whiteSpace = 'nowrap';
-
-    item.append(icon, label);
-    if (room.type === 'private') {
-      const lock = document.createElement('span');
-      lock.className = 'room-lock';
-      lock.textContent = 'Private';
-      item.appendChild(lock);
-    }
-    if (!room.joined) {
-      const join = document.createElement('span');
-      join.className = 'item-badge';
-      join.textContent = 'Join';
-      item.appendChild(join);
-    } else if (!DEFAULT_ROOMS.some(defaultRoom => defaultRoom.id === room.id)) {
-      const leave = document.createElement('button');
-      leave.className = 'group-leave';
-      leave.type = 'button';
-      leave.dataset.room = room.id;
-      leave.title = 'Leave room';
-      leave.textContent = '×';
-      item.appendChild(leave);
-    }
-    roomsList.appendChild(item);
-  });
-}
-
-async function initGroups() {
-  mergeRooms([]);
-  await loadUsersForPrivateGroups();
-  groupCreateToggle.addEventListener('click', () => {
-    groupCreateForm.classList.toggle('open');
-    if (groupCreateForm.classList.contains('open')) groupNameInput.focus();
-  });
-
-  [groupPublicBtn, groupPrivateBtn].forEach(btn => {
-    btn.addEventListener('click', () => {
-      groupCreateType = btn.dataset.groupType;
-      groupPublicBtn.classList.toggle('active', groupCreateType === 'public');
-      groupPrivateBtn.classList.toggle('active', groupCreateType === 'private');
-      groupUserSelect.classList.toggle('open', groupCreateType === 'private');
-    });
-  });
-
-  groupCreateForm.addEventListener('submit', async (event) => {
-    event.preventDefault();
-    const name = groupNameInput.value.trim();
-    if (!name) return;
-    const id = slugifyRoomName(name);
-    if (!id) { toast('Use letters or numbers in the room name', 'error'); return; }
-    const selectedMembers = getSelectedPrivateGroupMembers();
-    const members = { [currentUser.uid]: true };
-    selectedMembers.forEach(uid => { members[uid] = true; });
-    const room = {
-      id,
-      name,
-      icon: groupIconInput.value.trim() || '#',
-      type: groupCreateType,
-      owner: currentUser?.uid || '',
-      createdBy: currentUser?.uid || '',
-      createdAt: serverTimestamp(),
-      members,
-      settings: { disappearMs: 0 }
-    };
-    mergeRooms([{ id, name, icon: room.icon, type: room.type, owner: room.owner, members, settings: room.settings, joined: true }]);
-    groupIconInput.value = '';
-    groupNameInput.value = '';
-    groupCreateType = 'public';
-    groupPublicBtn.classList.add('active');
-    groupPrivateBtn.classList.remove('active');
-    groupUserSelect.classList.remove('open');
-    groupUserSelect.querySelectorAll('input[type="checkbox"]').forEach(input => { input.checked = false; });
-    groupCreateForm.classList.remove('open');
-    try {
-      await setDoc(doc(db, 'roomsMeta', id), room, { merge: true });
-      toast('Room created', 'success');
-    } catch (e) {
-      toast('Room saved on this device', 'info');
-    }
-  });
-
-  try {
-    DEFAULT_ROOMS.forEach(defaultRoom => {
-      setDoc(doc(db, 'roomsMeta', defaultRoom.id), {
-        ...defaultRoom,
-        builtIn: true,
-        owner: 'system',
-        members: currentUser ? { [currentUser.uid]: true } : {},
-        settings: { disappearMs: 0 }
-      }, { merge: true }).catch(() => {});
-    });
-    subscribeRoomsMeta();
-  } catch (e) {
-    mergeRooms([]);
-  }
-}
-
-function subscribeRoomsMeta() {
-  unsubRooms.forEach(unsub => unsub());
-  unsubRooms = [];
-  const remoteRoomsById = new Map();
-  const applySnapshot = (snap) => {
-    snap.forEach(d => {
-      const data = d.data();
-      const members = data.members || {};
-      remoteRoomsById.set(d.id, {
-        id: d.id,
-        name: data.name || d.id,
-        icon: data.icon || '#',
-        type: data.type || 'public',
-        owner: data.owner || data.createdBy || '',
-        members,
-        settings: data.settings || {},
-        builtIn: Boolean(data.builtIn),
-        createdAt: data.createdAt,
-        joined: Boolean(data.builtIn || data.type !== 'private' || !currentUser || data.owner === currentUser.uid || members[currentUser.uid])
-      });
-    });
-    mergeRooms([...remoteRoomsById.values()]);
-  };
-  unsubRooms.push(onSnapshot(query(collection(db, 'roomsMeta'), where('type', '==', 'public')), applySnapshot));
-  unsubRooms.push(onSnapshot(query(collection(db, 'roomsMeta'), where(`members.${currentUser.uid}`, '==', true)), applySnapshot));
-  unsubRooms.push(onSnapshot(query(collection(db, 'roomsMeta'), where('owner', '==', currentUser.uid)), applySnapshot));
-}
-
-async function loadUsersForPrivateGroups() {
-  try {
-    const snap = await getDocs(collection(db, 'users'));
-    allUsers = snap.docs.map(d => ({ uid: d.id, ...d.data() })).filter(u => u.uid !== currentUser?.uid);
-    renderPrivateInvitePicker();
-  } catch {
-    allUsers = [];
-    renderPrivateInvitePicker();
-  }
-}
-
-function renderPrivateInvitePicker() {
-  groupUserSelect.replaceChildren();
-  if (!allUsers.length) {
-    const empty = document.createElement('div');
-    empty.className = 'check-row';
-    empty.textContent = 'No users available yet';
-    groupUserSelect.appendChild(empty);
-    return;
-  }
-  allUsers.forEach(user => {
-    const label = document.createElement('label');
-    label.className = 'check-row';
-    const input = document.createElement('input');
-    input.type = 'checkbox';
-    input.value = user.uid;
-    const name = document.createElement('span');
-    name.textContent = user.username || user.displayName || user.email || 'User';
-    label.append(input, name);
-    groupUserSelect.appendChild(label);
-  });
-}
-
-function getSelectedPrivateGroupMembers() {
-  if (groupCreateType !== 'private') return [];
-  return [...groupUserSelect.querySelectorAll('input[type="checkbox"]:checked')].map(input => input.value);
-}
-
-async function leaveRoom(roomId) {
-  if (!roomId || DEFAULT_ROOMS.some(room => room.id === roomId)) return;
-  const room = findRoom(roomId);
-  if (room?.type === 'private' && room.owner === currentUser.uid) {
-    toast('Transfer ownership or delete the group instead', 'error');
-    return;
-  }
-  if (currentView === 'room' && currentRoom === roomId) {
-    document.getElementById('nav-global')?.click();
-  }
-  const remainingLocalRooms = readLocalRooms().filter(room => room.id !== roomId);
-  saveLocalRooms(remainingLocalRooms);
-  rooms = rooms.filter(room => room.id !== roomId);
-  renderRooms();
-  try {
-    await updateDoc(doc(db, 'roomsMeta', roomId), {
-      [`members.${currentUser.uid}`]: deleteField()
-    });
-  } catch {}
-}
-
-async function joinRoom(roomId) {
-  const room = rooms.find(r => r.id === roomId);
-  if (!room || room.joined) return;
-  if (room.type === 'private' && !isRoomMember(room)) {
-    toast('This private group is invite-only', 'error');
-    return;
-  }
-  room.joined = true;
-  saveLocalRooms(rooms.filter(r => r.joined).map(({ id, name, icon, joined }) => ({ id, name, icon, joined })));
-  renderRooms();
-  try {
-    await setDoc(doc(db, 'roomsMeta', roomId), {
-      members: { [currentUser.uid]: true }
-    }, { merge: true });
-  } catch {}
-}
-
-groupManageBtn.addEventListener('click', openGroupManageModal);
-groupManageClose.addEventListener('click', () => groupManageModal.classList.remove('open'));
-groupManageModal.addEventListener('click', (event) => {
-  if (event.target === groupManageModal) groupManageModal.classList.remove('open');
-});
-
-function openGroupManageModal() {
-  const room = findRoom(currentRoom);
-  if (!room || !room.joined) return;
-  const owner = isRoomOwner(room);
-  manageGroupIcon.value = room.icon || '';
-  manageGroupName.value = room.name || '';
-  groupDisappearSelect.value = String(getDisappearMs(room.settings));
-  manageGroupIcon.disabled = !owner;
-  manageGroupName.disabled = !owner;
-  manageGroupSave.disabled = !owner;
-  groupAddUsername.disabled = !owner;
-  groupAddMemberBtn.disabled = !owner;
-  groupDeleteBtn.style.display = owner && !room.builtIn ? 'block' : 'none';
-  renderGroupMembers(room);
-  groupManageModal.classList.add('open');
-}
-
-function renderGroupMembers(room) {
-  groupMemberList.replaceChildren();
-  const memberIds = new Set(Object.keys(room.members || {}).filter(uid => room.members[uid]));
-  if (room.owner) memberIds.add(room.owner);
-  if (!memberIds.size && currentUser) memberIds.add(currentUser.uid);
-  memberIds.forEach(uid => {
-    const user = uid === currentUser.uid
-      ? currentUserData
-      : allUsers.find(u => u.uid === uid) || { username: uid };
-    const row = document.createElement('div');
-    row.className = 'member-row';
-    const name = document.createElement('div');
-    name.className = 'member-row-name';
-    name.textContent = `${user.username || user.displayName || uid}${uid === room.owner ? ' · owner' : ''}`;
-    row.appendChild(name);
-    if (isRoomOwner(room) && uid !== room.owner) {
-      const remove = document.createElement('button');
-      remove.className = 'btn-secondary danger-text';
-      remove.type = 'button';
-      remove.textContent = 'Remove';
-      remove.addEventListener('click', () => removeGroupMember(room.id, uid));
-      row.appendChild(remove);
-    }
-    groupMemberList.appendChild(row);
-  });
-}
-
-manageGroupSave.addEventListener('click', async () => {
-  const room = findRoom(currentRoom);
-  if (!isRoomOwner(room)) return;
-  const name = manageGroupName.value.trim();
-  const icon = manageGroupIcon.value.trim() || '#';
-  if (!name) { toast('Group name required', 'error'); return; }
-  const settings = { ...(room.settings || {}), disappearMs: Number(groupDisappearSelect.value || 0) };
-  await setDoc(doc(db, 'roomsMeta', room.id), { name, icon, settings }, { merge: true });
-  toast('Group updated', 'success');
-});
-
-groupAddMemberBtn.addEventListener('click', async () => {
-  const room = findRoom(currentRoom);
-  if (!isRoomOwner(room)) return;
-  const username = groupAddUsername.value.trim();
-  if (!username) return;
-  const q = query(collection(db, 'users'), where('username', '==', username));
-  const snap = await getDocs(q);
-  if (snap.empty) { toast('User not found', 'error'); return; }
-  const user = { uid: snap.docs[0].id, ...snap.docs[0].data() };
-  await setDoc(doc(db, 'roomsMeta', room.id), { [`members.${user.uid}`]: true }, { merge: true });
-  groupAddUsername.value = '';
-  toast('Member added', 'success');
-});
-
-async function removeGroupMember(roomId, uid) {
-  if (!confirm('Remove this member from the group?')) return;
-  await updateDoc(doc(db, 'roomsMeta', roomId), { [`members.${uid}`]: deleteField() });
-  toast('Member removed', 'success');
-}
-
-groupDeleteBtn.addEventListener('click', async () => {
-  const room = findRoom(currentRoom);
-  if (!isRoomOwner(room) || room.builtIn) return;
-  if (!confirm('Delete this group for everyone? Messages may remain until Firestore cleanup runs.')) return;
-  await deleteDoc(doc(db, 'roomsMeta', room.id));
-  groupManageModal.classList.remove('open');
-  document.getElementById('nav-global')?.click();
-  toast('Group deleted', 'success');
-});
-
-// ── Message Subscription ──
-function subscribeMessages() {
+function subscribeRoom(roomId) {
   if (unsubMessages) unsubMessages();
   if (unsubTyping) unsubTyping();
 
-  let q;
-  if (currentView === 'global') {
-    q = query(collection(db, 'messages'), orderBy('timestamp', 'asc'), limit(100));
-  } else {
-    const room = findRoom(currentRoom);
-    if (room?.type === 'private' && !isRoomMember(room)) {
-      messagesContainer.innerHTML = '';
-      msgInput.disabled = true;
-      sendBtn.disabled = true;
-      toast('You are not a member of this private group', 'error');
-      return;
+  const messagesArea = document.getElementById('messagesArea');
+  const loadingEl = document.getElementById('loadingMsgs');
+
+  const q = query(
+    collection(db, 'messages'),
+    where('room', '==', roomId),
+    orderBy('createdAt', 'asc'),
+    limit(80)
+  );
+
+  let firstLoad = true;
+  unsubMessages = onSnapshot(q, (snap) => {
+    if (firstLoad) {
+      loadingEl.style.display = 'none';
+      firstLoad = false;
+      // clear existing messages except skeleton
+      Array.from(messagesArea.children).forEach(c => {
+        if (c !== loadingEl) c.remove();
+      });
     }
-    msgInput.disabled = false;
-    sendBtn.disabled = false;
-    q = query(collection(db, 'rooms', currentRoom, 'messages'), orderBy('timestamp', 'asc'), limit(100));
-  }
 
-  messagesContainer.innerHTML = '';
-  let lastDate = '';
-  let initialLoad = true;
-
-  unsubMessages = onSnapshot(q, (snapshot) => {
-    snapshot.docChanges().forEach(change => {
+    snap.docChanges().forEach(change => {
       if (change.type === 'added') {
-        const data = change.doc.data();
-        if (isExpiredMessage(data)) {
-          const ref = currentView === 'global'
-            ? doc(db, 'messages', change.doc.id)
-            : doc(db, 'rooms', currentRoom, 'messages', change.doc.id);
-          deleteDoc(ref).catch(() => {});
-          return;
+        const data = { id: change.doc.id, ...change.doc.data() };
+        const existingEl = document.getElementById('msg-' + data.id);
+        if (!existingEl) renderMessage(data, messagesArea);
+      } else if (change.type === 'modified') {
+        const data = { id: change.doc.id, ...change.doc.data() };
+        const existingEl = document.getElementById('msg-' + data.id);
+        if (existingEl) {
+          const updated = buildMessageEl(data);
+          existingEl.replaceWith(updated);
         }
-        const msgDate = formatDate(data.timestamp);
-        if (msgDate && msgDate !== lastDate) {
-          lastDate = msgDate;
-          const divider = document.createElement('div');
-          divider.className = 'msg-day-divider'; divider.textContent = msgDate;
-          messagesContainer.appendChild(divider);
-        }
-        renderMessage(change.doc.id, data, messagesContainer);
-        scrollToBottom(messagesContainer);
-
-        if (!initialLoad) {
-          maybeNotifyMessage({ username: data.username, text: data.text || 'Image', uid: data.uid, type: currentView, room: currentRoom });
-        }
-      }
-      if (change.type === 'removed') {
-        const el = document.getElementById(`msg-${change.doc.id}`);
+      } else if (change.type === 'removed') {
+        const el = document.getElementById('msg-' + change.doc.id);
         if (el) el.remove();
       }
     });
-    initialLoad = false;
+
+    const atBottom = messagesArea.scrollHeight - messagesArea.scrollTop < messagesArea.clientHeight + 200;
+    if (atBottom || firstLoad === false) scrollToBottom();
   });
 
   // Typing indicator
-  const typingColl = currentView === 'global'
-    ? collection(db, 'typing')
-    : collection(db, 'rooms', currentRoom, 'typing');
-  unsubTyping = onSnapshot(typingColl, (snap) => {
-    const typers = [];
-    snap.forEach(d => {
-      const td = d.data();
-      if (td.uid !== currentUser.uid && Date.now() - (td.ts?.toMillis?.() || 0) < 5000) {
-        typers.push(td.username);
-      }
-    });
+  const typingQ = query(collection(db, 'typing'), where('room', '==', roomId));
+  unsubTyping = onSnapshot(typingQ, (snap) => {
+    const typers = snap.docs
+      .map(d => d.data())
+      .filter(d => d.uid !== currentUser?.uid && d.typing);
+    const indicator = document.getElementById('typingIndicator');
+    const typingText = document.getElementById('typingText');
     if (typers.length > 0) {
-      typingArea.innerHTML = `${typers.join(', ')} ${typers.length > 1 ? 'are' : 'is'} typing <span class="typing-dots"><span></span><span></span><span></span></span>`;
+      const names = typers.slice(0, 2).map(t => t.username).join(', ');
+      typingText.textContent = `${names} ${typers.length === 1 ? 'is' : 'are'} typing`;
+      indicator.style.display = 'flex';
     } else {
-      typingArea.textContent = '';
+      indicator.style.display = 'none';
     }
   });
 }
 
-function renderMessage(id, data, container) {
-  const isMine = data.uid === currentUser.uid;
-  const row = document.createElement('div');
-  row.className = `msg-row ${isMine ? 'mine' : ''}`;
-  row.id = `msg-${id}`;
+let lastMsgDate = null;
 
-  const avatarSrc = data.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.username||'U')}&background=3b82f6&color=fff`;
-
-  // Reactions summary
-  const reactions = data.reactions || {};
-  const reactionKeys = Object.keys(reactions);
-  let reactionsHtml = '';
-  if (reactionKeys.length > 0) {
-    const counts = {};
-    reactionKeys.forEach(uid => { const e = reactions[uid]; counts[e] = (counts[e]||0)+1; });
-    reactionsHtml = `<div class="msg-reactions">` +
-      Object.entries(counts).map(([emoji, count]) => {
-        const myReaction = reactions[currentUser.uid] === emoji;
-        return `<span class="reaction-chip ${myReaction?'mine-reaction':''}" data-emoji="${emoji}" data-msgid="${id}" title="${count} reaction${count>1?'s':''}">${emoji} ${count}</span>`;
-      }).join('') + `</div>`;
+function renderMessage(data, container) {
+  // Day divider
+  if (data.createdAt) {
+    const dateStr = formatDate(data.createdAt);
+    if (dateStr !== lastMsgDate) {
+      lastMsgDate = dateStr;
+      const div = document.createElement('div');
+      div.className = 'msg-day-divider';
+      div.innerHTML = `<span>${dateStr}</span>`;
+      container.appendChild(div);
+    }
   }
+  const el = buildMessageEl(data);
+  container.appendChild(el);
+}
 
-  const QUICK_REACTIONS = ['👍','❤️','😂','🔥','😮','😢'];
-  const reactionPickerHtml = `<div class="reaction-picker">${QUICK_REACTIONS.map(e=>`<button data-emoji="${e}" data-msgid="${id}" class="react-btn">${e}</button>`).join('')}</div>`;
+function buildMessageEl(data) {
+  const isMe = data.uid === currentUser?.uid;
+  const avatar = data.photoURL || genAvatar(data.username || 'User');
 
-  row.innerHTML = `
-    <img class="msg-avatar" src="${avatarSrc}" alt="${data.username||'U'}" />
-    <div class="msg-bubble-wrap">
-      ${!isMine ? `<div class="msg-sender-name">${data.username||'Unknown'}</div>` : ''}
-      <div class="msg-bubble" style="position:relative;">
-        <div class="msg-actions">
-          <button class="msg-action-btn react-picker-toggle" data-msgid="${id}">😊</button>
-          ${isMine ? `<button class="msg-action-btn del" data-msgid="${id}">🗑</button>` : ''}
-        </div>
-        ${reactionPickerHtml}
-        ${data.text ? `<span class="msg-text">${escapeHtml(data.text)}</span>` : ''}
-        ${data.imageUrl ? `<img class="msg-image" src="${data.imageUrl}" alt="image" />` : ''}
-      </div>
-      ${reactionsHtml}
+  const el = document.createElement('div');
+  el.className = 'msg';
+  el.id = 'msg-' + data.id;
+
+  const reactionsHTML = buildReactionsHTML(data);
+
+  el.innerHTML = `
+    <img class="msg-avatar" src="${avatar}" alt="avatar" onerror="this.src='${genAvatar(data.username || 'U')}'"/>
+    <div class="msg-body">
       <div class="msg-meta">
-        <span class="msg-time">${formatTime(data.timestamp)}</span>
+        <span class="msg-author ${isMe ? 'is-me' : ''}">${escapeHTML(data.username || 'Unknown')}</span>
+        <span class="msg-time">${formatTime(data.createdAt)}</span>
       </div>
+      ${data.text ? `<div class="msg-text">${formatText(data.text)}</div>` : ''}
+      ${data.imageURL ? `<img class="msg-image" src="${data.imageURL}" alt="image" onclick="openImageModal(this.src)"/>` : ''}
+      <div class="reactions-row" id="reactions-${data.id}">${reactionsHTML}</div>
+    </div>
+    <div class="msg-actions">
+      <button class="msg-action-btn" onclick="showEmojiPicker('${data.id}', '${data.room || currentRoom}')" title="React">😊</button>
+      ${isMe ? `<button class="msg-action-btn" onclick="deleteMessage('${data.id}', '${data.room || currentRoom}')" title="Delete">🗑️</button>` : ''}
+    </div>
+  `;
+
+  return el;
+}
+
+function buildReactionsHTML(data) {
+  if (!data.reactions) return '';
+  return Object.entries(data.reactions).map(([emoji, users]) => {
+    const count = Object.keys(users).length;
+    if (count === 0) return '';
+    const mine = users[currentUser?.uid] ? 'mine' : '';
+    return `<div class="reaction-chip ${mine}" onclick="toggleReaction('${data.id}','${emoji}','${data.room || currentRoom}')">
+      ${emoji} <span>${count}</span>
     </div>`;
-
-  container.appendChild(row);
-
-  // Delete
-  row.querySelectorAll('.msg-action-btn.del').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      if (!confirm('Delete this message?')) return;
-      try {
-        if (currentView === 'global') await deleteDoc(doc(db, 'messages', btn.dataset.msgid));
-        else await deleteDoc(doc(db, 'rooms', currentRoom, 'messages', btn.dataset.msgid));
-        toast('Message deleted', 'success');
-      } catch(e) { toast('Could not delete', 'error'); }
-    });
-  });
-
-  // Reaction picker toggle
-  row.querySelectorAll('.react-picker-toggle').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const bubble = btn.closest('.msg-bubble');
-      bubble.classList.toggle('show-picker');
-    });
-  });
-
-  // React buttons
-  row.querySelectorAll('.react-btn').forEach(btn => {
-    btn.addEventListener('click', async (e) => {
-      e.stopPropagation();
-      const emoji = btn.dataset.emoji;
-      const msgId = btn.dataset.msgid;
-      const ref = currentView === 'global'
-        ? doc(db, 'messages', msgId)
-        : doc(db, 'rooms', currentRoom, 'messages', msgId);
-      await updateDoc(ref, { [`reactions.${currentUser.uid}`]: emoji });
-      btn.closest('.msg-bubble').classList.remove('show-picker');
-    });
-  });
-
-  // Reaction chips (toggle off)
-  row.querySelectorAll('.reaction-chip').forEach(chip => {
-    chip.addEventListener('click', async () => {
-      const msgId = chip.dataset.msgid;
-      const ref = currentView === 'global'
-        ? doc(db, 'messages', msgId)
-        : doc(db, 'rooms', currentRoom, 'messages', msgId);
-      const snap = await getDoc(ref);
-      if (!snap.exists()) return;
-      const reactions = snap.data().reactions || {};
-      if (reactions[currentUser.uid] === chip.dataset.emoji) {
-        const update = { ...reactions };
-        delete update[currentUser.uid];
-        await updateDoc(ref, { reactions: update });
-      }
-    });
-  });
-
-  // Image zoom
-  row.querySelectorAll('.msg-image').forEach(img => {
-    img.addEventListener('click', () => {
-      lightboxImg.src = img.src;
-      lightbox.classList.add('open');
-    });
-  });
+  }).join('');
 }
 
-function escapeHtml(text) {
-  return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+function formatText(text) {
+  let t = escapeHTML(text);
+  t = t.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  t = t.replace(/\*(.*?)\*/g, '<em>$1</em>');
+  t = t.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener" style="color:var(--accent3)">$1</a>');
+  t = t.replace(/\n/g, '<br>');
+  return t;
 }
 
-// Close reaction pickers on outside click
-document.addEventListener('click', () => {
-  document.querySelectorAll('.msg-bubble.show-picker').forEach(b => b.classList.remove('show-picker'));
-});
+function escapeHTML(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
 
-// ── Send Message ──
-async function sendMessage() {
-  const text = msgInput.value.trim();
-  if (!text && !pendingImageFile) return;
-  const room = currentView === 'room' ? findRoom(currentRoom) : null;
-  if (room?.type === 'private' && !isRoomMember(room)) {
-    toast('You are not a member of this private group', 'error');
-    return;
-  }
-  const expiresAt = buildExpiresAt(currentView === 'room' ? getDisappearMs(room?.settings) : 0);
+// ──────────────────────────────────────────────────
+// SEND MESSAGE
+// ──────────────────────────────────────────────────
+window.sendMessage = async () => {
+  if (!currentUser || !currentUserData) return;
+  const input = document.getElementById('msgInput');
+  const text = input.value.trim();
+  if (!text && !pendingImageURL) return;
 
   const msgData = {
     uid: currentUser.uid,
-    sender: currentUser.uid,
     username: currentUserData.username,
-    displayName: currentUserData.displayName,
+    displayName: currentUserData.displayName || currentUserData.username,
     photoURL: currentUserData.photoURL || '',
-    text: text,
-    timestamp: serverTimestamp(),
-    reactions: {},
-    roomId: currentView === 'room' ? currentRoom : 'global'
+    text: text || '',
+    createdAt: serverTimestamp(),
+    reactions: {}
   };
-  if (expiresAt) msgData.expiresAt = expiresAt;
 
-  // Upload image if pending
-  if (pendingImageFile) {
-    try {
-      const imgRef = storageRef(storage, `chat-images/${Date.now()}-${pendingImageFile.name}`);
-      await uploadBytes(imgRef, pendingImageFile);
-      msgData.imageUrl = await getDownloadURL(imgRef);
-    } catch(e) {
-      // Storage might not be enabled; use data URL as fallback
-      msgData.imageUrl = pendingImageDataUrl;
-    }
-    clearImagePreview();
+  if (currentDMUser) {
+    // DM
+    const dmId = getDMId(currentUser.uid, currentDMUser.uid);
+    msgData.dmId = dmId;
+    msgData.room = 'dm_' + dmId;
+    if (pendingImageURL) msgData.imageURL = pendingImageURL;
+    await addDoc(collection(db, 'dms'), msgData);
+
+    await setDoc(doc(db, 'dms_meta', dmId), {
+      participants: [currentUser.uid, currentDMUser.uid],
+      lastMessage: text || '📷 Image',
+      lastAt: serverTimestamp(),
+      [`unread_${currentDMUser.uid}`]: (await getDoc(doc(db,'dms_meta',dmId))).data()?.[`unread_${currentDMUser.uid}`]+1 || 1
+    }, { merge: true });
+
+  } else {
+    // Room
+    msgData.room = currentRoom;
+    if (pendingImageURL) msgData.imageURL = pendingImageURL;
+    await addDoc(collection(db, 'messages'), msgData);
   }
 
-  msgInput.value = '';
-  autoResizeTextarea(msgInput);
+  input.value = '';
+  input.style.height = 'auto';
+  pendingImageURL = null;
+  clearTyping();
+};
 
-  try {
-    if (currentView === 'global') {
-      await addDoc(collection(db, 'messages'), msgData);
-    } else {
-      await addDoc(collection(db, 'rooms', currentRoom, 'messages'), msgData);
-    }
-    clearTypingIndicator();
-  } catch(e) {
-    toast('Failed to send message', 'error');
-    console.error(e);
+window.handleInputKey = (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    window.sendMessage();
   }
-}
+  autoResize(e.target);
+};
 
-sendBtn.addEventListener('click', sendMessage);
-msgInput.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
-});
+// ──────────────────────────────────────────────────
+// TYPING INDICATOR
+// ──────────────────────────────────────────────────
+window.handleTyping = () => {
+  if (!currentUser || !currentUserData) return;
+  autoResize(document.getElementById('msgInput'));
 
-// ── Typing Indicator ──
-function setTypingIndicator() {
-  if (!currentUser) return;
-  const typingColl = currentView === 'global' ? collection(db, 'typing') : collection(db, 'rooms', currentRoom, 'typing');
-  setDoc(doc(typingColl, currentUser.uid), {
-    uid: currentUser.uid, username: currentUserData.username, ts: serverTimestamp()
-  });
+  const room = currentDMUser ? 'dm_' + getDMId(currentUser.uid, currentDMUser.uid) : currentRoom;
+
+  if (!isTyping) {
+    isTyping = true;
+    setDoc(doc(db, 'typing', currentUser.uid), {
+      uid: currentUser.uid,
+      username: currentUserData.username,
+      room,
+      typing: true,
+      at: serverTimestamp()
+    });
+  }
   clearTimeout(typingTimeout);
-  typingTimeout = setTimeout(clearTypingIndicator, 4000);
+  typingTimeout = setTimeout(clearTyping, 2500);
+};
+
+function clearTyping() {
+  isTyping = false;
+  if (currentUser) {
+    setDoc(doc(db, 'typing', currentUser.uid), { typing: false }, { merge: true });
+  }
 }
 
-function clearTypingIndicator() {
+// ──────────────────────────────────────────────────
+// DELETE MESSAGE
+// ──────────────────────────────────────────────────
+window.deleteMessage = async (msgId, room) => {
+  const col = room.startsWith('dm_') ? 'dms' : 'messages';
+  await deleteDoc(doc(db, col, msgId));
+  showToast('Message deleted');
+};
+
+// ──────────────────────────────────────────────────
+// REACTIONS
+// ──────────────────────────────────────────────────
+let emojiPickerMsgId = null;
+let emojiPickerRoom = null;
+const REACTION_EMOJIS = ['👍','❤️','😂','🔥','😮','👏','🎉','💯'];
+
+window.showEmojiPicker = (msgId, room) => {
+  // Close existing
+  document.querySelectorAll('.emoji-picker').forEach(e => e.remove());
+
+  const msgEl = document.getElementById('msg-' + msgId);
+  if (!msgEl) return;
+
+  const picker = document.createElement('div');
+  picker.className = 'emoji-picker';
+  picker.innerHTML = REACTION_EMOJIS.map(e =>
+    `<span class="emoji-opt" onclick="toggleReaction('${msgId}','${e}','${room}');this.closest('.emoji-picker').remove()">${e}</span>`
+  ).join('');
+
+  msgEl.style.position = 'relative';
+  msgEl.appendChild(picker);
+
+  setTimeout(() => document.addEventListener('click', () => picker.remove(), { once: true }), 50);
+};
+
+window.toggleReaction = async (msgId, emoji, room) => {
   if (!currentUser) return;
-  const typingColl = currentView === 'global' ? collection(db, 'typing') : collection(db, 'rooms', currentRoom, 'typing');
-  deleteDoc(doc(typingColl, currentUser.uid)).catch(()=>{});
-}
+  const col = room.startsWith('dm_') ? 'dms' : 'messages';
+  const ref = doc(db, col, msgId);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) return;
 
-msgInput.addEventListener('input', () => { autoResizeTextarea(msgInput); setTypingIndicator(); });
+  const reactions = snap.data().reactions || {};
+  const emojiUsers = reactions[emoji] || {};
 
-// ── Emoji picker ──
-emojiBtn.addEventListener('click', (e) => { e.stopPropagation(); emojiPicker.classList.toggle('open'); });
-document.addEventListener('click', (e) => { if (!emojiPicker.contains(e.target) && e.target !== emojiBtn) emojiPicker.classList.remove('open'); });
+  if (emojiUsers[currentUser.uid]) {
+    delete emojiUsers[currentUser.uid];
+  } else {
+    emojiUsers[currentUser.uid] = true;
+  }
 
-// ── Image upload ──
-imgFileInput.addEventListener('change', (e) => {
+  reactions[emoji] = emojiUsers;
+  await updateDoc(ref, { reactions });
+};
+
+// ──────────────────────────────────────────────────
+// EMOJI TRAY
+// ──────────────────────────────────────────────────
+window.toggleEmojiTray = () => {
+  document.getElementById('emojiTray').classList.toggle('open');
+};
+
+window.insertEmoji = (emoji) => {
+  const input = document.getElementById('msgInput');
+  const pos = input.selectionStart;
+  const val = input.value;
+  input.value = val.slice(0, pos) + emoji + val.slice(pos);
+  input.selectionStart = input.selectionEnd = pos + emoji.length;
+  input.focus();
+};
+
+// ──────────────────────────────────────────────────
+// IMAGE UPLOAD (base64 inline)
+// ──────────────────────────────────────────────────
+let pendingImageURL = null;
+
+window.handleImageUpload = (e) => {
   const file = e.target.files[0];
   if (!file) return;
-  pendingImageFile = file;
+  if (file.size > 3 * 1024 * 1024) { showToast('⚠️ Image must be under 3MB'); return; }
+
   const reader = new FileReader();
   reader.onload = (ev) => {
-    pendingImageDataUrl = ev.target.result;
-    imgPreview.src = ev.target.result;
-    imgPreviewWrap.classList.add('show');
+    pendingImageURL = ev.target.result;
+    showToast('📷 Image ready — press send!');
   };
   reader.readAsDataURL(file);
-  e.target.value = '';
-});
-imgCancelBtn.addEventListener('click', clearImagePreview);
-function clearImagePreview() {
-  pendingImageFile = null; pendingImageDataUrl = null;
-  imgPreview.src = '';
-  imgPreviewWrap.classList.remove('show');
-}
+};
 
-// ── Online Users ──
+window.openImageModal = (src) => {
+  const overlay = document.createElement('div');
+  overlay.className = 'img-modal-overlay';
+  overlay.innerHTML = `<img src="${src}" alt="full"/>`;
+  overlay.onclick = () => overlay.remove();
+  document.body.appendChild(overlay);
+};
+
+// ──────────────────────────────────────────────────
+// ONLINE USERS
+// ──────────────────────────────────────────────────
 function subscribeOnlineUsers() {
   const q = query(collection(db, 'users'), where('online', '==', true));
-  unsubOnline = onSnapshot(q, (snap) => {
-    onlineUsersList.innerHTML = '';
-    let count = 0;
-    snap.forEach(d => {
-      count++;
-      const u = d.data();
+  onSnapshot(q, (snap) => {
+    const list = document.getElementById('onlineList');
+    const count = document.getElementById('onlineCount');
+    list.innerHTML = '';
+    const users = snap.docs.map(d => d.data());
+    count.textContent = `${users.length} online`;
+
+    users.forEach(u => {
       const div = document.createElement('div');
       div.className = 'online-user';
-      const avatarSrc = u.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.username||'U')}&background=3b82f6&color=fff`;
+      const av = u.photoURL || genAvatar(u.username);
       div.innerHTML = `
-        <div class="online-avatar-wrap">
-          <img class="online-avatar" src="${avatarSrc}" alt="${u.username}" />
-          <div class="online-dot"></div>
-        </div>
-        <span class="online-name">${u.username || 'User'}</span>`;
-      div.addEventListener('click', () => openDmWithUser(u));
-      onlineUsersList.appendChild(div);
+        <img class="online-user-avatar" src="${av}" alt="${u.username}" onerror="this.src='${genAvatar(u.username)}'"/>
+        <span class="online-user-name">@${escapeHTML(u.username)}</span>
+        <div class="online-dot"></div>
+      `;
+      div.onclick = () => { if (u.uid !== currentUser?.uid) { document.getElementById('dmUsernameInput').value = u.username; openDMModal(); } };
+      list.appendChild(div);
     });
-    chatOnlineCount.textContent = `● ${count} online`;
   });
 }
 
-// ── DMs ──
-function openDmPanel() {
-  dmPanel.classList.add('open');
-  loadDmList();
-}
-dmBack.addEventListener('click', () => dmPanel.classList.remove('open'));
-
-async function openDmWithUser(u) {
-  currentDmUid = u.uid;
-  currentDmUsername = u.username;
-  document.getElementById('dm-panel-title').textContent = `💬 ${u.username}`;
-  openDmPanel();
-  subscribeDmMessages();
-  // Mark as active in dm list
-  document.querySelectorAll('.dm-row').forEach(r => {
-    r.classList.toggle('active', r.dataset.uid === u.uid);
-  });
-}
-
-dmStartBtn.addEventListener('click', async () => {
-  const username = dmUsernameInput.value.trim();
-  if (!username) return;
-  // Find user by username
-  const q = query(collection(db, 'users'), where('username', '==', username));
-  const snap = await getDocs(q);
-  if (snap.empty) { toast('User not found', 'error'); return; }
-  const u = snap.docs[0].data();
-  if (u.uid === currentUser.uid) { toast("Can't DM yourself", 'error'); return; }
-  dmUsernameInput.value = '';
-  openDmWithUser(u);
-});
-
-dmUsernameInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') dmStartBtn.click(); });
-
-function getDmId(uid1, uid2) {
+// ──────────────────────────────────────────────────
+// DMs
+// ──────────────────────────────────────────────────
+function getDMId(uid1, uid2) {
   return [uid1, uid2].sort().join('_');
 }
 
-function subscribeDmMessages() {
-  if (unsubDmMessages) unsubDmMessages();
-  if (!currentDmUid) return;
-  const dmId = getDmId(currentUser.uid, currentDmUid);
-  let dmMuted = false;
-  getDoc(doc(db, 'dms', dmId)).then(snap => {
-    dmMuted = Boolean(snap.data()?.mutedBy?.[currentUser.uid]);
-  }).catch(() => {});
-  cleanupExpiredMessages(collection(db, 'dms', dmId, 'messages'));
-  const q = query(collection(db, 'dms', dmId, 'messages'), orderBy('timestamp', 'asc'), limit(100));
-  dmMessages.innerHTML = '';
-  let initialLoad = true;
-  unsubDmMessages = onSnapshot(q, (snap) => {
+window.openDMModal = () => {
+  document.getElementById('dmModal').style.display = 'flex';
+  document.getElementById('dmUsernameInput').focus();
+};
+
+window.closeDMModal = (e) => {
+  if (e.target === document.getElementById('dmModal')) closeDMModalDirect();
+};
+
+window.closeDMModalDirect = () => {
+  document.getElementById('dmModal').style.display = 'none';
+};
+
+window.startDM = async () => {
+  const username = document.getElementById('dmUsernameInput').value.trim();
+  if (!username) { showToast('Enter a username'); return; }
+
+  const q = query(collection(db, 'users'), where('username', '==', username));
+  const snap = await getDocs(q);
+
+  if (snap.empty) { showToast('⚠️ User not found'); return; }
+
+  const targetData = snap.docs[0].data();
+  if (targetData.uid === currentUser.uid) { showToast("That's you! 😄"); return; }
+
+  closeDMModalDirect();
+  openDMChat(targetData);
+};
+
+function openDMChat(userData) {
+  currentDMUser = userData;
+  closeSidebar();
+
+  document.querySelectorAll('.room-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.dm-user-item').forEach(b => b.classList.remove('active'));
+
+  const dmId = getDMId(currentUser.uid, userData.uid);
+  const existingItem = document.getElementById('dm-item-' + userData.uid);
+  if (existingItem) existingItem.classList.add('active');
+
+  document.getElementById('chatIcon').textContent = '💬';
+  document.getElementById('chatName').textContent = '@' + userData.username;
+  document.getElementById('chatDesc').textContent = 'Direct Message';
+  document.getElementById('msgInput').placeholder = `Message @${userData.username}…`;
+  document.getElementById('loadingMsgs').style.display = 'flex';
+
+  // Reset unread
+  if (dmUnreads[userData.uid]) {
+    dmUnreads[userData.uid] = 0;
+    updateDMBadges();
+    setDoc(doc(db, 'dms_meta', dmId), { [`unread_${currentUser.uid}`]: 0 }, { merge: true });
+  }
+
+  // Subscribe DM messages
+  if (unsubMessages) unsubMessages();
+  if (unsubTyping) unsubTyping();
+  lastMsgDate = null;
+
+  const q = query(
+    collection(db, 'dms'),
+    where('dmId', '==', dmId),
+    orderBy('createdAt', 'asc'),
+    limit(80)
+  );
+
+  const messagesArea = document.getElementById('messagesArea');
+  let firstLoad = true;
+
+  unsubMessages = onSnapshot(q, (snap) => {
+    if (firstLoad) {
+      document.getElementById('loadingMsgs').style.display = 'none';
+      firstLoad = false;
+      Array.from(messagesArea.children).forEach(c => {
+        if (c !== document.getElementById('loadingMsgs')) c.remove();
+      });
+    }
+
     snap.docChanges().forEach(change => {
       if (change.type === 'added') {
-        const data = change.doc.data();
-        if (isExpiredMessage(data)) {
-          deleteDoc(doc(db, 'dms', dmId, 'messages', change.doc.id)).catch(() => {});
-          return;
+        const data = { id: change.doc.id, ...change.doc.data() };
+        if (!document.getElementById('msg-' + data.id)) {
+          renderMessage(data, messagesArea);
+          if (data.uid !== currentUser.uid) sendNotification(data.username, data.text);
         }
-        renderDmMessage(change.doc.id, data);
-        scrollToBottom(dmMessages);
-        if (!initialLoad && !dmMuted) {
-          maybeNotifyMessage({ username: data.username, text: data.text || 'Image', uid: data.uid, type: 'direct' });
-        }
-      }
-      if (change.type === 'removed') {
-        const el = document.getElementById(`dm-msg-${change.doc.id}`);
+      } else if (change.type === 'removed') {
+        const el = document.getElementById('msg-' + change.doc.id);
         if (el) el.remove();
       }
     });
-    initialLoad = false;
+
+    scrollToBottom();
   });
 
-  // DM typing
-  const typingRef = collection(db, 'dms', dmId, 'typing');
-  onSnapshot(typingRef, (snap) => {
-    const typers = [];
-    snap.forEach(d => {
-      const td = d.data();
-      if (td.uid !== currentUser.uid && Date.now() - (td.ts?.toMillis?.() || 0) < 5000) typers.push(td.username);
-    });
-    dmTypingArea.innerHTML = typers.length > 0
-      ? `${typers.join(', ')} is typing <span class="typing-dots"><span></span><span></span><span></span></span>`
-      : '';
-  });
-}
-
-function renderDmMessage(id, data) {
-  const isMine = data.uid === currentUser.uid;
-  const row = document.createElement('div');
-  row.className = `msg-row ${isMine ? 'mine' : ''}`;
-  row.id = `dm-msg-${id}`;
-  const avatarSrc = data.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.username||'U')}&background=3b82f6&color=fff`;
-  row.innerHTML = `
-    <img class="msg-avatar" src="${avatarSrc}" alt="${data.username}" />
-    <div class="msg-bubble-wrap">
-      ${!isMine ? `<div class="msg-sender-name">${escapeHtml(data.username||'')}</div>` : ''}
-      <div class="msg-bubble">
-        ${data.text ? `<span>${escapeHtml(data.text)}</span>` : ''}
-        ${data.imageUrl ? `<img class="msg-image" src="${data.imageUrl}" alt="img" />` : ''}
-      </div>
-      <div class="msg-meta"><span class="msg-time">${formatTime(data.timestamp)}</span></div>
-    </div>`;
-  dmMessages.appendChild(row);
-  row.querySelectorAll('.msg-image').forEach(img => {
-    img.addEventListener('click', () => { lightboxImg.src = img.src; lightbox.classList.add('open'); });
+  // Typing
+  const typingQ = query(collection(db, 'typing'), where('room', '==', 'dm_' + dmId));
+  unsubTyping = onSnapshot(typingQ, (snap) => {
+    const typers = snap.docs.map(d => d.data()).filter(d => d.uid !== currentUser?.uid && d.typing);
+    const indicator = document.getElementById('typingIndicator');
+    if (typers.length > 0) {
+      document.getElementById('typingText').textContent = `${typers[0].username} is typing`;
+      indicator.style.display = 'flex';
+    } else indicator.style.display = 'none';
   });
 }
 
-async function cleanupExpiredMessages(messagesColl) {
-  try {
-    const snap = await getDocs(query(messagesColl, orderBy('timestamp', 'asc'), limit(100)));
-    snap.forEach(d => {
-      if (isExpiredMessage(d.data())) deleteDoc(d.ref).catch(() => {});
-    });
-  } catch {}
-}
+function subscribeDMList() {
+  if (!currentUser) return;
+  const q = query(collection(db, 'dms_meta'), where('participants', 'array-contains', currentUser.uid));
 
-async function sendDmMessage() {
-  const text = dmInput.value.trim();
-  if (!text || !currentDmUid) return;
-  const dmId = getDmId(currentUser.uid, currentDmUid);
-  const dmMeta = await getDoc(doc(db, 'dms', dmId)).catch(() => null);
-  const settings = dmMeta?.exists?.() ? (dmMeta.data().settings || {}) : {};
-  const expiresAt = buildExpiresAt(getDisappearMs(settings));
-  dmInput.value = '';
-  const msgData = {
-    uid: currentUser.uid,
-    sender: currentUser.uid,
-    username: currentUserData.username,
-    photoURL: currentUserData.photoURL || '',
-    text,
-    timestamp: serverTimestamp()
-  };
-  if (expiresAt) msgData.expiresAt = expiresAt;
+  onSnapshot(q, async (snap) => {
+    const dmListEl = document.getElementById('dmList');
+    dmListEl.innerHTML = '';
 
-  await setDoc(doc(db, 'dms', dmId), {
-    participants: [currentUser.uid, currentDmUid],
-    lastMessage: text,
-    lastSender: currentUser.uid,
-    mutedBy: dmMeta?.exists?.() ? (dmMeta.data().mutedBy || {}) : {},
-    settings,
-    updatedAt: serverTimestamp()
-  }, { merge: true });
-  await addDoc(collection(db, 'dms', dmId, 'messages'), msgData);
-}
-
-dmSendBtn.addEventListener('click', sendDmMessage);
-dmInput.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendDmMessage(); } });
-dmInput.addEventListener('input', () => {
-  if (!currentDmUid) return;
-  const dmId = getDmId(currentUser.uid, currentDmUid);
-  const typingRef = collection(db, 'dms', dmId, 'typing');
-  setDoc(doc(typingRef, currentUser.uid), { uid: currentUser.uid, username: currentUserData.username, ts: serverTimestamp() });
-  clearTimeout(typingTimeout);
-  typingTimeout = setTimeout(() => deleteDoc(doc(typingRef, currentUser.uid)).catch(()=>{}), 4000);
-});
-
-async function loadDmList() {
-  dmList.innerHTML = '';
-  const q = query(collection(db, 'dms'), where('participants', 'array-contains', currentUser.uid), orderBy('updatedAt', 'desc'));
-  try {
-    const snap = await getDocs(q);
-    if (snap.empty) {
-      dmList.innerHTML = '<p style="font-size:0.82rem;color:var(--muted);padding:8px 6px;">No DMs yet. Search for a user above.</p>';
-      return;
-    }
-    for (const d of snap.docs) {
-      const data = d.data();
-      const otherUid = data.participants.find(p => p !== currentUser.uid);
+    for (const docSnap of snap.docs) {
+      const meta = docSnap.data();
+      const otherUid = meta.participants.find(p => p !== currentUser.uid);
       if (!otherUid) continue;
+
       const userSnap = await getDoc(doc(db, 'users', otherUid));
       if (!userSnap.exists()) continue;
-      const u = userSnap.data();
-      const row = document.createElement('div');
-      row.className = 'dm-row'; row.dataset.uid = u.uid;
-      const avatarSrc = u.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.username||'U')}&background=3b82f6&color=fff`;
-      row.innerHTML = `
-        <img class="dm-row-avatar" src="${avatarSrc}" alt="${u.username}" />
-        <div style="min-width:0;">
-          <div class="dm-row-name">${u.username}</div>
-          <div class="dm-row-preview">${data.mutedBy?.[currentUser.uid] ? 'Muted · ' : ''}${data.lastMessage||''}</div>
-        </div>`;
-      row.addEventListener('click', () => openDmWithUser(u));
-      attachDmLongPress(row, d.id, u);
-      dmList.appendChild(row);
+      const userData = userSnap.data();
+
+      const unread = meta[`unread_${currentUser.uid}`] || 0;
+      if (unread > 0) {
+        dmUnreads[otherUid] = unread;
+      }
+
+      const item = document.createElement('div');
+      item.className = 'dm-user-item';
+      item.id = 'dm-item-' + otherUid;
+      if (currentDMUser?.uid === otherUid) item.classList.add('active');
+
+      const av = userData.photoURL || genAvatar(userData.username);
+      item.innerHTML = `
+        <img class="dm-avatar" src="${av}" alt="${userData.username}" onerror="this.src='${genAvatar(userData.username)}'"/>
+        <span class="dm-username">@${escapeHTML(userData.username)}</span>
+        <div class="online-dot ${userData.online ? '' : 'offline'}"></div>
+        ${unread > 0 ? `<div class="unread-badge" style="position:static;margin-left:0">${unread}</div>` : ''}
+      `;
+      item.onclick = () => openDMChat(userData);
+      dmListEl.appendChild(item);
     }
-  } catch(e) {
-    dmList.innerHTML = '<p style="font-size:0.82rem;color:var(--muted);padding:8px 6px;">Start a new DM above.</p>';
+
+    updateDMBadges();
+  });
+}
+
+function updateDMBadges() {
+  const total = Object.values(dmUnreads).reduce((a, b) => a + b, 0);
+  const badge = document.getElementById('dmBadge');
+  if (total > 0) {
+    badge.textContent = total;
+    badge.style.display = 'flex';
+  } else {
+    badge.style.display = 'none';
   }
 }
 
-function attachDmLongPress(row, dmId, user) {
-  let timer = null;
-  let startX = 0;
-  let startY = 0;
-  const clear = () => {
-    clearTimeout(timer);
-    timer = null;
-  };
-  const open = (event) => {
-    event.preventDefault();
-    row.dataset.dmId = dmId;
-    row.dataset.uid = user.uid;
-    openDmContextMenu(event, dmId, user);
-  };
-  row.addEventListener('pointerdown', (event) => {
-    if (event.button !== undefined && event.button !== 0) return;
-    startX = event.clientX;
-    startY = event.clientY;
-    clear();
-    timer = setTimeout(() => open(event), 3000);
-  });
-  row.addEventListener('pointermove', (event) => {
-    if (Math.abs(event.clientX - startX) > 12 || Math.abs(event.clientY - startY) > 12) clear();
-  });
-  row.addEventListener('pointerup', clear);
-  row.addEventListener('pointercancel', clear);
-  row.addEventListener('contextmenu', (event) => open(event));
-}
-
-function openDmContextMenu(event, dmId, user) {
-  dmContextMenu.dataset.dmId = dmId;
-  dmContextMenu.dataset.uid = user.uid;
-  const x = Math.min(event.clientX || 16, window.innerWidth - 250);
-  const y = Math.min(event.clientY || 16, window.innerHeight - 130);
-  dmContextMenu.style.left = `${Math.max(12, x)}px`;
-  dmContextMenu.style.top = `${Math.max(12, y)}px`;
-  dmContextMenu.classList.add('open');
-}
-
-document.addEventListener('click', (event) => {
-  if (!dmContextMenu.contains(event.target)) dmContextMenu.classList.remove('open');
-});
-
-dmContextMenu.addEventListener('click', async (event) => {
-  const action = event.target.closest('button')?.dataset.action;
-  if (!action) return;
-  const dmId = dmContextMenu.dataset.dmId;
-  dmContextMenu.classList.remove('open');
-  if (action === 'mute') {
-    await toggleDmMute(dmId);
-  } else if (action === 'disappear') {
-    await setDmDisappearMode(dmId);
-  }
-});
-
-async function toggleDmMute(dmId) {
-  const ref = doc(db, 'dms', dmId);
-  const snap = await getDoc(ref);
-  const muted = Boolean(snap.data()?.mutedBy?.[currentUser.uid]);
-  if (muted) await updateDoc(ref, { [`mutedBy.${currentUser.uid}`]: deleteField() });
-  else await setDoc(ref, { [`mutedBy.${currentUser.uid}`]: true }, { merge: true });
-  toast(muted ? 'Chat unmuted' : 'Chat muted', 'success');
-  loadDmList();
-}
-
-async function setDmDisappearMode(dmId) {
-  const current = await getDoc(doc(db, 'dms', dmId));
-  const existing = String(getDisappearMs(current.data()?.settings || {}));
-  const choice = prompt('Disappearing messages: 0 = Off, 24h, 7d, or 30d', DISAPPEAR_OPTIONS[existing] || 'Off');
-  const normalized = String(choice || '').toLowerCase().replace(/\s+/g, '');
-  const map = { '0': 0, off: 0, '24h': 86400000, '24hours': 86400000, '7d': 604800000, '7days': 604800000, '30d': 2592000000, '30days': 2592000000 };
-  if (!(normalized in map)) return;
-  await setDoc(doc(db, 'dms', dmId), { 'settings.disappearMs': map[normalized] }, { merge: true });
-  toast(`Disappearing messages: ${DISAPPEAR_OPTIONS[map[normalized]]}`, 'success');
-}
-
-// ── Notes ──
-let unsubNotes = null;
-function openNotesPanel() {
-  notesPanel.classList.add('open');
-  subscribeNotes();
-}
-document.getElementById('notes-back').addEventListener('click', () => notesPanel.classList.remove('open'));
-
-function subscribeNotes() {
-  if (unsubNotes) unsubNotes();
-  const q = query(collection(db, 'users', currentUser.uid, 'notes'), orderBy('createdAt', 'desc'));
-  unsubNotes = onSnapshot(q, (snap) => {
-    notesList.innerHTML = '';
-    if (snap.empty) {
-      notesList.innerHTML = '<p style="font-size:0.85rem;color:var(--muted);text-align:center;margin-top:24px;">No notes yet. Add your first one!</p>';
-      return;
-    }
-    snap.forEach(d => {
-      const data = d.data();
+// ──────────────────────────────────────────────────
+// NOTES
+// ──────────────────────────────────────────────────
+function loadNotes() {
+  if (!currentUser) return;
+  const q = query(
+    collection(db, 'users', currentUser.uid, 'notes'),
+    orderBy('createdAt', 'desc'),
+    limit(30)
+  );
+  onSnapshot(q, (snap) => {
+    const list = document.getElementById('notesList');
+    list.innerHTML = '';
+    snap.docs.forEach(d => {
+      const data = { id: d.id, ...d.data() };
       const card = document.createElement('div');
       card.className = 'note-card';
       card.innerHTML = `
-        <button class="note-del" data-id="${d.id}">✕</button>
-        <div class="note-text">${escapeHtml(data.text)}</div>
-        <div class="note-time">${formatTime(data.createdAt)}</div>`;
-      card.querySelector('.note-del').addEventListener('click', async (e) => {
-        await deleteDoc(doc(db, 'users', currentUser.uid, 'notes', e.target.dataset.id));
-        toast('Note deleted', 'success');
-      });
-      notesList.appendChild(card);
+        <div class="note-text">${escapeHTML(data.text)}</div>
+        <div class="note-ts">${formatTime(data.createdAt)}</div>
+        <button class="note-del-btn" onclick="deleteNote('${data.id}')">✕</button>
+      `;
+      list.appendChild(card);
     });
   });
 }
 
-noteAddBtn.addEventListener('click', async () => {
-  const text = noteInput.value.trim();
-  if (!text) return;
-  await addDoc(collection(db, 'users', currentUser.uid, 'notes'), { text, createdAt: serverTimestamp() });
-  noteInput.value = '';
-  toast('Note saved', 'success');
-});
-noteInput.addEventListener('keydown', (e) => { if (e.key === 'Enter' && e.ctrlKey) noteAddBtn.click(); });
+window.addNote = async () => {
+  const input = document.getElementById('noteInput');
+  const text = input.value.trim();
+  if (!text || !currentUser) return;
+  await addDoc(collection(db, 'users', currentUser.uid, 'notes'), {
+    text, createdAt: serverTimestamp()
+  });
+  input.value = '';
+  showToast('📝 Note saved');
+};
 
-// ── Profile Modal ──
-profileBtn.addEventListener('click', () => {
-  profileAvatarBig.src = currentUserData.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUserData.username||'U')}&background=3b82f6&color=fff`;
-  profileUsernameInput.value = currentUserData.username || '';
-  profileDisplayInput.value = currentUserData.displayName || '';
-  profileEmailInput.value = currentUserData.email || '';
-  profileModal.classList.add('open');
-});
-profileCancelBtn.addEventListener('click', () => profileModal.classList.remove('open'));
-profileModal.addEventListener('click', (e) => { if (e.target === profileModal) profileModal.classList.remove('open'); });
-profileSaveBtn.addEventListener('click', async () => {
-  const newUsername = profileUsernameInput.value.trim();
-  const newDisplay  = profileDisplayInput.value.trim();
-  if (!newUsername) { toast('Username required', 'error'); return; }
-  await setDoc(doc(db, 'users', currentUser.uid), {
-    username: newUsername, displayName: newDisplay
-  }, { merge: true });
-  currentUserData.username = newUsername;
-  currentUserData.displayName = newDisplay;
-  localStorage.setItem('zap_username', newUsername);
-  navUsername.textContent = newUsername;
-  profileModal.classList.remove('open');
-  toast('Profile updated!', 'success');
-});
+window.deleteNote = async (noteId) => {
+  await deleteDoc(doc(db, 'users', currentUser.uid, 'notes', noteId));
+};
 
-// ── Logout ──
-logoutBtn.addEventListener('click', async () => {
+// ──────────────────────────────────────────────────
+// PANEL TOGGLE
+// ──────────────────────────────────────────────────
+window.switchPanel = (panel) => {
+  activePanel = panel;
+  document.querySelectorAll('.panel-tab').forEach((t, i) => {
+    t.classList.toggle('active', (i === 0 && panel === 'online') || (i === 1 && panel === 'notes'));
+  });
+  document.getElementById('panel-online').classList.toggle('active', panel === 'online');
+  document.getElementById('panel-notes').classList.toggle('active', panel === 'notes');
+};
+
+// ──────────────────────────────────────────────────
+// PROFILE
+// ──────────────────────────────────────────────────
+window.openProfileModal = () => {
+  document.getElementById('profileModal').style.display = 'flex';
+};
+
+window.closeProfileModal = (e) => {
+  if (e.target === document.getElementById('profileModal')) closeProfileModalDirect();
+};
+
+window.closeProfileModalDirect = () => {
+  document.getElementById('profileModal').style.display = 'none';
+};
+
+window.saveProfile = async () => {
+  if (!currentUser) return;
+  const username = document.getElementById('profileUsernameInput').value.trim();
+  const displayName = document.getElementById('profileDisplayInput').value.trim();
+
+  if (!username || !/^[a-zA-Z0-9_]{3,24}$/.test(username)) {
+    showToast('⚠️ Invalid username'); return;
+  }
+
+  await setDoc(doc(db, 'users', currentUser.uid), { username, displayName }, { merge: true });
+  currentUserData = { ...currentUserData, username, displayName };
+  document.getElementById('navUsername').textContent = '@' + username;
+  closeProfileModalDirect();
+  showToast('✅ Profile saved');
+};
+
+// ──────────────────────────────────────────────────
+// LOGOUT
+// ──────────────────────────────────────────────────
+window.handleLogout = async () => {
+  if (!currentUser) return;
   await setDoc(doc(db, 'users', currentUser.uid), { online: false, lastSeen: serverTimestamp() }, { merge: true });
+  clearTyping();
   await signOut(auth);
-  localStorage.removeItem('zap_username');
-  localStorage.removeItem('zap_uid');
   window.location.href = 'index.html';
+};
+
+// ──────────────────────────────────────────────────
+// MOBILE SIDEBAR
+// ──────────────────────────────────────────────────
+document.getElementById('mobileMenuBtn').addEventListener('click', () => {
+  document.getElementById('sidebar').classList.toggle('open');
 });
 
-// ── Browser Notifications ──
-function initNotifications() {
-  notificationsEnabled = localStorage.getItem('zap_notifications') === 'true';
-  notifyGroupMessages = localStorage.getItem('zap_notify_groups') !== 'false';
-  updateNotificationButton();
-  updateGroupNotificationButton();
-
-  notifyToggleBtn.addEventListener('click', async () => {
-    if (!('Notification' in window)) {
-      toast('Notifications are not supported in this browser', 'error');
-      return;
-    }
-    if (Notification.permission !== 'granted') {
-      const permission = await Notification.requestPermission();
-      if (permission !== 'granted') {
-        notificationsEnabled = false;
-        localStorage.setItem('zap_notifications', 'false');
-        updateNotificationButton();
-        return;
-      }
-    }
-    notificationsEnabled = !notificationsEnabled;
-    localStorage.setItem('zap_notifications', String(notificationsEnabled));
-    updateNotificationButton();
-    if (notificationsEnabled) await registerPhoneNotificationTarget();
-    toast(notificationsEnabled ? 'Notifications enabled' : 'Notifications muted', 'success');
-  });
-
-  notifyGroupsToggleBtn.addEventListener('click', () => {
-    notifyGroupMessages = !notifyGroupMessages;
-    localStorage.setItem('zap_notify_groups', String(notifyGroupMessages));
-    updateGroupNotificationButton();
-  });
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
 }
 
-async function registerPhoneNotificationTarget() {
-  if (!('serviceWorker' in navigator)) return;
-  try {
-    const reg = await navigator.serviceWorker.ready;
-    const subscription = await reg.pushManager?.getSubscription?.();
-    if (subscription && currentUser) {
-      await setDoc(doc(db, 'users', currentUser.uid), {
-        pushSubscriptions: { [btoa(subscription.endpoint).slice(0, 32)]: subscription.toJSON() }
-      }, { merge: true });
-    }
-  } catch {}
-}
-
-function updateNotificationButton() {
-  if (!notifyToggleBtn) return;
-  notifyToggleBtn.classList.toggle('enabled', notificationsEnabled);
-  notifyToggleBtn.textContent = notificationsEnabled ? '🔔 Notifications On' : '🔕 Notifications';
-}
-
-function updateGroupNotificationButton() {
-  if (!notifyGroupsToggleBtn) return;
-  notifyGroupsToggleBtn.classList.toggle('enabled', notifyGroupMessages);
-  notifyGroupsToggleBtn.textContent = notifyGroupMessages ? '# Room Alerts On' : '# Room Alerts Off';
-}
-
-async function maybeNotifyMessage({ username, text, uid, type, room }) {
-  if (!document.hidden || uid === currentUser?.uid || !notificationsEnabled) return;
-  if (!('Notification' in window) || Notification.permission !== 'granted') return;
-
-  const isDirect = type === 'direct';
-  const isMention = currentUserData?.username && text.toLowerCase().includes(`@${currentUserData.username.toLowerCase()}`);
-  const isGroup = type === 'room';
-  if (!isDirect && !isMention && !(isGroup && notifyGroupMessages)) return;
-
-  const title = isDirect ? 'Zap direct message' : isMention ? 'Zap mention' : `Zap room: ${room || 'chat'}`;
-  const options = {
-    body: `${username || 'Someone'}: ${text}`,
-    icon: 'icon-192.png',
-    badge: 'icon-192.png',
-    tag: isDirect ? 'zap-dm' : `zap-${room || 'global'}`,
-    data: { url: 'dashboard.html', type, room }
-  };
-
-  try {
-    const reg = await navigator.serviceWorker?.ready;
-    if (reg?.showNotification) {
-      await reg.showNotification(title, options);
-      return;
-    }
-  } catch {}
-
-  new Notification(title, options);
-}
-
-// ── Lightbox ──
-lightbox.addEventListener('click', () => lightbox.classList.remove('open'));
-
-// ── PWA Install + Service Worker ──
-function initPWA() {
-  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
-  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
-
-  if (installBtn) {
-    installBtn.style.display = isIOS && !isStandalone ? 'flex' : 'none';
-    installBtn.addEventListener('click', async () => {
-      if (isIOS && !deferredInstallPrompt) {
-        alert('To install Zap on iPhone or iPad:\n\n1. Tap the Share button\n2. Scroll down\n3. Tap Add to Home Screen');
-        return;
-      }
-      if (!deferredInstallPrompt) return;
-      deferredInstallPrompt.prompt();
-      const choice = await deferredInstallPrompt.userChoice.catch(() => ({ outcome: 'dismissed' }));
-      deferredInstallPrompt = null;
-      installBtn.style.display = 'none';
-      if (choice.outcome === 'accepted') toast('Zap is installing', 'success');
-    });
-  }
-
-  window.addEventListener('beforeinstallprompt', (event) => {
-    event.preventDefault();
-    deferredInstallPrompt = event;
-    if (installBtn && !isStandalone) installBtn.style.display = 'flex';
-  });
-
-  window.addEventListener('appinstalled', () => {
-    deferredInstallPrompt = null;
-    if (installBtn) installBtn.style.display = 'none';
-    toast('Zap installed', 'success');
-  });
-
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js').catch((err) => console.warn('Service worker registration failed', err));
-  }
-}
-
-// ── Init ──
-function initUI() {
-  initPWA();
-  initNotifications();
-  initContextMenus();
-  initDisappearMode();
-}
-
-function initChat() {
-  subscribeMessages();
-  subscribeOnlineUsers();
-}
-
-function initDMs() {
-  loadDmList();
-}
-
-function initContextMenus() {
-  dmContextMenu.classList.remove('open');
-}
-
-function initDisappearMode() {
-  cleanupExpiredMessages(collection(db, 'messages'));
-}
-
-function initApp() {
-  initGroups();
-  initChat();
-  initDMs();
-}
-
-window.addEventListener('DOMContentLoaded', initUI);
+// Close sidebar on message click (mobile)
+document.getElementById('messagesArea').addEventListener('click', closeSidebar);
 </script>
 </body>
 </html>
-
