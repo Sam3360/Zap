@@ -1,4 +1,4 @@
-/* ⚡ Zap - Firebase Cloud Messaging Service Worker */
+// ⚡ Zap — Firebase Cloud Messaging Service Worker
 
 importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js');
@@ -14,19 +14,24 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
-// Handle background push notifications
+// Handle background push messages
 messaging.onBackgroundMessage((payload) => {
-  console.log('[firebase-messaging-sw.js] Received background message:', payload);
+  console.log('[⚡ Zap SW] Background message received:', payload);
 
   const notificationTitle = payload.notification?.title || '⚡ Zap';
   const notificationOptions = {
     body: payload.notification?.body || 'You have a new message',
-    icon: 'icon-192.png',
-    badge: 'icon-192.png',
-    tag: 'zap-notification',
-    data: payload.data || {},
+    icon: 'https://sam3360.github.io/Zap/icon-192.png',
+    badge: 'https://sam3360.github.io/Zap/icon-192.png',
+    tag: 'zap-message',
+    renotify: true,
+    vibrate: [200, 100, 200],
+    data: {
+      url: payload.data?.url || '/Zap/dashboard.html',
+      ...payload.data
+    },
     actions: [
-      { action: 'open', title: 'Open Zap' },
+      { action: 'open', title: '💬 Open Zap' },
       { action: 'dismiss', title: 'Dismiss' }
     ]
   };
@@ -37,60 +42,65 @@ messaging.onBackgroundMessage((payload) => {
 // Handle notification click
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
+
   if (event.action === 'dismiss') return;
+
+  const url = event.notification.data?.url || '/Zap/dashboard.html';
+
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      // If a Zap tab is already open, focus it
       for (const client of clientList) {
-        if (client.url.includes('/dashboard.html') && 'focus' in client) {
+        if (client.url.includes('/Zap/') && 'focus' in client) {
           return client.focus();
         }
       }
-      return clients.openWindow('/dashboard.html');
+      // Otherwise open a new tab
+      if (clients.openWindow) return clients.openWindow(url);
     })
   );
 });
 
 // Cache strategy for offline support
-const CACHE_NAME = 'zap-cache-v2';
-const urlsToCache = ['/', '/index.html', '/dashboard.html', '/manifest.json'];
+const CACHE_NAME = 'zap-v1';
+const ASSETS_TO_CACHE = [
+  '/Zap/',
+  '/Zap/index.html',
+  '/Zap/dashboard.html',
+  '/Zap/manifest.json'
+];
 
 self.addEventListener('install', (event) => {
-  event.waitUntil((async () => {
-    const cache = await caches.open(CACHE_NAME);
-    await Promise.all(urlsToCache.map(async (url) => {
-      try {
-        const response = await fetch(url, { cache: 'reload' });
-        if (response.ok) await cache.put(url, response);
-      } catch (err) {
-        console.warn('[firebase-messaging-sw] Skipped cache asset:', url, err);
-      }
-    }));
-    await self.skipWaiting();
-  })());
+  console.log('[⚡ Zap SW] Installing service worker…');
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS_TO_CACHE))
+  );
+  self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
+  console.log('[⚡ Zap SW] Activating service worker…');
   event.waitUntil(
-    caches.keys().then((names) => Promise.all(
-      names.filter(n => n !== CACHE_NAME).map(n => caches.delete(n))
-    ))
+    caches.keys().then((keys) =>
+      Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
+    )
   );
   self.clients.claim();
 });
 
-self.addEventListener('push', (event) => {
-  if (!event.data) return;
-  let payload = {};
-  try {
-    payload = event.data.json();
-  } catch {
-    payload = { body: event.data.text() };
+self.addEventListener('fetch', (event) => {
+  // Network-first strategy for Firebase, cache-first for static assets
+  if (event.request.url.includes('firestore') || event.request.url.includes('googleapis')) {
+    return; // Let Firebase handle its own requests
   }
-  event.waitUntil(self.registration.showNotification(payload.title || 'Zap', {
-    body: payload.body || 'You have a new message',
-    icon: payload.icon || 'icon-192.png',
-    badge: payload.badge || 'icon-192.png',
-    tag: payload.tag || 'zap-message',
-    data: payload.data || {}
-  }));
+
+  event.respondWith(
+    fetch(event.request)
+      .then((res) => {
+        const resClone = res.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, resClone));
+        return res;
+      })
+      .catch(() => caches.match(event.request))
+  );
 });
