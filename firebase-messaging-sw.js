@@ -1,4 +1,5 @@
 // ⚡ Zap — Firebase Cloud Messaging Service Worker
+// Place this file at the ROOT of your project (same level as index.html)
 
 importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js');
