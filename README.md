@@ -1,4 +1,4 @@
-# [Zap_v2 Now Phone Compatible](https://Sam3360.github.io/Zap/UserPolicyZap.html)  ⚡ [Latest version]
+# [Zap](https://Sam3360.github.io/Zap/UserPolicyZap.html)  ⚡ [Latest version - Now Phone Compatible]
 
 ![Zap Banner](ZapBanner.png)
 
