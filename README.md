@@ -1,7 +1,5 @@
 # [Zap_v2 Now Phone Compatible](https://Sam3360.github.io/Zap/UserPolicyZap.html)  ⚡ [Latest version]
 
-> NOTICE: All changes and features were merged into the OG repo so you may use - https://sam3360.github.io/Zap/
-
 ![Zap Banner](ZapBanner.png)
 
 Try it here: [https://Sam3360.github.io/Zap_v2](https://Sam3360.github.io/ZapPWA)
