@@ -714,8 +714,6 @@ body{
 .code-box{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--bg2);border:1px dashed var(--accent);border-radius:12px;padding:12px 14px;margin-bottom:10px}
 .code-box b{font-family:monospace;font-size:24px;letter-spacing:5px;color:var(--accent)}
 .mi.code{text-transform:uppercase;letter-spacing:4px;font-family:monospace;font-size:18px;text-align:center}
-.mini{background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.3);color:var(--accent);border-radius:8px;padding:4px 8px;font-size:11px;font-weight:700;cursor:pointer;margin-left:4px;flex-shrink:0}
-.mini.bad{color:var(--red);border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.08)}
 .hidden{display:none!important}
 </style>
 </head>
@@ -753,12 +751,29 @@ body{
   <!-- ─── LEFT SIDEBAR ─── -->
   <aside class="sidebar" id="sidebar">
     <div class="sb-scroll">
-      <div class="sb-lbl">💬 Community</div>
-      <div class="ch active" id="ch-general" data-room="general" data-icon="💬" data-name="General" data-desc="Talk about anything">
+      <div class="sb-lbl">⚡ Global</div>
+      <div class="ch active" id="ch-global" data-room="global" data-icon="🌍" data-name="Global Chat" data-desc="Everyone is here">
+        <span class="ch-ic">🌍</span><span class="ch-name">Global</span><span class="ch-badge">0</span>
+      </div>
+
+      <div class="sb-lbl">💬 Rooms</div>
+      <div class="ch" id="ch-general" data-room="general" data-icon="💬" data-name="General" data-desc="Talk about anything">
         <span class="ch-ic">💬</span><span class="ch-name">General</span><span class="ch-badge">0</span>
       </div>
-      <div class="ch" id="ch-support" data-room="support" data-icon="🛟" data-name="Support & Bugs" data-desc="Report bugs, ask for help">
-        <span class="ch-ic">🛟</span><span class="ch-name">Support &amp; Bugs</span><span class="ch-badge">0</span>
+      <div class="ch" id="ch-gaming" data-room="gaming" data-icon="🎮" data-name="Gaming" data-desc="Games, streams & clips">
+        <span class="ch-ic">🎮</span><span class="ch-name">Gaming</span><span class="ch-badge">0</span>
+      </div>
+      <div class="ch" id="ch-school" data-room="school" data-icon="📚" data-name="School" data-desc="Study together">
+        <span class="ch-ic">📚</span><span class="ch-name">School</span><span class="ch-badge">0</span>
+      </div>
+      <div class="ch" id="ch-music" data-room="music" data-icon="🎵" data-name="Music" data-desc="Beats & artists">
+        <span class="ch-ic">🎵</span><span class="ch-name">Music</span><span class="ch-badge">0</span>
+      </div>
+      <div class="ch" id="ch-memes" data-room="memes" data-icon="😂" data-name="Memes" data-desc="Post the good stuff">
+        <span class="ch-ic">😂</span><span class="ch-name">Memes</span><span class="ch-badge">0</span>
+      </div>
+      <div class="ch" id="ch-tech" data-room="tech" data-icon="💻" data-name="Tech" data-desc="Code, AI & gadgets">
+        <span class="ch-ic">💻</span><span class="ch-name">Tech</span><span class="ch-badge">0</span>
       </div>
 
       <div class="sb-lbl">👥 My Groups <span style="display:flex;gap:4px"><button onclick="openModal('joinGroupModal')">Join</button><button onclick="openModal('createGroupModal')">+ New</button></span></div>
@@ -779,7 +794,6 @@ body{
         <div class="hdr-sub" id="chatSub">Everyone is here</div>
       </div>
       <div class="hdr-acts">
-        <button class="hbt" id="ttlBtn" onclick="openModal('ttlModal')" title="Disappearing messages" style="display:none">⏳</button>
         <button class="hbt" id="infoBtn" onclick="showGroupInfo()" title="Group info" style="display:none">ℹ️</button>
         <button class="hbt" id="pinBtn" onclick="showPinned()" title="Pinned">📌</button>
         <button class="hbt" onclick="openModal('profileModal')" title="Profile">👤</button>
@@ -1031,16 +1045,6 @@ body{
   </div>
 </div>
 
-<!-- Disappearing messages -->
-<div class="modal-bg hidden" id="ttlModal" onclick="bgClose(event,'ttlModal')">
-  <div class="modal"><span class="modal-handle"></span>
-    <div class="modal-title">⏳ Disappearing messages</div>
-    <div class="modal-sub">New messages in this chat vanish after the time you pick. Older messages aren't affected.</div>
-    <div class="icopts" id="ttlOpts"></div>
-    <div class="modal-btns"><button class="mbtn ghost" onclick="closeModal('ttlModal')">Close</button></div>
-  </div>
-</div>
-
 <!-- Image Zoom -->
 <div class="zoom-bg hidden" id="zoomBg" onclick="closeZoom()">
   <button class="zoom-x" onclick="closeZoom()">✕</button>
@@ -1054,7 +1058,7 @@ body{
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import {
-  initializeFirestore, doc, setDoc, getDoc, addDoc, deleteDoc, updateDoc,
+  getFirestore, doc, setDoc, getDoc, addDoc, deleteDoc, updateDoc,
   collection, query, where, limit, onSnapshot, serverTimestamp, getDocs, runTransaction, arrayUnion, arrayRemove
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
@@ -1068,11 +1072,11 @@ const FB = initializeApp({
   appId:"1:121751642387:web:6e83c8f559dfb51f0dbae6"
 });
 const auth = getAuth(FB);
-const db=initializeFirestore(FB,{experimentalAutoDetectLongPolling:true});
+const db   = getFirestore(FB);
 
 /* ── STATE ── */
 let me=null, meData=null;
-let room='general', dmUser=null;
+let room='global', dmUser=null;
 let unsubMsgs=null, unsubTyp=null;
 let typTimer=null, typing=false;
 let replyTo=null, editId=null;
@@ -1085,16 +1089,21 @@ const MSG={};
 let searchDeb=null;
 const REACTS=['👍','❤️','😂','🔥','😮','👏','🎉','💯','😎','🤔'];
 const ROOMS={
+  global:['🌍','Global Chat','Everyone is here'],
   general:['💬','General','Talk about anything'],
-  support:['🛟','Support & Bugs','Report bugs, ask for help'],
+  gaming:['🎮','Gaming','Games, streams & clips'],
+  school:['📚','School','Study together'],
+  music:['🎵','Music','Beats & artists'],
+  memes:['😂','Memes','Post the good stuff'],
+  tech:['💻','Tech','Code, AI & gadgets'],
 };
 
 /* ── AUTH ── */
 onAuthStateChanged(auth, async user=>{
-  if (!user){ const j=new URLSearchParams(location.search).get('join'); if(j) localStorage.setItem('zap-join',j); go('index.html'); return; }
-  const s=await getDoc(doc(db,'users',user.uid));
-  if (!s.exists()||!s.data().username){ go('index.html?setup=1'); return; }
+  if (!user){ const j=new URLSearchParams(location.search).get('join'); if(j) localStorage.setItem('zap-join',j); location.href='index.html'; return; }
   me=user;
+  const s=await getDoc(doc(db,'users',user.uid));
+  if (!s.exists()){ location.href='index.html'; return; }
   meData=s.data();
   await setDoc(doc(db,'users',user.uid),{online:true,lastSeen:serverTimestamp()},{merge:true});
 
@@ -1105,13 +1114,13 @@ onAuthStateChanged(auth, async user=>{
   $('profDisplay').value=meData.displayName||'';
 
   initTheme();
-  goRoom('general');
+  autoSetup();
+  goRoom('global');
   subOnline();
   loadNotes();
   subDMList();
   subGroups();
   checkJoinLink();
-  getDoc(doc(db,'appAdmins',me.uid)).then(s=>{isAppAdmin=s.exists();}).catch(()=>{});
   swReg();
   const beat=()=>{ if(!document.hidden) setDoc(doc(db,'users',me.uid),{online:myStatus!=='invisible',lastSeen:serverTimestamp()},{merge:true}); };
   setInterval(beat,60000);
@@ -1129,33 +1138,11 @@ window.addEventListener('beforeunload',()=>{
 window.addEventListener('unhandledrejection',e=>{
   const m=e.reason?.message||'';
   if (m.includes('permission-denied')||m.includes('insufficient permissions')){
-    e.preventDefault(); window._zapReady?toast('🚫 You don\'t have permission to do that','error'):showSetupGuide();
+    e.preventDefault(); showSetupGuide();
   }
 });
 
 /* ── HELPERS ── */
-function go(url){
-  const same=q=>q.replace(/index\.html$/,'');
-  if(same(new URL(url,location.href).pathname)===same(location.pathname)){
-    document.body.innerHTML='<div style="padding:32px;max-width:440px;margin:auto;font-family:sans-serif;color:#f1f5f9;line-height:1.5"><h2>⚠️ Wrong file on your site</h2><p style="color:#94a3b8;margin-top:12px">This app screen is saved as <b>index.html</b> in your GitHub repo, so it keeps redirecting to itself. <b>index.html</b> must be the login page, and this file must be named <b>dashboard.html</b>.</p></div>';
-    return;
-  }
-  try{
-    const now=Date.now(),h=JSON.parse(sessionStorage.getItem('zap-hops')||'[]').filter(v=>now-v<20000);
-    h.push(now);sessionStorage.setItem('zap-hops',JSON.stringify(h));
-    if(h.length>3){loopStop();return;}
-  }catch(e){}
-  location.href=url;
-}
-function loopStop(){
-  document.body.innerHTML='<div style="padding:32px;max-width:420px;margin:auto;font-family:sans-serif;color:#f1f5f9"><h2>⚡ Zap stopped a reload loop</h2><p style="color:#94a3b8;margin:12px 0">Something kept redirecting this page. Tap below to reset this device, then try again.</p><button id="zapFix" style="padding:12px 18px;border:0;border-radius:10px;background:#3b82f6;color:#fff;font-size:15px">Reset &amp; sign out</button></div>';
-  document.getElementById('zapFix').onclick=async()=>{
-    try{await signOut(auth);}catch(e){}
-    try{(await navigator.serviceWorker.getRegistrations()).forEach(r=>r.unregister());(await caches.keys()).forEach(k=>caches.delete(k));}catch(e){}
-    try{sessionStorage.clear();}catch(e){}
-    location.replace('index.html');
-  };
-}
 const $=id=>document.getElementById(id);
 const genAv=u=>`https://ui-avatars.com/api/?name=${encodeURIComponent(u||'?')}&background=3b82f6&color=fff&bold=true&rounded=true`;
 
@@ -1281,7 +1268,6 @@ function goRoom(roomId){
   subTyping(roomId);
   closeSidebar();
   setMobileActive('chat');
-  watchTtl();
 }
 
 // Wire room buttons
@@ -1292,7 +1278,7 @@ document.querySelectorAll('.ch[data-room]').forEach(btn=>{
 function setHeader(ic,name,desc){
   $('chatIc').textContent=ic;
   $('chatName').textContent=name;
-  baseSub=desc;renderSub();
+  $('chatSub').textContent=desc;
 }
 
 function clearMsgs(){
@@ -1310,19 +1296,24 @@ function clearMsgs(){
 // Uses single-field query (no composite index needed)
 function subMsgs(roomId){
   if(unsubMsgs) unsubMsgs();
-  const q=(roomId.startsWith('g_')||roomId.startsWith('dm__'))?query(mcol(),limit(120)):query(mcol(),where('room','==',roomId),limit(120));
+  const isDM=roomId.startsWith('dm__');
+  const col=isDM?'dms':'messages';
+  const field=isDM?'dmId':'room';
+  const val=isDM?roomId.slice(4):roomId;
+
+  const q=query(collection(db,col),where(field,'==',val),limit(120));
   let first=true;
 
   unsubMsgs=onSnapshot(q,snap=>{
     if(first){
       first=false;
-      $('skelWrap').style.display='none';window._zapReady=true;
+      $('skelWrap').style.display='none';
       if(snap.empty){showEmpty();return;}
       // sort client-side, render in order
       snap.docs
         .map(d=>({id:d.id,...d.data()}))
         .sort((a,b)=>(a.createdAt?.seconds||0)-(b.createdAt?.seconds||0))
-        .forEach(d=>{ if(isExpired(d)){reap(d);return;} if(!document.getElementById('mg-'+d.id)) renderMsg(d); });
+        .forEach(d=>{ if(!document.getElementById('mg-'+d.id)) renderMsg(d); });
       scrollBot(true);
       return;
     }
@@ -1330,7 +1321,6 @@ function subMsgs(roomId){
       if(ch.type==='added'){
         const d={id:ch.doc.id,...ch.doc.data()};
         if(!document.getElementById('mg-'+d.id)){
-          if(isExpired(d)){reap(d);return;}
           removeEmpty();
           renderMsg(d);
           if(d.uid!==me?.uid){ notif(d.username||'?',d.text||'📷'); bumpBadge(roomId); }
@@ -1407,7 +1397,7 @@ function buildMsg(data){
   const rqHTML=data.replyTo?`<div class="rq" onclick="jumpMsg('${data.replyTo.id}')"><span class="rq-auth">↩ ${esc(data.replyTo.username)}</span>${esc((data.replyTo.text||'📷').slice(0,80))}</div>`:'';
   const txtHTML=data.text?`<div class="mg-txt">${fmtTxt(data.text)}</div>`:'';
   const imgHTML=data.imageURL?`<img class="mg-img" src="${data.imageURL}" alt="img" onclick="openZoom('${data.imageURL}')" loading="lazy"/>`:'';
-  const audHTML=data.voiceURL?`<div class="mg-audio"><audio controls preload="metadata" src="${data.voiceURL}" onerror="this.outerHTML='<span style=color:var(--muted);font-size:12px>⚠️ Can’t play on this device</span>'"></audio></div>`:'';
+  const audHTML=data.voiceURL?`<div class="mg-audio"><audio controls src="${data.voiceURL}"></audio></div>`:'';
   const edHTML=data.edited?`<span class="mg-edited">(edited)</span>`:'';
   const rxHTML=buildReacts(data);
 
@@ -1417,7 +1407,6 @@ function buildMsg(data){
     if(data.text) acts+=`<button class="ma" onclick="startEdit('${data.id}')" title="Edit">✏️</button>`;
     acts+=`<button class="ma del" onclick="delMsg('${data.id}')" title="Delete">🗑️</button>`;
   }
-  if(!isMe&&canMod()) acts+=`<button class="ma del" onclick="delMsg('${data.id}')" title="Delete (moderator)">🛡️</button>`;
   acts+=`<button class="ma" onclick="togglePin('${data.id}')" title="Pin">📌</button>`;
 
   el.innerHTML=`
@@ -1462,7 +1451,8 @@ window.trigReact=(e,msgId)=>{
 };
 window.toggleReact=async(msgId,em)=>{
   if(!me) return;
-  const ref=mdoc(msgId);
+  const col=dmUser?'dms':'messages';
+  const ref=doc(db,col,msgId);
   const s=await getDoc(ref);if(!s.exists()) return;
   const rx=s.data().reactions||{};
   const u=rx[em]||{};
@@ -1484,19 +1474,18 @@ window.sendMsg=async()=>{
   };
   if(replyTo) data.replyTo={id:replyTo.id,username:replyTo.username,text:replyTo.text};
   if(pendingImg) data.imageURL=pendingImg;
-  if(curTtl>0) data.expiresAt=new Date(Date.now()+curTtl*3600000);
 
   if(dmUser){
     const did=dmId(me.uid,dmUser.uid);
     data.dmId=did;data.room='dm__'+did;
-    await addDoc(mcol(),data);
+    await addDoc(collection(db,'dms'),data);
     const mRef=doc(db,'dms_meta',did);
     const ms=await getDoc(mRef);
     const prev=ms.exists()?(ms.data()[`unread_${dmUser.uid}`]||0):0;
     await setDoc(mRef,{participants:[me.uid,dmUser.uid],lastMessage:txt||'📷 Image',lastAt:serverTimestamp(),[`unread_${dmUser.uid}`]:prev+1},{merge:true});
   } else {
     data.room=room;
-    await addDoc(mcol(),data);
+    await addDoc(collection(db,'messages'),data);
   }
   inp.value='';inp.style.height='auto';
   cancelReply();cancelImg();updateChar('');clearTypDoc();
@@ -1541,19 +1530,22 @@ window.jumpMsg=id=>{
 
 /* ── DELETE / EDIT ── */
 window.delMsg=async msgId=>{
-  await deleteDoc(mdoc(msgId));toast('Message deleted','info');
+  const col=dmUser?'dms':'messages';
+  await deleteDoc(doc(db,col,msgId));toast('Message deleted','info');
 };
 window.startEdit=msgId=>{editId=msgId;$('editIn').value=MSG[msgId]?.text||'';openModal('editModal');};
 window.saveEdit=async()=>{
   if(!editId) return;
   const txt=$('editIn').value.trim();if(!txt) return;
-  await updateDoc(mdoc(editId),{text:txt,edited:true});
+  const col=dmUser?'dms':'messages';
+  await updateDoc(doc(db,col,editId),{text:txt,edited:true});
   editId=null;closeModal('editModal');toast('✅ Edited','success');
 };
 
 /* ── PIN ── */
 window.togglePin=async msgId=>{
-  const ref=pinRef();
+  const r=dmUser?'dm__'+dmId(me.uid,dmUser.uid):room;
+  const ref=doc(db,'rooms',r);
   const s=await getDoc(ref);
   const pins=s.exists()?(s.data().pinned||[]):[];
   if(pins.includes(msgId)){
@@ -1565,12 +1557,13 @@ window.togglePin=async msgId=>{
 window.showPinned=async()=>{
   const list=$('pinnedList');list.innerHTML='<div style="color:var(--muted);font-size:13px">Loading…</div>';
   openModal('pinnedModal');
-  const s=await getDoc(pinRef());
+  const r=dmUser?'dm__'+dmId(me.uid,dmUser.uid):room;
+  const s=await getDoc(doc(db,'rooms',r));
   const pins=s.exists()?(s.data().pinned||[]):[];
   list.innerHTML='';
   if(!pins.length){list.innerHTML='<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px">No pinned messages</div>';return;}
   for(const id of pins){
-    const ms=await getDoc(mdoc(id));
+    const ms=await getDoc(doc(db,'messages',id));
     if(!ms.exists()) continue;
     const d=ms.data();
     const item=document.createElement('div');item.className='pin-item';
@@ -1610,11 +1603,11 @@ window.closeZoom=()=>$('zoomBg').classList.add('hidden');
 $('voiceBtn').addEventListener('click',()=>{
   if(voiceRec){stopVoice();return;}
   navigator.mediaDevices.getUserMedia({audio:true}).then(stream=>{
-    const mt=['audio/mp4','audio/webm;codecs=opus','audio/webm'].find(m=>window.MediaRecorder&&MediaRecorder.isTypeSupported&&MediaRecorder.isTypeSupported(m));voiceRec=new MediaRecorder(stream,mt?{mimeType:mt,audioBitsPerSecond:32000}:{});voiceChunks=[];voiceSec=0;
+    voiceRec=new MediaRecorder(stream,{audioBitsPerSecond:24000});voiceChunks=[];voiceSec=0;
     voiceRec.ondataavailable=e=>voiceChunks.push(e.data);
     voiceRec.onstop=async()=>{
       stream.getTracks().forEach(t=>t.stop());
-      const blob=new Blob(voiceChunks,{type:(voiceRec&&voiceRec.mimeType)||'audio/webm'});
+      const blob=new Blob(voiceChunks,{type:'audio/webm'});
       const r=new FileReader();
       r.onload=async ev=>{
         if(ev.target.result.length>900000){toast('⚠️ Voice note too long','error');return;}
@@ -1623,9 +1616,8 @@ $('voiceBtn').addEventListener('click',()=>{
           photoURL:meData.photoURL||'',text:'',voiceURL:ev.target.result,
           createdAt:serverTimestamp(),reactions:{},
         };
-        if(dmUser){const did=dmId(me.uid,dmUser.uid);vData.dmId=did;vData.room='dm__'+did;}else vData.room=room;
-        if(curTtl>0) vData.expiresAt=new Date(Date.now()+curTtl*3600000);
-        await addDoc(mcol(),vData);
+        if(dmUser){const did=dmId(me.uid,dmUser.uid);vData.dmId=did;vData.room='dm__'+did;await addDoc(collection(db,'dms'),vData);}
+        else{vData.room=room;await addDoc(collection(db,'messages'),vData);}
         toast('🎤 Voice sent!','success');
       };
       r.readAsDataURL(blob);
@@ -1711,7 +1703,7 @@ function openDMChat(ud){
 
   // Clear unread
   const did=dmId(me.uid,ud.uid);
-  setDoc(doc(db,'dms_meta',did),{participants:[me.uid,ud.uid],[`unread_${me.uid}`]:0},{merge:true});
+  setDoc(doc(db,'dms_meta',did),{[`unread_${me.uid}`]:0},{merge:true});
   if(dmUnreads[ud.uid]){dmUnreads[ud.uid]=0;updateDMBadge();}
 
   clearMsgs();
@@ -1721,7 +1713,6 @@ function openDMChat(ud){
   subTyping(rid);
   closeSidebar();
   setMobileActive('chat');
-  watchTtl();
 }
 
 function subDMList(){
@@ -1816,7 +1807,7 @@ window.saveProfile=async()=>{
 window.handleLogout=async()=>{
   if(!me) return;
   await setDoc(doc(db,'users',me.uid),{online:false,lastSeen:serverTimestamp()},{merge:true});
-  clearTypDoc();await signOut(auth);go('index.html');
+  clearTypDoc();await signOut(auth);location.href='index.html';
 };
 
 /* ── SEARCH ── */
@@ -1832,7 +1823,7 @@ async function doSearch(term){
   const sd=$('searchDrop');
   sd.innerHTML='<div style="padding:12px 14px;font-size:13px;color:var(--muted)">Searching…</div>';
   sd.classList.add('open');
-  const q=(room.startsWith('g_')||room.startsWith('dm__'))?query(mcol(),limit(120)):query(mcol(),where('room','==',room),limit(120));
+  const q=query(collection(db,'messages'),where('room','==',room),limit(120));
   const snap=await getDocs(q);
   const res=snap.docs.map(d=>({id:d.id,...d.data()}))
     .filter(m=>m.text&&m.text.toLowerCase().includes(term.toLowerCase()))
@@ -1897,37 +1888,7 @@ $('menuBtn').addEventListener('click',()=>{
 });
 window.closeSidebar=closeSidebar;
 
-/* ── PATHS · ROLES · DISAPPEARING MESSAGES ── */
-let isAppAdmin=false,curTtl=0,unsubTtl=null,baseSub='';
-const TTLS=[[0,'Off'],[1,'1 hour'],[14,'14 hours'],[24,'24 hours'],[168,'7 days'],[336,'14 days']];
-const ttlLabel=h=>(TTLS.find(v=>v[0]===h)||[0,h+'h'])[1];
-const mcol=()=>room.startsWith('dm__')?collection(db,'dmChats',room.slice(4),'messages'):room.startsWith('g_')?collection(db,'groups',room.slice(2),'messages'):collection(db,'messages');
-const mdoc=id=>doc(mcol(),id);
-const pinRef=()=>dmUser?doc(db,'dms_meta',dmId(me.uid,dmUser.uid)):room.startsWith('g_')?doc(db,'groups',room.slice(2)):doc(db,'rooms',room);
-const myGroup=()=>myGroups.find(g=>'g_'+g.id===room);
-const gAdmin=g=>!!g&&(g.ownerUid===me.uid||(g.admins||[]).includes(me.uid));
-const canMod=()=>dmUser?false:room.startsWith('g_')?gAdmin(myGroup()):isAppAdmin;
-const ttlAllowed=()=>dmUser?true:room.startsWith('g_')?gAdmin(myGroup()):false;
-const isExpired=m=>!!m.expiresAt&&m.expiresAt.toMillis()<=Date.now();
-const reap=m=>deleteDoc(mdoc(m.id)).catch(()=>{});
-function renderSub(){$('chatSub').textContent=baseSub+(curTtl?'  ·  ⏳ '+ttlLabel(curTtl):'');}
-function watchTtl(){
-  if(unsubTtl){unsubTtl();unsubTtl=null;} curTtl=0;renderSub();
-  $('ttlBtn').style.display=ttlAllowed()?'flex':'none';
-  const ref=dmUser?doc(db,'dms_meta',dmId(me.uid,dmUser.uid)):room.startsWith('g_')?doc(db,'groups',room.slice(2)):null;
-  if(ref) unsubTtl=onSnapshot(ref,s=>{curTtl=s.exists()?(s.data().ttl||0):0;renderSub();},()=>{});
-}
-window.setTtl=async h=>{
-  try{
-    await setDoc(pinRef(),dmUser?{participants:[me.uid,dmUser.uid],ttl:h}:{ttl:h},{merge:true});
-    closeModal('ttlModal');toast(h?'⏳ Messages vanish after '+ttlLabel(h):'Disappearing messages off','success');
-  }catch(e){toast('🚫 Only admins can change this','error');}
-};
-function sweep(){document.querySelectorAll('#msgs .mg').forEach(el=>{const m=MSG[el.id.slice(3)];if(m&&isExpired(m)){el.remove();reap(m);}});}
-setInterval(sweep,30000);
-$('ttlOpts').innerHTML=TTLS.map(v=>`<span class="icopt" style="font-size:13px;padding:8px 12px" onclick="setTtl(${v[0]})">${v[1]}</span>`).join('');
-
-/* ── GROUPS (messages live in groups/<id>/messages) ── */
+/* ── GROUPS (messages live in 'messages' with room='g_<id>') ── */
 let myGroups=[],curGroup=null,pickedIcon='👥';
 const CC='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const genCode=()=>Array.from({length:6},()=>CC[Math.floor(Math.random()*CC.length)]).join('');
@@ -1945,8 +1906,7 @@ function subGroups(){
       el.innerHTML=`<span class="ch-ic">${esc(g.icon||'👥')}</span><span class="ch-name">${esc(g.name)}</span><span class="ch-badge">0</span>`;
       el.onclick=()=>goRoom('g_'+g.id);list.appendChild(el);
     });
-    if(!dmUser&&room.startsWith('g_')&&!myGroups.find(g=>'g_'+g.id===room)) goRoom('general');
-    if(!dmUser&&room.startsWith('g_')) $('ttlBtn').style.display=ttlAllowed()?'flex':'none';
+    if(!dmUser&&room.startsWith('g_')&&!myGroups.find(g=>'g_'+g.id===room)) goRoom('global');
   });
 }
 window.pickIcon=el=>{document.querySelectorAll('.icopt').forEach(o=>o.classList.remove('active'));el.classList.add('active');pickedIcon=el.textContent;};
@@ -1959,8 +1919,8 @@ window.createGroup=async()=>{
       code='';
       for(let i=0;i<8&&!code;i++){const c=genCode();if(!(await tx.get(doc(db,'codes',c))).exists()) code=c;}
       if(!code) throw new Error('Could not make a unique code, try again');
-      tx.set(doc(db,'codes',code),{groupId:gref.id,name,icon:pickedIcon});
-      tx.set(gref,{name,icon:pickedIcon,code,ownerUid:me.uid,members:[me.uid],admins:[],createdAt:serverTimestamp()});
+      tx.set(doc(db,'codes',code),{groupId:gref.id});
+      tx.set(gref,{name,icon:pickedIcon,code,ownerUid:me.uid,members:[me.uid],createdAt:serverTimestamp()});
     });
     $('grpName').value='';closeModal('createGroupModal');
     ROOMS['g_'+gref.id]=[pickedIcon,name,'1 member'];
@@ -1972,13 +1932,12 @@ async function joinByCode(raw){
   if(code.length!==6){toast('⚠️ Codes are 6 characters','error');return false;}
   const cs=await getDoc(doc(db,'codes',code));
   if(!cs.exists()){toast('⚠️ No group with that code','error');return false;}
-  const {groupId:gid,name,icon}=cs.data();
-  if(!myGroups.some(x=>x.id===gid)){
-    try{await updateDoc(doc(db,'groups',gid),{members:arrayUnion(me.uid),joinCode:code});}
-    catch(e){toast('⚠️ Could not join — ask for a fresh code','error');return false;}
-  }
-  ROOMS['g_'+gid]=[icon||'👥',name||'Group','Group'];
-  goRoom('g_'+gid);toast('✅ Joined '+(name||'group'),'success');
+  const gid=cs.data().groupId,gs=await getDoc(doc(db,'groups',gid));
+  if(!gs.exists()){toast('⚠️ That group no longer exists','error');return false;}
+  const g=gs.data(),already=g.members.includes(me.uid);
+  if(!already) await updateDoc(doc(db,'groups',gid),{members:arrayUnion(me.uid)});
+  ROOMS['g_'+gid]=[g.icon||'👥',g.name,'Group'];
+  goRoom('g_'+gid);toast(already?'You are already in '+g.name:'✅ Joined '+g.name,'success');
   return true;
 }
 window.joinGroup=async()=>{if(await joinByCode($('joinCode').value)){$('joinCode').value='';closeModal('joinGroupModal');}};
@@ -1989,31 +1948,15 @@ function checkJoinLink(){
   $('joinCode').value=c.toUpperCase().slice(0,6);openModal('joinGroupModal');toast('Invite found — tap Join','info',3500);
 }
 window.showGroupInfo=async()=>{
-  const g=myGroup();if(!g) return;
-  curGroup=g;const owner=g.ownerUid===me.uid,adm=gAdmin(g),admins=g.admins||[];
+  const g=myGroups.find(x=>'g_'+x.id===room);if(!g) return;
+  curGroup=g;const owner=g.ownerUid===me.uid;
   $('gi-title').textContent=(g.icon||'👥')+' '+g.name;$('gi-code').textContent=g.code;
   $('gi-owner').classList.toggle('hidden',!owner);$('gi-leave').classList.toggle('hidden',owner);
   $('gi-members').innerHTML='<div style="color:var(--muted);font-size:13px">Loading…</div>';
   openModal('groupInfoModal');
   const us=await Promise.all(g.members.map(u=>getDoc(doc(db,'users',u))));
-  $('gi-members').innerHTML=us.filter(s=>s.exists()).map(s=>{
-    const u=s.data(),isAd=admins.includes(u.uid),isOw=u.uid===g.ownerUid;let b='';
-    if(u.uid!==me.uid&&!isOw){
-      if(owner) b+=`<button class="mini" data-act="${isAd?'unadmin':'admin'}" data-uid="${u.uid}">${isAd?'Demote':'Make admin'}</button>`;
-      if(owner||(adm&&!isAd)) b+=`<button class="mini bad" data-act="kick" data-uid="${u.uid}">Kick</button>`;
-    }
-    return `<div class="ou"><div class="ou-avw"><img class="ou-av" style="border-color:var(--border)" src="${u.photoURL||genAv(u.username)}" onerror="this.src='${genAv(u.username)}'"/></div><div class="ou-name">@${esc(u.username)} ${isOw?'👑':isAd?'🛡️':''}</div>${b}</div>`;
-  }).join('');
-};
-$('gi-members').addEventListener('click',e=>{const b=e.target.closest('[data-act]');if(b) memberAct(b.dataset.act,b.dataset.uid);});
-window.memberAct=async(act,uid)=>{
-  const g=curGroup;if(!g) return;const ref=doc(db,'groups',g.id);
-  try{
-    if(act==='kick'){ if(!confirm('Kick this member?')) return; await updateDoc(ref,{members:arrayRemove(uid)}); }
-    else if(act==='admin') await updateDoc(ref,{admins:arrayUnion(uid)});
-    else if(act==='unadmin') await updateDoc(ref,{admins:arrayRemove(uid)});
-    toast('✅ Done','success');setTimeout(showGroupInfo,700);
-  }catch(e){toast('🚫 Not allowed','error');}
+  $('gi-members').innerHTML=us.filter(s=>s.exists()).map(s=>{const u=s.data();
+    return `<div class="ou"><div class="ou-avw"><img class="ou-av" style="border-color:var(--border)" src="${u.photoURL||genAv(u.username)}" onerror="this.src='${genAv(u.username)}'"/></div><div class="ou-name">@${esc(u.username)}${u.uid===g.ownerUid?' 👑':''}</div></div>`;}).join('');
 };
 window.copyCode=()=>navigator.clipboard.writeText(curGroup.code).then(()=>toast('✅ Code copied','success'));
 window.shareInvite=async()=>{
@@ -2023,8 +1966,8 @@ window.shareInvite=async()=>{
 };
 window.leaveGroup=async()=>{
   if(!confirm('Leave '+curGroup.name+'?')) return;
-  await updateDoc(doc(db,'groups',curGroup.id),{members:arrayRemove(me.uid),admins:arrayRemove(me.uid)});
-  closeModal('groupInfoModal');goRoom('general');
+  await updateDoc(doc(db,'groups',curGroup.id),{members:arrayRemove(me.uid)});
+  closeModal('groupInfoModal');goRoom('global');
 };
 window.newCode=async()=>{
   const g=curGroup;let code='';
@@ -2033,7 +1976,7 @@ window.newCode=async()=>{
       code='';
       for(let i=0;i<8&&!code;i++){const c=genCode();if(!(await tx.get(doc(db,'codes',c))).exists()) code=c;}
       if(!code) throw new Error('Try again');
-      tx.delete(doc(db,'codes',g.code));tx.set(doc(db,'codes',code),{groupId:g.id,name:g.name,icon:g.icon||'👥'});tx.update(doc(db,'groups',g.id),{code});
+      tx.delete(doc(db,'codes',g.code));tx.set(doc(db,'codes',code),{groupId:g.id});tx.update(doc(db,'groups',g.id),{code});
     });
     curGroup.code=code;$('gi-code').textContent=code;toast('🔄 New code — old invites stop working','success',3500);
   }catch(e){toast('⚠️ '+e.message,'error');}
@@ -2042,7 +1985,7 @@ window.deleteGroup=async()=>{
   if(!confirm('Delete '+curGroup.name+' for everyone?')) return;
   const g=curGroup;
   await deleteDoc(doc(db,'codes',g.code));await deleteDoc(doc(db,'groups',g.id));
-  closeModal('groupInfoModal');goRoom('general');toast('Group deleted','info');
+  closeModal('groupInfoModal');goRoom('global');toast('Group deleted','info');
 };
 
 /* ── MOBILE KEYBOARD FIT ── */
