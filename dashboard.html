@@ -708,6 +708,12 @@ body{
 }
 
 /* Hidden utility */
+.icopts{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.icopt{font-size:22px;padding:6px 8px;border-radius:10px;border:1px solid var(--border2);cursor:pointer;background:rgba(255,255,255,.03);line-height:1}
+.icopt.active{background:rgba(59,130,246,.18);border-color:var(--accent)}
+.code-box{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--bg2);border:1px dashed var(--accent);border-radius:12px;padding:12px 14px;margin-bottom:10px}
+.code-box b{font-family:monospace;font-size:24px;letter-spacing:5px;color:var(--accent)}
+.mi.code{text-transform:uppercase;letter-spacing:4px;font-family:monospace;font-size:18px;text-align:center}
 .hidden{display:none!important}
 </style>
 </head>
@@ -770,6 +776,9 @@ body{
         <span class="ch-ic">💻</span><span class="ch-name">Tech</span><span class="ch-badge">0</span>
       </div>
 
+      <div class="sb-lbl">👥 My Groups <span style="display:flex;gap:4px"><button onclick="openModal('joinGroupModal')">Join</button><button onclick="openModal('createGroupModal')">+ New</button></span></div>
+      <div id="groupList"></div>
+
       <div class="sb-lbl">💌 Direct Messages <button onclick="openModal('dmModal')">+ New</button></div>
       <div id="dmList"></div>
     </div>
@@ -785,6 +794,7 @@ body{
         <div class="hdr-sub" id="chatSub">Everyone is here</div>
       </div>
       <div class="hdr-acts">
+        <button class="hbt" id="infoBtn" onclick="showGroupInfo()" title="Group info" style="display:none">ℹ️</button>
         <button class="hbt" id="pinBtn" onclick="showPinned()" title="Pinned">📌</button>
         <button class="hbt" onclick="openModal('profileModal')" title="Profile">👤</button>
       </div>
@@ -1001,6 +1011,40 @@ body{
   </div>
 </div>
 
+<!-- Create Group -->
+<div class="modal-bg hidden" id="createGroupModal" onclick="bgClose(event,'createGroupModal')">
+  <div class="modal"><span class="modal-handle"></span>
+    <div class="modal-title">✨ Create a Group</div>
+    <div class="modal-sub">You'll get a unique join code to share</div>
+    <div class="mf"><label class="ml">Group name</label><input class="mi" id="grpName" maxlength="30" placeholder="e.g. Study Squad" autocomplete="off"/></div>
+    <div class="mf"><label class="ml">Icon</label><div class="icopts">
+      <span class="icopt active" onclick="pickIcon(this)">👥</span><span class="icopt" onclick="pickIcon(this)">🎮</span><span class="icopt" onclick="pickIcon(this)">📚</span><span class="icopt" onclick="pickIcon(this)">🎵</span><span class="icopt" onclick="pickIcon(this)">🏠</span><span class="icopt" onclick="pickIcon(this)">💼</span><span class="icopt" onclick="pickIcon(this)">🔥</span><span class="icopt" onclick="pickIcon(this)">🎨</span><span class="icopt" onclick="pickIcon(this)">⚽</span><span class="icopt" onclick="pickIcon(this)">🍕</span></div></div>
+    <div class="modal-btns"><button class="mbtn ghost" onclick="closeModal('createGroupModal')">Cancel</button><button class="mbtn primary" onclick="createGroup()">Create ✓</button></div>
+  </div>
+</div>
+<!-- Join Group -->
+<div class="modal-bg hidden" id="joinGroupModal" onclick="bgClose(event,'joinGroupModal')">
+  <div class="modal"><span class="modal-handle"></span>
+    <div class="modal-title">🔑 Join a Group</div>
+    <div class="modal-sub">Enter the 6-character code you were given</div>
+    <div class="mf"><input class="mi code" id="joinCode" maxlength="6" placeholder="ABC123" autocomplete="off"/></div>
+    <div class="modal-btns"><button class="mbtn ghost" onclick="closeModal('joinGroupModal')">Cancel</button><button class="mbtn primary" onclick="joinGroup()">Join ➤</button></div>
+  </div>
+</div>
+<!-- Group Info -->
+<div class="modal-bg hidden" id="groupInfoModal" onclick="bgClose(event,'groupInfoModal')">
+  <div class="modal"><span class="modal-handle"></span>
+    <div class="modal-title" id="gi-title">Group</div>
+    <div class="modal-sub">Share this code or link to invite people</div>
+    <div class="code-box"><b id="gi-code">------</b><button class="mbtn ghost" style="flex:0;padding:8px 14px" onclick="copyCode()">Copy</button></div>
+    <button class="mbtn primary" style="width:100%;margin-bottom:12px" onclick="shareInvite()">🔗 Share invite link</button>
+    <label class="ml">Members</label>
+    <div id="gi-members" style="max-height:30vh;overflow-y:auto"></div>
+    <div class="modal-btns" id="gi-owner"><button class="mbtn ghost" onclick="newCode()">🔄 New code</button><button class="mbtn danger" onclick="deleteGroup()">🗑 Delete</button></div>
+    <div class="modal-btns"><button class="mbtn danger" id="gi-leave" onclick="leaveGroup()">Leave</button><button class="mbtn ghost" onclick="closeModal('groupInfoModal')">Close</button></div>
+  </div>
+</div>
+
 <!-- Image Zoom -->
 <div class="zoom-bg hidden" id="zoomBg" onclick="closeZoom()">
   <button class="zoom-x" onclick="closeZoom()">✕</button>
@@ -1015,7 +1059,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/fireba
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import {
   getFirestore, doc, setDoc, getDoc, addDoc, deleteDoc, updateDoc,
-  collection, query, where, limit, onSnapshot, serverTimestamp, getDocs
+  collection, query, where, limit, onSnapshot, serverTimestamp, getDocs, runTransaction, arrayUnion, arrayRemove
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 /* ── INIT ── */
@@ -1056,7 +1100,7 @@ const ROOMS={
 
 /* ── AUTH ── */
 onAuthStateChanged(auth, async user=>{
-  if (!user){ location.href='index.html'; return; }
+  if (!user){ const j=new URLSearchParams(location.search).get('join'); if(j) localStorage.setItem('zap-join',j); location.href='index.html'; return; }
   me=user;
   const s=await getDoc(doc(db,'users',user.uid));
   if (!s.exists()){ location.href='index.html'; return; }
@@ -1075,6 +1119,8 @@ onAuthStateChanged(auth, async user=>{
   subOnline();
   loadNotes();
   subDMList();
+  subGroups();
+  checkJoinLink();
   swReg();
   const beat=()=>{ if(!document.hidden) setDoc(doc(db,'users',me.uid),{online:myStatus!=='invisible',lastSeen:serverTimestamp()},{merge:true}); };
   setInterval(beat,60000);
@@ -1213,6 +1259,7 @@ function goRoom(roomId){
   $('msgInput').placeholder=`Message #${name.toLowerCase()}…`;
   $('replyBar').classList.remove('show');
   $('pinBtn').style.display='flex';
+  $('infoBtn').style.display=roomId.startsWith('g_')?'flex':'none';
   clearMsgs();
   document.querySelectorAll('.ch').forEach(b=>b.classList.remove('active','unread'));
   const ab=$('ch-'+roomId);
@@ -1646,7 +1693,7 @@ window.startDM=async()=>{
 
 function openDMChat(ud){
   dmUser=ud;lastDate=null;replyTo=null;
-  $('replyBar').classList.remove('show');$('pinBtn').style.display='none';
+  $('replyBar').classList.remove('show');$('pinBtn').style.display='none';$('infoBtn').style.display='none';
   document.querySelectorAll('.ch').forEach(b=>b.classList.remove('active'));
   document.querySelectorAll('.dm-item').forEach(b=>b.classList.remove('active'));
   const di=$('dm-item-'+ud.uid);if(di) di.classList.add('active');
@@ -1840,6 +1887,106 @@ $('menuBtn').addEventListener('click',()=>{
   $('sidebar').classList.contains('open')?closeSidebar():openSidebar();
 });
 window.closeSidebar=closeSidebar;
+
+/* ── GROUPS (messages live in 'messages' with room='g_<id>') ── */
+let myGroups=[],curGroup=null,pickedIcon='👥';
+const CC='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+const genCode=()=>Array.from({length:6},()=>CC[Math.floor(Math.random()*CC.length)]).join('');
+const inviteLink=c=>location.origin+location.pathname.replace(/[^/]*$/,'dashboard.html')+'?join='+c;
+function subGroups(){
+  onSnapshot(query(collection(db,'groups'),where('members','array-contains',me.uid)),snap=>{
+    myGroups=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.createdAt?.seconds||0)-(b.createdAt?.seconds||0));
+    const list=$('groupList');list.innerHTML='';
+    if(!myGroups.length) list.innerHTML='<div style="padding:2px 10px 8px;font-size:12px;color:var(--muted)">No groups yet — create one or join with a code</div>';
+    myGroups.forEach(g=>{
+      const n=g.members.length;
+      ROOMS['g_'+g.id]=[g.icon||'👥',g.name,n+' member'+(n===1?'':'s')];
+      const el=document.createElement('div');
+      el.className='ch'+(room==='g_'+g.id&&!dmUser?' active':'');el.id='ch-g_'+g.id;
+      el.innerHTML=`<span class="ch-ic">${esc(g.icon||'👥')}</span><span class="ch-name">${esc(g.name)}</span><span class="ch-badge">0</span>`;
+      el.onclick=()=>goRoom('g_'+g.id);list.appendChild(el);
+    });
+    if(!dmUser&&room.startsWith('g_')&&!myGroups.find(g=>'g_'+g.id===room)) goRoom('global');
+  });
+}
+window.pickIcon=el=>{document.querySelectorAll('.icopt').forEach(o=>o.classList.remove('active'));el.classList.add('active');pickedIcon=el.textContent;};
+window.createGroup=async()=>{
+  const name=$('grpName').value.trim();
+  if(name.length<2){toast('⚠️ Name needs 2+ characters','error');return;}
+  const gref=doc(collection(db,'groups'));let code='';
+  try{
+    await runTransaction(db,async tx=>{
+      code='';
+      for(let i=0;i<8&&!code;i++){const c=genCode();if(!(await tx.get(doc(db,'codes',c))).exists()) code=c;}
+      if(!code) throw new Error('Could not make a unique code, try again');
+      tx.set(doc(db,'codes',code),{groupId:gref.id});
+      tx.set(gref,{name,icon:pickedIcon,code,ownerUid:me.uid,members:[me.uid],createdAt:serverTimestamp()});
+    });
+    $('grpName').value='';closeModal('createGroupModal');
+    ROOMS['g_'+gref.id]=[pickedIcon,name,'1 member'];
+    goRoom('g_'+gref.id);toast('🎉 Created! Code: '+code,'success',4000);
+  }catch(e){toast('⚠️ '+e.message,'error');}
+};
+async function joinByCode(raw){
+  const code=(raw||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+  if(code.length!==6){toast('⚠️ Codes are 6 characters','error');return false;}
+  const cs=await getDoc(doc(db,'codes',code));
+  if(!cs.exists()){toast('⚠️ No group with that code','error');return false;}
+  const gid=cs.data().groupId,gs=await getDoc(doc(db,'groups',gid));
+  if(!gs.exists()){toast('⚠️ That group no longer exists','error');return false;}
+  const g=gs.data(),already=g.members.includes(me.uid);
+  if(!already) await updateDoc(doc(db,'groups',gid),{members:arrayUnion(me.uid)});
+  ROOMS['g_'+gid]=[g.icon||'👥',g.name,'Group'];
+  goRoom('g_'+gid);toast(already?'You are already in '+g.name:'✅ Joined '+g.name,'success');
+  return true;
+}
+window.joinGroup=async()=>{if(await joinByCode($('joinCode').value)){$('joinCode').value='';closeModal('joinGroupModal');}};
+function checkJoinLink(){
+  const c=new URLSearchParams(location.search).get('join')||localStorage.getItem('zap-join');
+  if(!c) return;
+  localStorage.removeItem('zap-join');history.replaceState(null,'',location.pathname);
+  $('joinCode').value=c.toUpperCase().slice(0,6);openModal('joinGroupModal');toast('Invite found — tap Join','info',3500);
+}
+window.showGroupInfo=async()=>{
+  const g=myGroups.find(x=>'g_'+x.id===room);if(!g) return;
+  curGroup=g;const owner=g.ownerUid===me.uid;
+  $('gi-title').textContent=(g.icon||'👥')+' '+g.name;$('gi-code').textContent=g.code;
+  $('gi-owner').classList.toggle('hidden',!owner);$('gi-leave').classList.toggle('hidden',owner);
+  $('gi-members').innerHTML='<div style="color:var(--muted);font-size:13px">Loading…</div>';
+  openModal('groupInfoModal');
+  const us=await Promise.all(g.members.map(u=>getDoc(doc(db,'users',u))));
+  $('gi-members').innerHTML=us.filter(s=>s.exists()).map(s=>{const u=s.data();
+    return `<div class="ou"><div class="ou-avw"><img class="ou-av" style="border-color:var(--border)" src="${u.photoURL||genAv(u.username)}" onerror="this.src='${genAv(u.username)}'"/></div><div class="ou-name">@${esc(u.username)}${u.uid===g.ownerUid?' 👑':''}</div></div>`;}).join('');
+};
+window.copyCode=()=>navigator.clipboard.writeText(curGroup.code).then(()=>toast('✅ Code copied','success'));
+window.shareInvite=async()=>{
+  const url=inviteLink(curGroup.code),text=`Join "${curGroup.name}" on ⚡ Zap — code ${curGroup.code}`;
+  if(navigator.share){try{await navigator.share({title:'⚡ Zap',text,url});return;}catch(e){if(e.name==='AbortError') return;}}
+  navigator.clipboard.writeText(text+'\n'+url).then(()=>toast('🔗 Invite copied','success'));
+};
+window.leaveGroup=async()=>{
+  if(!confirm('Leave '+curGroup.name+'?')) return;
+  await updateDoc(doc(db,'groups',curGroup.id),{members:arrayRemove(me.uid)});
+  closeModal('groupInfoModal');goRoom('global');
+};
+window.newCode=async()=>{
+  const g=curGroup;let code='';
+  try{
+    await runTransaction(db,async tx=>{
+      code='';
+      for(let i=0;i<8&&!code;i++){const c=genCode();if(!(await tx.get(doc(db,'codes',c))).exists()) code=c;}
+      if(!code) throw new Error('Try again');
+      tx.delete(doc(db,'codes',g.code));tx.set(doc(db,'codes',code),{groupId:g.id});tx.update(doc(db,'groups',g.id),{code});
+    });
+    curGroup.code=code;$('gi-code').textContent=code;toast('🔄 New code — old invites stop working','success',3500);
+  }catch(e){toast('⚠️ '+e.message,'error');}
+};
+window.deleteGroup=async()=>{
+  if(!confirm('Delete '+curGroup.name+' for everyone?')) return;
+  const g=curGroup;
+  await deleteDoc(doc(db,'codes',g.code));await deleteDoc(doc(db,'groups',g.id));
+  closeModal('groupInfoModal');goRoom('global');toast('Group deleted','info');
+};
 
 /* ── MOBILE KEYBOARD FIT ── */
 const vv=window.visualViewport;
