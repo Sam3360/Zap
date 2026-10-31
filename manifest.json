@@ -1,28 +1,15 @@
 {
-  "name": "⚡ Zap",
-  "short_name": "Zap",
-  "description": "Next-generation real-time social messaging app",
-  "start_url": "dashboard.html",
+  "name": "⚡ Zap — Lightning Messaging",
+  "short_name": "⚡ Zap",
+  "description": "Real-time messaging: rooms, DMs, voice, images",
+  "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#0f172a",
+  "orientation": "any",
+  "background_color": "#080e1a",
   "theme_color": "#3b82f6",
-  "orientation": "portrait-primary",
   "icons": [
-    {
-      "src": "icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
-    }
-  ],
-  "screenshots": [],
-  "categories": ["social", "communication"],
-  "lang": "en"
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
+  ]
 }
