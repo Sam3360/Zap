@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>⚡ Zap — Sign In</title>
+<title>Zap — Sign In</title>
 <link rel="manifest" href="manifest.json"/>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>"/>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
@@ -202,7 +202,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
       <span class="chip">🌙 Dark Mode</span>
     </div>
 
-    <div class="foot">⚡ Zap · Made with ❤️ · v2.0</div>
+    <div class="foot">⚡ Zap · Made with ❤️ · v5 (login page)</div>
   </div>
 </div>
 
@@ -219,9 +219,9 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged }
+import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc, serverTimestamp }
+import { initializeFirestore, doc, setDoc, getDoc, serverTimestamp }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const app = initializeApp({
@@ -233,11 +233,11 @@ const app = initializeApp({
   appId:"1:121751642387:web:6e83c8f559dfb51f0dbae6"
 });
 const auth = getAuth(app);
-const db = getFirestore(app);
+const db = initializeFirestore(app,{experimentalAutoDetectLongPolling:true});
 
 // Particles
 const pc = document.getElementById('particles');
-for (let i=0;i<18;i++){
+for (let i=0;i<(matchMedia('(prefers-reduced-motion: reduce)').matches?0:18);i++){
   const p=document.createElement('div');
   p.className='particle';
   p.style.left=Math.random()*100+'%';
@@ -248,6 +248,23 @@ for (let i=0;i<18;i++){
   pc.appendChild(p);
 }
 
+function go(url){
+  try{
+    const now=Date.now(),h=JSON.parse(sessionStorage.getItem('zap-hops')||'[]').filter(v=>now-v<20000);
+    h.push(now);sessionStorage.setItem('zap-hops',JSON.stringify(h));
+    if(h.length>3){loopStop();return;}
+  }catch(e){}
+  location.href=url;
+}
+function loopStop(){
+  document.body.innerHTML='<div style="padding:32px;max-width:420px;margin:auto;font-family:sans-serif;color:#f1f5f9"><h2>⚡ Zap stopped a reload loop</h2><p style="color:#94a3b8;margin:12px 0">Something kept redirecting this page. Tap below to reset this device, then try again.</p><button id="zapFix" style="padding:12px 18px;border:0;border-radius:10px;background:#3b82f6;color:#fff;font-size:15px">Reset &amp; sign out</button></div>';
+  document.getElementById('zapFix').onclick=async()=>{
+    try{await signOut(auth);}catch(e){}
+    try{(await navigator.serviceWorker.getRegistrations()).forEach(r=>r.unregister());(await caches.keys()).forEach(k=>caches.delete(k));}catch(e){}
+    try{sessionStorage.clear();}catch(e){}
+    location.replace('index.html');
+  };
+}
 const setStatus=(msg,type='')=>{
   const el=document.getElementById('statusMsg');
   el.textContent=msg; el.className='status '+type;
@@ -258,47 +275,40 @@ const setLoading=on=>{
   document.getElementById('btnTxt').textContent=on?'Signing in…':'Continue with Google';
 };
 
-// Already signed in?
+let signingIn=false;
 onAuthStateChanged(auth, async user=>{
-  if (user){
+  if (!user||signingIn) return;
+  try{
     const snap=await getDoc(doc(db,'users',user.uid));
-    if (snap.exists()) { location.href='dashboard.html'; }
-  }
+    if (snap.exists()&&snap.data().username) go('dashboard.html');
+    else setStatus('👋 Signed in — pick a username above, then tap Continue.','info');
+  }catch(e){ setStatus('Could not reach the database ('+(e.code||'offline')+')','err'); }
 });
 
 window.signIn=async()=>{
-  const uname=document.getElementById('uname').value.trim();
-  const inp=document.getElementById('uname');
-  if (!uname){ inp.classList.add('err'); setStatus('⚠️ Enter a username first.','err'); inp.focus(); return; }
-  if (!/^[a-zA-Z0-9_]{3,24}$/.test(uname)){ inp.classList.add('err'); setStatus('⚠️ 3–24 chars, letters/numbers/underscore only.','err'); return; }
-  inp.classList.remove('err');
-  setLoading(true); setStatus('Opening Google sign-in…','info');
+  const inp=document.getElementById('uname'),uname=inp.value.trim();
+  if (uname&&!/^[a-zA-Z0-9_]{3,24}$/.test(uname)){ inp.classList.add('err'); setStatus('⚠️ 3–24 chars, letters/numbers/underscore only.','err'); return; }
+  inp.classList.remove('err'); signingIn=true; setLoading(true);
   try{
-    const provider=new GoogleAuthProvider();
-    provider.setCustomParameters({prompt:'select_account'});
-    const result=await signInWithPopup(auth,provider);
-    const user=result.user;
-    setStatus('✅ Signed in! Setting up your profile…','ok');
-    const ref=doc(db,'users',user.uid);
-    const snap=await getDoc(ref);
-    await setDoc(ref,{
-      uid:user.uid,
-      username: snap.exists()?snap.data().username:uname,
-      displayName:user.displayName||uname,
-      email:user.email,
-      photoURL:user.photoURL||'',
-      online:true,
-      status:'online',
-      lastSeen:serverTimestamp(),
-      createdAt: snap.exists()?snap.data().createdAt:serverTimestamp(),
-    },{merge:true});
-    location.href='dashboard.html';
+    let user=auth.currentUser;
+    if(!user){
+      setStatus('Opening Google sign-in…','info');
+      const provider=new GoogleAuthProvider();
+      provider.setCustomParameters({prompt:'select_account'});
+      user=(await signInWithPopup(auth,provider)).user;
+    }
+    const ref=doc(db,'users',user.uid),snap=await getDoc(ref),old=snap.exists()?snap.data():{};
+    const name=old.username||uname;
+    if(!name){ signingIn=false; setLoading(false); setStatus('👋 New here! Pick a username above, then tap Continue.','info'); inp.focus(); return; }
+    setStatus('✅ Setting up your profile…','ok');
+    await setDoc(ref,{uid:user.uid,username:name,displayName:old.displayName||user.displayName||name,photoURL:user.photoURL||'',online:true,status:'online',lastSeen:serverTimestamp(),createdAt:old.createdAt||serverTimestamp()},{merge:true});
+    go('dashboard.html');
   }catch(err){
-    setLoading(false);
+    signingIn=false; setLoading(false);
     if (err.code==='auth/popup-closed-by-user') setStatus('Sign-in cancelled.','err');
     else if (err.code==='auth/popup-blocked') setStatus('⚠️ Popups blocked. Allow them for this site.','err');
     else if (err.code==='auth/unauthorized-domain') setStatus('⚠️ Add '+location.hostname+' in Firebase → Authentication → Settings → Authorized domains.','err');
-    else setStatus('Error: '+err.message,'err');
+    else setStatus('Error: '+(err.code||err.message),'err');
   }
 };
 
