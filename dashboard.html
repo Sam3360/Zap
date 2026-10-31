@@ -6,9 +6,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <meta name="mobile-web-app-capable" content="yes"/>
-<title>Zap</title>
+<title>⚡ Zap</title>
 <link rel="manifest" href="manifest.json"/>
-<link rel="apple-touch-icon" href="https://sam3360.github.io/Zap/icon-192.png"/>
+<link rel="apple-touch-icon" href="icon-192.png"/>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>"/>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
 <style>
@@ -132,7 +132,7 @@ body{
   position:fixed;
   top:calc(var(--nav-h) + var(--sai-top));
   left:0;right:0;
-  bottom:0;
+  bottom:var(--kb,0px);
   overflow:hidden;
 }
 
@@ -687,6 +687,8 @@ body{
 
   /* Shell takes full height with bottom nav space */
   .shell{bottom:var(--bn-h)}
+  body.kb .shell{bottom:var(--kb,0px)}
+  body.kb .bottom-nav{display:none}
 
   /* Messages more padding */
   .msgs{padding:10px 10px 6px}
@@ -1039,6 +1041,7 @@ let dmUnreads={};
 let lastDate=null;
 let voiceRec=null, voiceChunks=[], voiceInt=null, voiceSec=0;
 let myStatus='online';
+const MSG={};
 let searchDeb=null;
 const REACTS=['👍','❤️','😂','🔥','😮','👏','🎉','💯','😎','🤔'];
 const ROOMS={
@@ -1073,7 +1076,9 @@ onAuthStateChanged(auth, async user=>{
   loadNotes();
   subDMList();
   swReg();
-  notifPerm();
+  const beat=()=>{ if(!document.hidden) setDoc(doc(db,'users',me.uid),{online:myStatus!=='invisible',lastSeen:serverTimestamp()},{merge:true}); };
+  setInterval(beat,60000);
+  document.addEventListener('visibilitychange',beat);
 });
 
 window.addEventListener('beforeunload',()=>{
@@ -1151,14 +1156,14 @@ function snd(){
 }
 
 function notif(title,body){
-  if(Notification.permission==='granted'&&document.hidden){
-    new Notification('⚡ Zap',{body:`${title}: ${body}`,icon:'https://sam3360.github.io/Zap/icon-192.png'});
+  if('Notification' in window&&Notification.permission==='granted'&&document.hidden){
+    new Notification('⚡ Zap',{body:`${title}: ${body}`,icon:'icon-192.png'});
     snd();
   }
 }
 
 async function notifPerm(){
-  if(Notification.permission==='default') await Notification.requestPermission();
+  if('Notification' in window&&Notification.permission==='default') await Notification.requestPermission();
 }
 
 function swReg(){
@@ -1291,11 +1296,12 @@ function subTyping(roomId){
   if(unsubTyp) unsubTyp();
   const q=query(collection(db,'typing'),where('room','==',roomId));
   unsubTyp=onSnapshot(q,snap=>{
-    const typers=snap.docs.map(d=>d.data()).filter(d=>d.uid!==me?.uid&&d.typing&&d.username);
+    const typers=snap.docs.map(d=>d.data()).filter(d=>d.uid!==me?.uid&&d.typing&&d.username&&(!d.at||Date.now()-d.at.toMillis()<6000));
     const bar=$('typingBar');
     if(typers.length){
       $('typingTxt').textContent=typers.slice(0,2).map(t=>t.username).join(', ')+(typers.length===1?' is':' are')+' typing';
       bar.classList.add('show');
+      clearTimeout(window._tt);window._tt=setTimeout(()=>bar.classList.remove('show'),6000);
     } else { bar.classList.remove('show'); }
   });
 }
@@ -1334,6 +1340,7 @@ function renderMsg(data){
 }
 
 function buildMsg(data){
+  MSG[data.id]=data;
   const isMe=data.uid===me?.uid;
   const av=data.photoURL||genAv(data.username||'?');
   const el=document.createElement('div');
@@ -1348,9 +1355,9 @@ function buildMsg(data){
   const rxHTML=buildReacts(data);
 
   let acts=`<button class="ma" onclick="trigReact(event,'${data.id}')" title="React">😊</button>
-    <button class="ma" onclick="setReply('${data.id}','${esc(data.username)}','${esc((data.text||'').slice(0,80))}')" title="Reply">↩️</button>`;
+    <button class="ma" onclick="setReply('${data.id}')" title="Reply">↩️</button>`;
   if(isMe){
-    if(data.text) acts+=`<button class="ma" onclick="startEdit('${data.id}',\`${data.text.replace(/`/g,"'")}\`)" title="Edit">✏️</button>`;
+    if(data.text) acts+=`<button class="ma" onclick="startEdit('${data.id}')" title="Edit">✏️</button>`;
     acts+=`<button class="ma del" onclick="delMsg('${data.id}')" title="Delete">🗑️</button>`;
   }
   acts+=`<button class="ma" onclick="togglePin('${data.id}')" title="Pin">📌</button>`;
@@ -1409,6 +1416,7 @@ window.toggleReact=async(msgId,em)=>{
 /* ── SEND MESSAGE ── */
 window.sendMsg=async()=>{
   if(!me||!meData) return;
+  notifPerm();
   const inp=$('msgInput');
   const txt=inp.value.trim();
   if(!txt&&!pendingImg) return;
@@ -1459,7 +1467,8 @@ function handleTyp(){
 function clearTypDoc(){typing=false;if(me) setDoc(doc(db,'typing',me.uid),{typing:false},{merge:true});}
 
 /* ── REPLY ── */
-window.setReply=(id,username,text)=>{
+window.setReply=id=>{
+  const m=MSG[id]||{};const username=m.username||'',text=(m.text||'').slice(0,80);
   replyTo={id,username,text};
   $('replyBar').classList.add('show');
   $('replyAuth').textContent='↩ Replying to @'+username;
@@ -1477,7 +1486,7 @@ window.delMsg=async msgId=>{
   const col=dmUser?'dms':'messages';
   await deleteDoc(doc(db,col,msgId));toast('Message deleted','info');
 };
-window.startEdit=(msgId,text)=>{editId=msgId;$('editIn').value=text;openModal('editModal');};
+window.startEdit=msgId=>{editId=msgId;$('editIn').value=MSG[msgId]?.text||'';openModal('editModal');};
 window.saveEdit=async()=>{
   if(!editId) return;
   const txt=$('editIn').value.trim();if(!txt) return;
@@ -1518,17 +1527,27 @@ window.showPinned=async()=>{
 };
 
 /* ── IMAGE UPLOAD ── */
-$('fileInput').addEventListener('change',e=>{
-  const f=e.target.files[0];if(!f) return;
-  if(f.size>4*1024*1024){toast('⚠️ Max 4MB','error');return;}
-  const r=new FileReader();
-  r.onload=ev=>{
-    pendingImg=ev.target.result;
-    $('ipbThumb').src=pendingImg;$('ipbName').textContent=f.name;
-    $('imgPrevBar').classList.add('show');toast('📷 Ready — press send!','info');
+function compressImg(file,cb){
+  const img=new Image(),url=URL.createObjectURL(file);
+  img.onload=()=>{
+    const sc=Math.min(1,1024/Math.max(img.width,img.height));
+    const c=document.createElement('canvas');c.width=Math.round(img.width*sc);c.height=Math.round(img.height*sc);
+    c.getContext('2d').drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(url);
+    cb(c.toDataURL('image/jpeg',.72));
   };
-  r.readAsDataURL(f);e.target.value='';
-});
+  img.onerror=()=>toast('⚠️ Could not read image','error');
+  img.src=url;
+}
+function attachImg(f){
+  if(!f||!f.type.startsWith('image/')) return;
+  compressImg(f,d=>{
+    if(d.length>900000){toast('⚠️ Image too large','error');return;}
+    pendingImg=d;$('ipbThumb').src=d;$('ipbName').textContent=f.name||'pasted image';
+    $('imgPrevBar').classList.add('show');toast('📷 Ready — press send!','info');
+  });
+}
+$('fileInput').addEventListener('change',e=>{attachImg(e.target.files[0]);e.target.value='';});
+$('msgInput').addEventListener('paste',e=>{const f=[...(e.clipboardData?.files||[])][0];if(f){e.preventDefault();attachImg(f);}});
 window.cancelImg=()=>{pendingImg=null;$('imgPrevBar').classList.remove('show');};
 window.openZoom=src=>{$('zoomImg').src=src;$('zoomBg').classList.remove('hidden');};
 window.closeZoom=()=>$('zoomBg').classList.add('hidden');
@@ -1537,13 +1556,14 @@ window.closeZoom=()=>$('zoomBg').classList.add('hidden');
 $('voiceBtn').addEventListener('click',()=>{
   if(voiceRec){stopVoice();return;}
   navigator.mediaDevices.getUserMedia({audio:true}).then(stream=>{
-    voiceRec=new MediaRecorder(stream);voiceChunks=[];voiceSec=0;
+    voiceRec=new MediaRecorder(stream,{audioBitsPerSecond:24000});voiceChunks=[];voiceSec=0;
     voiceRec.ondataavailable=e=>voiceChunks.push(e.data);
     voiceRec.onstop=async()=>{
       stream.getTracks().forEach(t=>t.stop());
       const blob=new Blob(voiceChunks,{type:'audio/webm'});
       const r=new FileReader();
       r.onload=async ev=>{
+        if(ev.target.result.length>900000){toast('⚠️ Voice note too long','error');return;}
         const vData={
           uid:me.uid,username:meData.username,displayName:meData.displayName||meData.username,
           photoURL:meData.photoURL||'',text:'',voiceURL:ev.target.result,
@@ -1562,7 +1582,7 @@ $('voiceBtn').addEventListener('click',()=>{
       voiceSec++;
       const mn=Math.floor(voiceSec/60),sc=voiceSec%60;
       $('vbTimer').textContent=`${mn}:${sc.toString().padStart(2,'0')}`;
-      if(voiceSec>=120) stopVoice();
+      if(voiceSec>=40) stopVoice();
     },1000);
   }).catch(()=>toast('⚠️ Mic access denied','error'));
 });
@@ -1586,7 +1606,7 @@ $('msgs').addEventListener('scroll',e=>{
 function subOnline(){
   const q=query(collection(db,'users'),where('online','==',true));
   onSnapshot(q,snap=>{
-    const users=snap.docs.map(d=>d.data());
+    const users=snap.docs.map(d=>d.data()).filter(u=>!u.lastSeen||Date.now()-u.lastSeen.toMillis()<180000);
     $('onlinePill').textContent=users.length+' online';
     $('onlinePill2').textContent=users.length+' online';
     const html=users.map(u=>{
@@ -1820,6 +1840,18 @@ $('menuBtn').addEventListener('click',()=>{
   $('sidebar').classList.contains('open')?closeSidebar():openSidebar();
 });
 window.closeSidebar=closeSidebar;
+
+/* ── MOBILE KEYBOARD FIT ── */
+const vv=window.visualViewport;
+function fitKb(){
+  if(!vv) return;
+  const kb=Math.max(0,window.innerHeight-vv.height-vv.offsetTop);
+  document.documentElement.style.setProperty('--kb',kb+'px');
+  document.body.classList.toggle('kb',kb>80);
+  if(kb>80) setTimeout(()=>scrollBot(true),50);
+}
+if(vv){vv.addEventListener('resize',fitKb);vv.addEventListener('scroll',fitKb);}
+$('msgInput').addEventListener('focus',()=>setTimeout(()=>window.scrollTo(0,0),100));
 
 /* ── MODAL UTILS ── */
 window.openModal=id=>{$(id)?.classList.remove('hidden');};
