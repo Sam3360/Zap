@@ -1,6 +1,6 @@
-# [Zap](https://Sam3360.github.io/Zap/UserPolicyZap.html)  ⚡ [Latest version]
+# [Zap](https://Sam3360.github.io/Zap/UserPolicyZap.html)  ⚡ [Not Latest Version]
 
-> latest version - github.com/sam3360/Zap_v4
+> latest version - [github.com/sam3360/Zap_v4](https://sam3360.github.io/Zap_v4/)
 
 ![Zap Banner](ZapBanner.png)
 
