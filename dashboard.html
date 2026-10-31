@@ -6,13 +6,13 @@
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <meta name="mobile-web-app-capable" content="yes"/>
-<title>Zap</title>
+<title>⚡ Zap</title>
 <link rel="manifest" href="manifest.json"/>
 <link rel="apple-touch-icon" href="icon-192.png"/>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>"/>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
 <style>
-
+/* ═══ RESET ═══ */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{
   --bg:#080e1a;--bg2:#0d1525;
@@ -24,7 +24,7 @@
   --ease:cubic-bezier(0.4,0,0.2,1);
   --sh:0 4px 24px rgba(0,0,0,0.45);--sh2:0 12px 48px rgba(0,0,0,0.55);
 
-
+  /* Layout heights — safe-area aware */
   --nav-h:56px;
   --bn-h:calc(56px + env(safe-area-inset-bottom,0px));
   --sai-top:env(safe-area-inset-top,0px);
@@ -44,12 +44,14 @@ body{
   overscroll-behavior:none;
 }
 
-
+/* ═══ SCROLLBARS ═══ */
 ::-webkit-scrollbar{width:3px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:rgba(148,163,184,0.18);border-radius:99px}
 
-
+/* ═══════════════════════════════════════════════
+   TOP NAVBAR
+═══════════════════════════════════════════════ */
 .navbar{
   position:fixed;top:0;left:0;right:0;
   height:calc(var(--nav-h) + var(--sai-top));
@@ -69,10 +71,10 @@ body{
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
   letter-spacing:-.5px;flex-shrink:0}
 
-
+/* Mobile hamburger */
 .nav-menu-btn{background:none;border:none;color:var(--text3);font-size:22px;
   cursor:pointer;padding:6px;border-radius:8px;line-height:1;flex-shrink:0;
-  display:none; 
+  display:none; /* shown via media query */
 }
 
 .nav-search-wrap{flex:1;max-width:260px;position:relative;margin:0 8px}
@@ -104,7 +106,7 @@ body{
   font-size:12px;font-weight:600;transition:all .18s;white-space:nowrap}
 .btn-out:hover{background:rgba(239,68,68,.18)}
 
-
+/* Search dropdown */
 .search-drop{
   position:fixed;top:calc(var(--nav-h) + var(--sai-top) + 4px);left:50%;
   transform:translateX(-50%);width:min(420px,calc(100vw - 24px));
@@ -122,8 +124,9 @@ body{
 .sd-txt{font-size:13px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sd-time{font-size:10px;color:var(--muted);margin-top:2px}
 
-
-
+/* ═══════════════════════════════════════════════
+   FULL-HEIGHT APP SHELL  (3 columns on desktop, 1 on mobile)
+═══════════════════════════════════════════════ */
 .shell{
   display:flex;
   position:fixed;
@@ -133,7 +136,9 @@ body{
   overflow:hidden;
 }
 
-
+/* ═══════════════════════════════════════════════
+   LEFT SIDEBAR
+═══════════════════════════════════════════════ */
 .sidebar{
   width:260px;flex-shrink:0;
   background:var(--card2);border-right:1px solid var(--border);
@@ -162,7 +167,7 @@ body{
   padding:1px 6px;font-size:9px;font-weight:800;display:none;flex-shrink:0}
 .ch.unread .ch-badge{display:block}
 
-
+/* DM items */
 .dm-item{
   display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:10px;
   cursor:pointer;transition:all .15s;margin-bottom:1px;
@@ -184,11 +189,15 @@ body{
   width:16px;height:16px;font-size:9px;font-weight:800;
   display:flex;align-items:center;justify-content:center}
 
+/* ═══════════════════════════════════════════════
+   MAIN CHAT
+═══════════════════════════════════════════════ */
 .main{
   flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden;
   background:var(--bg);position:relative;
 }
 
+/* Chat header */
 .chat-hdr{
   padding:11px 14px;border-bottom:1px solid var(--border);
   display:flex;align-items:center;gap:10px;flex-shrink:0;
@@ -207,6 +216,7 @@ body{
   padding:6px;cursor:pointer;color:var(--text3);font-size:16px;transition:all .15s;line-height:1}
 .hbt:hover{background:rgba(59,130,246,.1);color:var(--accent)}
 
+/* Typing bar */
 .typing-bar{
   height:0;overflow:hidden;transition:height .2s var(--ease);
   display:flex;align-items:center;gap:7px;padding:0 14px;
@@ -220,7 +230,7 @@ body{
 .dots span:nth-child(3){animation-delay:.4s}
 @keyframes dp{0%,60%,100%{transform:translateY(0);opacity:.5}30%{transform:translateY(-5px);opacity:1}}
 
-
+/* Messages area */
 .msgs{
   flex:1;overflow-y:auto;overflow-x:hidden;
   padding:12px 12px 8px;
@@ -229,7 +239,7 @@ body{
   overscroll-behavior:contain;
 }
 
-
+/* Scroll to bottom */
 .scrollfab{
   position:absolute;bottom:16px;right:14px;
   background:var(--accent);border:none;border-radius:50%;
@@ -240,13 +250,13 @@ body{
 }
 .scrollfab.show{opacity:1;pointer-events:all}
 
-
+/* Day divider */
 .day-div{display:flex;align-items:center;gap:8px;margin:12px 0;flex-shrink:0}
 .day-div::before,.day-div::after{content:'';flex:1;height:1px;background:var(--border)}
 .day-div span{font-size:11px;color:var(--muted);background:var(--bg);padding:2px 10px;
   border-radius:20px;border:1px solid var(--border);white-space:nowrap;font-weight:500}
 
-
+/* Empty state */
 .empty-st{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
   gap:10px;padding:32px 20px;text-align:center}
 .empty-st .ei{font-size:56px;animation:fl 3s ease-in-out infinite}
@@ -254,6 +264,7 @@ body{
 .empty-st .et{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:var(--text2)}
 .empty-st .es{font-size:13px;color:var(--muted);max-width:240px;line-height:1.5}
 
+/* Skeleton */
 .skel-w{display:flex;flex-direction:column;gap:16px;padding:4px 0}
 .skel-m{display:flex;gap:10px}
 .sk{background:linear-gradient(90deg,var(--card) 25%,rgba(255,255,255,.04) 50%,var(--card) 75%);
@@ -263,6 +274,7 @@ body{
 .sk-bd{flex:1;display:flex;flex-direction:column;gap:6px;padding-top:4px}
 .sk-l{height:11px;border-radius:5px}
 
+/* ═══ MESSAGE GROUPS ═══ */
 .mg{
   display:flex;gap:9px;padding:3px 6px;border-radius:12px;
   transition:background .12s;position:relative;
@@ -292,7 +304,7 @@ body{
 .mg-txt pre{background:rgba(0,0,0,.4);border:1px solid var(--border);border-radius:8px;
   padding:10px;font-size:12px;overflow-x:auto;margin:5px 0;font-family:monospace;color:#7dd3fc;line-height:1.5}
 
-
+/* Image */
 .mg-img{
   max-width:min(280px,75vw);max-height:200px;border-radius:10px;
   margin-top:5px;object-fit:cover;cursor:zoom-in;
@@ -300,20 +312,21 @@ body{
 }
 .mg-img:hover{opacity:.88}
 
-
+/* Voice */
 .mg-audio{display:flex;align-items:center;gap:8px;margin-top:6px;
   background:var(--card);border:1px solid var(--border);border-radius:10px;
   padding:8px 12px;max-width:260px}
 .mg-audio audio{flex:1;height:28px;min-width:0}
 .mg-audio audio::-webkit-media-controls-panel{background:var(--card2)}
 
+/* Reply quote */
 .rq{background:rgba(59,130,246,.08);border-left:3px solid var(--accent);
   border-radius:0 6px 6px 0;padding:4px 9px;margin-bottom:5px;cursor:pointer;
   font-size:12px;color:var(--text3);transition:background .15s}
 .rq:hover{background:rgba(59,130,246,.14)}
 .rq-auth{font-weight:700;color:var(--accent);margin-right:5px}
 
-
+/* Reactions */
 .reacts{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
 .react{display:flex;align-items:center;gap:3px;
   background:rgba(255,255,255,.05);border:1px solid var(--border);
@@ -324,21 +337,21 @@ body{
 .react.mine{background:rgba(59,130,246,.16);border-color:rgba(59,130,246,.4)}
 .react .rc{font-size:11px;color:var(--muted);font-weight:700;min-width:8px;text-align:center}
 
-
+/* Hover actions */
 .macts{
   position:absolute;right:6px;top:4px;
   display:flex;gap:2px;opacity:0;pointer-events:none;transition:opacity .15s;
   background:var(--card);border:1px solid var(--border);border-radius:10px;
   padding:3px 4px;box-shadow:var(--sh);z-index:20;
 }
-
+/* On touch devices always show */
 @media(hover:none){.macts{opacity:1;pointer-events:all;position:static;background:none;border:none;box-shadow:none;padding:4px 0 0}}
 .ma{background:none;border:none;cursor:pointer;font-size:15px;
   padding:3px 5px;border-radius:6px;color:var(--text3);transition:all .12s;line-height:1}
 .ma:hover,.ma:active{background:rgba(255,255,255,.08);color:var(--text)}
 .ma.del:hover,.ma.del:active{background:rgba(239,68,68,.15);color:var(--red)}
 
-
+/* Emoji reaction picker */
 .rpicker{
   position:absolute;right:6px;top:calc(100% + 4px);z-index:100;
   background:var(--card);border:1px solid var(--border);border-radius:14px;
@@ -349,6 +362,7 @@ body{
 .ropt{font-size:20px;cursor:pointer;padding:4px;border-radius:8px;transition:all .12s;line-height:1}
 .ropt:hover,.ropt:active{background:rgba(255,255,255,.1);transform:scale(1.15)}
 
+/* ═══ REPLY BAR ═══ */
 .reply-bar{
   background:rgba(59,130,246,.07);border-top:2px solid rgba(59,130,246,.2);
   padding:7px 14px;display:none;align-items:center;gap:10px;flex-shrink:0;
@@ -362,6 +376,7 @@ body{
   font-size:18px;padding:2px 4px;border-radius:6px;transition:all .15s;line-height:1}
 .rb-x:hover,.rb-x:active{color:var(--red);background:rgba(239,68,68,.1)}
 
+/* ═══ IMG PREVIEW BAR ═══ */
 .img-prev-bar{
   padding:8px 14px;display:none;align-items:center;gap:10px;
   border-top:1px solid var(--border);background:var(--card2);flex-shrink:0;
@@ -374,7 +389,7 @@ body{
   border-radius:8px;padding:5px 10px;cursor:pointer;color:var(--red);font-size:12px;
   font-weight:600;transition:all .15s;white-space:nowrap}
 
-
+/* ═══ VOICE BAR ═══ */
 .voice-bar{
   padding:10px 14px;display:none;align-items:center;gap:10px;
   background:rgba(239,68,68,.07);border-top:1px solid rgba(239,68,68,.18);
@@ -391,7 +406,7 @@ body{
   font-size:12px;font-weight:700;transition:all .15s;white-space:nowrap}
 .vb-stop:hover,.vb-stop:active{background:rgba(239,68,68,.25)}
 
-
+/* ═══ INPUT AREA ═══ */
 .input-area{
   padding:8px 10px;
   padding-bottom:calc(8px + env(safe-area-inset-bottom,0px));
@@ -439,7 +454,9 @@ body{
 .char-cnt.warn{color:var(--yellow);display:block}
 .char-cnt.over{color:var(--red);display:block}
 
-
+/* ═══════════════════════════════════════════════
+   RIGHT PANEL
+═══════════════════════════════════════════════ */
 .rpanel{
   width:220px;flex-shrink:0;
   background:var(--card2);border-left:1px solid var(--border);
@@ -454,6 +471,7 @@ body{
 .rp-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
 .rp-body{flex:1;overflow-y:auto;padding:10px}
 
+/* Online users */
 .online-hdr{font-size:11px;color:var(--muted);padding:4px 6px 10px;display:flex;align-items:center;gap:6px}
 .online-pill{background:rgba(34,197,94,.14);color:var(--green);
   border-radius:20px;padding:2px 8px;font-size:10px;font-weight:700;
@@ -468,7 +486,7 @@ body{
 .ou-name{font-size:12.5px;font-weight:500;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
 .ou-status{font-size:10px;color:var(--green)}
 
-
+/* Notes */
 .note-area{margin-bottom:10px}
 .note-ta{width:100%;background:var(--card3);border:1px solid var(--border);border-radius:10px;
   padding:9px;color:var(--text);font-family:inherit;font-size:13px;
@@ -492,14 +510,16 @@ body{
 .note-del:hover,.note-del:active{color:var(--red);background:rgba(239,68,68,.1)}
 .no-notes{text-align:center;padding:28px 12px;color:var(--muted);font-size:13px}
 
-
+/* ═══════════════════════════════════════════════
+   MODALS
+═══════════════════════════════════════════════ */
 .modal-bg{
   position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.65);
   backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);
   display:flex;align-items:flex-end;justify-content:center;
   padding:0;animation:fdin .18s ease;
 }
-
+/* On desktop center it */
 @media(min-width:641px){.modal-bg{align-items:center;padding:20px}}
 @keyframes fdin{from{opacity:0}to{opacity:1}}
 .modal-bg.hidden{display:none}
@@ -538,7 +558,7 @@ body{
 .mbtn.ghost:hover,.mbtn.ghost:active{background:rgba(255,255,255,.09)}
 .mbtn.danger{background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.2)}
 
-
+/* Profile modal */
 .prof-av-area{text-align:center;margin-bottom:16px}
 .prof-av{width:76px;height:76px;border-radius:50%;object-fit:cover;
   border:3px solid var(--accent);box-shadow:0 0 20px rgba(59,130,246,.3)}
@@ -548,11 +568,12 @@ body{
   transition:all .15s;background:rgba(255,255,255,.03);user-select:none}
 .sopt.active{background:rgba(59,130,246,.15);border-color:rgba(59,130,246,.35);color:var(--accent)}
 
+/* Pinned list */
 .pin-item{padding:10px;border:1px solid var(--border);border-radius:10px;
   margin-bottom:7px;cursor:pointer;font-size:13px;transition:background .12s}
 .pin-item:hover,.pin-item:active{background:rgba(59,130,246,.06)}
 
-
+/* Image zoom */
 .zoom-bg{position:fixed;inset:0;z-index:700;background:rgba(0,0,0,.92);
   display:flex;align-items:center;justify-content:center;cursor:zoom-out;
   animation:fdin .15s ease;padding:16px}
@@ -564,7 +585,7 @@ body{
   display:flex;align-items:center;justify-content:center;z-index:701;
   -webkit-backdrop-filter:blur(8px)}
 
-
+/* Firebase setup guide */
 .setup-guide{
   position:fixed;inset:0;z-index:800;background:rgba(0,0,0,.75);
   backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
@@ -581,7 +602,9 @@ body{
 }
 @media(min-width:641px){.setup-inner{border-radius:20px;padding:28px}}
 
-
+/* ═══════════════════════════════════════════════
+   TOAST
+═══════════════════════════════════════════════ */
 .toast-wrap{
   position:fixed;
   bottom:calc(var(--bn-h) + 10px);
@@ -600,12 +623,14 @@ body{
 .toast.success{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.08)}
 .toast.error{border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.08)}
 
-
+/* ═══════════════════════════════════════════════
+   MOBILE BOTTOM NAV
+═══════════════════════════════════════════════ */
 .bottom-nav{
   position:fixed;bottom:0;left:0;right:0;
   background:rgba(8,14,26,.96);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
   border-top:1px solid var(--border);z-index:250;
-  display:none; 
+  display:none; /* shown on mobile */
   padding-bottom:var(--sai-bot);
 }
 [data-theme="light"] .bottom-nav{background:rgba(240,244,255,.97)}
@@ -624,28 +649,32 @@ body{
   display:none}
 .bn-btn .bn-badge[data-count]:not([data-count="0"])::after{display:flex}
 
-
+/* ═══════════════════════════════════════════════
+   MOBILE SIDE DRAWER (Rooms & DMs)
+═══════════════════════════════════════════════ */
 .drawer-overlay{
   display:none;position:fixed;inset:0;z-index:199;background:rgba(0,0,0,.5);
   animation:fdin .18s ease;
 }
 .drawer-overlay.show{display:block}
 
-
-
+/* ═══════════════════════════════════════════════
+   RESPONSIVE BREAKPOINTS
+═══════════════════════════════════════════════ */
+/* Tablet: hide right panel */
 @media(max-width:1024px){
   .rpanel{display:none}
 }
-
+/* Mobile: everything stacks */
 @media(max-width:640px){
-
+  /* Show mobile UI */
   .nav-menu-btn{display:flex;align-items:center;justify-content:center}
   .btn-out{display:none}
   .nav-uname-wrap{display:none}
   .bottom-nav{display:block}
   .hdr-back{display:flex;align-items:center}
 
-
+  /* Sidebar becomes a drawer */
   .sidebar{
     position:fixed;top:0;bottom:0;left:0;
     width:min(290px,88vw);
@@ -656,19 +685,20 @@ body{
   }
   .sidebar.open{transform:translateX(0)}
 
+  /* Shell takes full height with bottom nav space */
   .shell{bottom:var(--bn-h)}
   body.kb .shell{bottom:var(--kb,0px)}
   body.kb .bottom-nav{display:none}
 
-
+  /* Messages more padding */
   .msgs{padding:10px 10px 6px}
   .input-area{padding:7px 8px;padding-bottom:calc(7px + env(safe-area-inset-bottom,0px))}
 
-
+  /* Make messages readable */
   .mg{padding:2px 4px}
   .mg-txt{font-size:14.5px}
 
-
+  /* Touch-friendly action buttons */
   .ma{padding:5px 7px;font-size:16px}
   .macts{gap:4px}
 }
@@ -677,7 +707,7 @@ body{
   .send-btn{width:32px;height:32px}
 }
 
-
+/* Hidden utility */
 .icopts{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
 .icopt{font-size:22px;padding:6px 8px;border-radius:10px;border:1px solid var(--border2);cursor:pointer;background:rgba(255,255,255,.03);line-height:1}
 .icopt.active{background:rgba(59,130,246,.18);border-color:var(--accent)}
@@ -689,6 +719,7 @@ body{
 </head>
 <body>
 
+<!-- ═══ NAVBAR ═══ -->
 <nav class="navbar">
   <button class="nav-menu-btn" id="menuBtn" aria-label="Menu">☰</button>
   <span class="nav-bolt">⚡</span>
@@ -714,8 +745,10 @@ body{
 <!-- Drawer overlay -->
 <div class="drawer-overlay" id="drawerOverlay" onclick="closeSidebar()"></div>
 
+<!-- ═══ APP SHELL ═══ -->
 <div class="shell">
 
+  <!-- ─── LEFT SIDEBAR ─── -->
   <aside class="sidebar" id="sidebar">
     <div class="sb-scroll">
       <div class="sb-lbl">⚡ Global</div>
@@ -751,6 +784,7 @@ body{
     </div>
   </aside>
 
+  <!-- ─── MAIN CHAT ─── -->
   <main class="main" id="mainArea">
     <div class="chat-hdr">
       <button class="hdr-back" id="backBtn" onclick="goBack()">←</button>
@@ -771,7 +805,7 @@ body{
       <span id="typingTxt">typing…</span>
     </div>
 
-
+    <!-- Messages -->
     <div class="msgs" id="msgs">
       <div id="skelWrap" class="skel-w">
         <div class="skel-m"><div class="sk sk-av"></div><div class="sk-bd"><div class="sk sk-l" style="width:55%"></div><div class="sk sk-l" style="width:36%"></div></div></div>
@@ -781,21 +815,21 @@ body{
       <button class="scrollfab" id="scrollFab" onclick="scrollBot()">↓</button>
     </div>
 
-
+    <!-- Reply bar -->
     <div class="reply-bar" id="replyBar">
       <span class="rb-ic">↩️</span>
       <div class="rb-c"><div class="rb-auth" id="replyAuth"></div><div class="rb-txt" id="replyTxt"></div></div>
       <button class="rb-x" onclick="cancelReply()">✕</button>
     </div>
 
-
+    <!-- Image preview -->
     <div class="img-prev-bar" id="imgPrevBar">
       <img class="ipb-thumb" id="ipbThumb" src="" alt=""/>
       <div class="ipb-info"><strong id="ipbName">image</strong><span>Ready to send</span></div>
       <button class="ipb-rm" onclick="cancelImg()">Remove</button>
     </div>
 
-
+    <!-- Voice bar -->
     <div class="voice-bar" id="voiceBar">
       <div class="vb-dot"></div>
       <span class="vb-timer" id="vbTimer">0:00</span>
@@ -803,7 +837,7 @@ body{
       <button class="vb-stop" onclick="stopVoice()">⬛ Stop & Send</button>
     </div>
 
-
+    <!-- Input -->
     <div class="input-area">
       <div class="emoji-tray" id="emojiTray">
         <button class="et-btn" onclick="insEmoji('😀')">😀</button><button class="et-btn" onclick="insEmoji('😂')">😂</button>
@@ -834,6 +868,7 @@ body{
     </div>
   </main>
 
+  <!-- ─── RIGHT PANEL ─── -->
   <aside class="rpanel" id="rpanel">
     <div class="rp-tabs">
       <div class="rp-tab active" onclick="switchPanel('online',this)" id="rpt-online">Online</div>
@@ -855,7 +890,7 @@ body{
   </aside>
 </div>
 
-
+<!-- ═══ MOBILE BOTTOM NAV ═══ -->
 <div class="bottom-nav" id="bottomNav">
   <div class="bn-inner">
     <button class="bn-btn active" id="bn-chat" onclick="mobileNav('chat')">
@@ -876,12 +911,12 @@ body{
   </div>
 </div>
 
-
+<!-- ═══ TOAST CONTAINER ═══ -->
 <div class="toast-wrap" id="toastWrap"></div>
 
+<!-- ═══ MODALS ═══ -->
 
-
-
+<!-- DM Modal -->
 <div class="modal-bg hidden" id="dmModal" onclick="bgClose(event,'dmModal')">
   <div class="modal">
     <span class="modal-handle"></span>
@@ -896,7 +931,7 @@ body{
   </div>
 </div>
 
-
+<!-- Profile Modal -->
 <div class="modal-bg hidden" id="profileModal" onclick="bgClose(event,'profileModal')">
   <div class="modal">
     <span class="modal-handle"></span>
@@ -922,7 +957,7 @@ body{
   </div>
 </div>
 
-
+<!-- Edit Modal -->
 <div class="modal-bg hidden" id="editModal" onclick="bgClose(event,'editModal')">
   <div class="modal">
     <span class="modal-handle"></span>
@@ -935,7 +970,7 @@ body{
   </div>
 </div>
 
-
+<!-- Pinned Modal -->
 <div class="modal-bg hidden" id="pinnedModal" onclick="bgClose(event,'pinnedModal')">
   <div class="modal">
     <span class="modal-handle"></span>
@@ -947,7 +982,7 @@ body{
   </div>
 </div>
 
-
+<!-- Mobile Online Modal -->
 <div class="modal-bg hidden" id="onlineModal" onclick="bgClose(event,'onlineModal')">
   <div class="modal">
     <span class="modal-handle"></span>
@@ -960,7 +995,7 @@ body{
   </div>
 </div>
 
-
+<!-- Mobile Notes Modal -->
 <div class="modal-bg hidden" id="notesModal" onclick="bgClose(event,'notesModal')">
   <div class="modal">
     <span class="modal-handle"></span>
@@ -976,7 +1011,7 @@ body{
   </div>
 </div>
 
-
+<!-- Create Group -->
 <div class="modal-bg hidden" id="createGroupModal" onclick="bgClose(event,'createGroupModal')">
   <div class="modal"><span class="modal-handle"></span>
     <div class="modal-title">✨ Create a Group</div>
@@ -987,7 +1022,7 @@ body{
     <div class="modal-btns"><button class="mbtn ghost" onclick="closeModal('createGroupModal')">Cancel</button><button class="mbtn primary" onclick="createGroup()">Create ✓</button></div>
   </div>
 </div>
-
+<!-- Join Group -->
 <div class="modal-bg hidden" id="joinGroupModal" onclick="bgClose(event,'joinGroupModal')">
   <div class="modal"><span class="modal-handle"></span>
     <div class="modal-title">🔑 Join a Group</div>
@@ -996,7 +1031,7 @@ body{
     <div class="modal-btns"><button class="mbtn ghost" onclick="closeModal('joinGroupModal')">Cancel</button><button class="mbtn primary" onclick="joinGroup()">Join ➤</button></div>
   </div>
 </div>
-
+<!-- Group Info -->
 <div class="modal-bg hidden" id="groupInfoModal" onclick="bgClose(event,'groupInfoModal')">
   <div class="modal"><span class="modal-handle"></span>
     <div class="modal-title" id="gi-title">Group</div>
@@ -1010,13 +1045,15 @@ body{
   </div>
 </div>
 
-
+<!-- Image Zoom -->
 <div class="zoom-bg hidden" id="zoomBg" onclick="closeZoom()">
   <button class="zoom-x" onclick="closeZoom()">✕</button>
   <img class="zoom-img" id="zoomImg" src="" alt="full"/>
 </div>
 
+<!-- Firebase Setup Guide (injected by JS if needed) -->
 
+<!-- ═══ FIREBASE + APP LOGIC ═══ -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
@@ -1025,7 +1062,7 @@ import {
   collection, query, where, limit, onSnapshot, serverTimestamp, getDocs, runTransaction, arrayUnion, arrayRemove
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-
+/* ── INIT ── */
 const FB = initializeApp({
   apiKey:"AIzaSyDeQip7FvQDyiSdiBjNlCJc9MT5fVQcnCc",
   authDomain:"login-21af0.firebaseapp.com",
@@ -1037,7 +1074,7 @@ const FB = initializeApp({
 const auth = getAuth(FB);
 const db   = getFirestore(FB);
 
-
+/* ── STATE ── */
 let me=null, meData=null;
 let room='global', dmUser=null;
 let unsubMsgs=null, unsubTyp=null;
@@ -1061,6 +1098,7 @@ const ROOMS={
   tech:['💻','Tech','Code, AI & gadgets'],
 };
 
+/* ── AUTH ── */
 onAuthStateChanged(auth, async user=>{
   if (!user){ const j=new URLSearchParams(location.search).get('join'); if(j) localStorage.setItem('zap-join',j); location.href='index.html'; return; }
   me=user;
@@ -1096,7 +1134,7 @@ window.addEventListener('beforeunload',()=>{
   }
 });
 
-
+/* ── GLOBAL ERROR CATCH ── */
 window.addEventListener('unhandledrejection',e=>{
   const m=e.reason?.message||'';
   if (m.includes('permission-denied')||m.includes('insufficient permissions')){
@@ -1104,6 +1142,7 @@ window.addEventListener('unhandledrejection',e=>{
   }
 });
 
+/* ── HELPERS ── */
 const $=id=>document.getElementById(id);
 const genAv=u=>`https://ui-avatars.com/api/?name=${encodeURIComponent(u||'?')}&background=3b82f6&color=fff&bold=true&rounded=true`;
 
@@ -1177,7 +1216,7 @@ function swReg(){
   if('serviceWorker'in navigator) navigator.serviceWorker.register('firebase-messaging-sw.js').catch(()=>{});
 }
 
-
+/* ── THEME ── */
 function initTheme(){
   const t=localStorage.getItem('zap-theme')||'dark';
   document.documentElement.setAttribute('data-theme',t);
@@ -1191,7 +1230,7 @@ $('themeBtn').addEventListener('click',()=>{
   $('themeBtn').textContent=n==='dark'?'🌙':'☀️';
 });
 
-
+/* ── AUTO SETUP ── */
 async function autoSetup(){
   if (localStorage.getItem('zap-setup3')) return;
   try{
@@ -1212,7 +1251,7 @@ async function autoSetup(){
   }catch(e){ console.warn('Setup skipped',e.message); }
 }
 
-
+/* ── ROOM SWITCHING ── */
 function goRoom(roomId){
   room=roomId; dmUser=null; lastDate=null; replyTo=null;
   const [ic,name,desc]=ROOMS[roomId]||['💬',roomId,roomId];
@@ -1231,7 +1270,7 @@ function goRoom(roomId){
   setMobileActive('chat');
 }
 
-
+// Wire room buttons
 document.querySelectorAll('.ch[data-room]').forEach(btn=>{
   btn.addEventListener('click',()=>goRoom(btn.dataset.room));
 });
@@ -1253,7 +1292,8 @@ function clearMsgs(){
   lastDate=null;
 }
 
-
+/* ── SUBSCRIBE MESSAGES ── */
+// Uses single-field query (no composite index needed)
 function subMsgs(roomId){
   if(unsubMsgs) unsubMsgs();
   const isDM=roomId.startsWith('dm__');
@@ -1269,7 +1309,7 @@ function subMsgs(roomId){
       first=false;
       $('skelWrap').style.display='none';
       if(snap.empty){showEmpty();return;}
-      
+      // sort client-side, render in order
       snap.docs
         .map(d=>({id:d.id,...d.data()}))
         .sort((a,b)=>(a.createdAt?.seconds||0)-(b.createdAt?.seconds||0))
@@ -1298,7 +1338,7 @@ function subMsgs(roomId){
   });
 }
 
-
+/* ── SUBSCRIBE TYPING ── */
 function subTyping(roomId){
   if(unsubTyp) unsubTyp();
   const q=query(collection(db,'typing'),where('room','==',roomId));
@@ -1312,6 +1352,8 @@ function subTyping(roomId){
     } else { bar.classList.remove('show'); }
   });
 }
+
+/* ── RENDER MESSAGES ── */
 function showEmpty(){
   if($('emptyState')) return;
   const d=document.createElement('div');
@@ -1332,7 +1374,7 @@ function bumpBadge(roomId){
 function renderMsg(data){
   removeEmpty();
   const m=$('msgs'), fab=$('scrollFab');
-
+  // Day divider
   if(data.createdAt){
     const ds=fdate(data.createdAt);
     if(ds!==lastDate){
@@ -1391,7 +1433,7 @@ function buildReacts(data){
   }).join('');
 }
 
-
+/* ── REACTIONS ── */
 window.trigReact=(e,msgId)=>{
   e.stopPropagation();
   document.querySelectorAll('.rpicker').forEach(p=>p.remove());
@@ -1418,7 +1460,7 @@ window.toggleReact=async(msgId,em)=>{
   rx[em]=u;await updateDoc(ref,{reactions:rx});
 };
 
-
+/* ── SEND MESSAGE ── */
 window.sendMsg=async()=>{
   if(!me||!meData) return;
   notifPerm();
@@ -1462,7 +1504,7 @@ function updateChar(v){
   else el.className='char-cnt';
 }
 
-
+/* ── TYPING ── */
 function handleTyp(){
   if(!me||!meData) return;
   const r=dmUser?'dm__'+dmId(me.uid,dmUser.uid):room;
@@ -1471,6 +1513,7 @@ function handleTyp(){
 }
 function clearTypDoc(){typing=false;if(me) setDoc(doc(db,'typing',me.uid),{typing:false},{merge:true});}
 
+/* ── REPLY ── */
 window.setReply=id=>{
   const m=MSG[id]||{};const username=m.username||'',text=(m.text||'').slice(0,80);
   replyTo={id,username,text};
@@ -1485,7 +1528,7 @@ window.jumpMsg=id=>{
   if(el){el.scrollIntoView({behavior:'smooth',block:'center'});el.style.background='rgba(59,130,246,.13)';setTimeout(()=>el.style.background='',1200);}
 };
 
-
+/* ── DELETE / EDIT ── */
 window.delMsg=async msgId=>{
   const col=dmUser?'dms':'messages';
   await deleteDoc(doc(db,col,msgId));toast('Message deleted','info');
@@ -1499,7 +1542,7 @@ window.saveEdit=async()=>{
   editId=null;closeModal('editModal');toast('✅ Edited','success');
 };
 
-
+/* ── PIN ── */
 window.togglePin=async msgId=>{
   const r=dmUser?'dm__'+dmId(me.uid,dmUser.uid):room;
   const ref=doc(db,'rooms',r);
@@ -1530,7 +1573,7 @@ window.showPinned=async()=>{
   }
 };
 
-
+/* ── IMAGE UPLOAD ── */
 function compressImg(file,cb){
   const img=new Image(),url=URL.createObjectURL(file);
   img.onload=()=>{
@@ -1556,7 +1599,7 @@ window.cancelImg=()=>{pendingImg=null;$('imgPrevBar').classList.remove('show');}
 window.openZoom=src=>{$('zoomImg').src=src;$('zoomBg').classList.remove('hidden');};
 window.closeZoom=()=>$('zoomBg').classList.add('hidden');
 
-
+/* ── VOICE ── */
 $('voiceBtn').addEventListener('click',()=>{
   if(voiceRec){stopVoice();return;}
   navigator.mediaDevices.getUserMedia({audio:true}).then(stream=>{
@@ -1592,7 +1635,7 @@ $('voiceBtn').addEventListener('click',()=>{
 });
 window.stopVoice=()=>{if(voiceRec) voiceRec.stop();$('voiceBtn').textContent='🎤';};
 
-
+/* ── EMOJI ── */
 $('emojiBtn').addEventListener('click',()=>$('emojiTray').classList.toggle('open'));
 window.insEmoji=em=>{
   const ta=$('msgInput');const p=ta.selectionStart;
@@ -1600,12 +1643,13 @@ window.insEmoji=em=>{
   ta.selectionStart=ta.selectionEnd=p+em.length;ta.focus();grow(ta);
 };
 
+/* ── SCROLL FAB ── */
 $('msgs').addEventListener('scroll',e=>{
   const {scrollHeight,scrollTop,clientHeight}=e.target;
   $('scrollFab').classList.toggle('show',scrollHeight-scrollTop-clientHeight>300);
 });
 
-
+/* ── ONLINE USERS ── */
 function subOnline(){
   const q=query(collection(db,'users'),where('online','==',true));
   onSnapshot(q,snap=>{
@@ -1630,9 +1674,9 @@ window.setDMFromOnline=(uid,username,photoURL,online)=>{
   closeModal('onlineModal');
 };
 
-
+/* ── DM ── */
 window.openModal_dm=()=>{$('dmIn').value='';openModal('dmModal');setTimeout(()=>$('dmIn').focus(),120);};
-
+// Wire the nav DM button
 $('dmNotifBtn').addEventListener('click',()=>{ $('dmIn').value='';openModal('dmModal');setTimeout(()=>$('dmIn').focus(),120);});
 $('dmIn').addEventListener('keydown',e=>{if(e.key==='Enter') startDM();});
 
@@ -1707,7 +1751,7 @@ function updateDMBadge(){
   $('bnDmIc').setAttribute('data-count',total||'0');
 }
 
-
+/* ── NOTES ── */
 function loadNotes(){
   if(!me) return;
   const q=query(collection(db,'users',me.uid,'notes'),limit(50));
@@ -1744,7 +1788,7 @@ window.delNote=async id=>{ await deleteDoc(doc(db,'users',me.uid,'notes',id)); }
 $('noteTa').addEventListener('keydown',e=>{if(e.key==='Enter'&&e.ctrlKey){e.preventDefault();addNote();}});
 $('noteTaMob').addEventListener('keydown',e=>{if(e.key==='Enter'&&e.ctrlKey){e.preventDefault();addNoteMob();}});
 
-
+/* ── PROFILE ── */
 window.pickStatus=el=>{
   document.querySelectorAll('.sopt').forEach(o=>o.classList.remove('active'));
   el.classList.add('active');myStatus=el.dataset.s;
@@ -1759,14 +1803,14 @@ window.saveProfile=async()=>{
   closeModal('profileModal');toast('✅ Profile saved','success');
 };
 
-
+/* ── LOGOUT ── */
 window.handleLogout=async()=>{
   if(!me) return;
   await setDoc(doc(db,'users',me.uid),{online:false,lastSeen:serverTimestamp()},{merge:true});
   clearTypDoc();await signOut(auth);location.href='index.html';
 };
 
-
+/* ── SEARCH ── */
 $('searchIn').addEventListener('input',e=>{
   clearTimeout(searchDeb);
   const v=e.target.value.trim();
@@ -1796,6 +1840,7 @@ async function doSearch(term){
   });
 }
 
+/* ── RIGHT PANEL ── */
 window.switchPanel=(panel,tab)=>{
   document.querySelectorAll('.rp-tab').forEach(t=>t.classList.remove('active'));
   tab.classList.add('active');
@@ -1803,6 +1848,7 @@ window.switchPanel=(panel,tab)=>{
   $('rp-notes').classList.toggle('hidden',panel!=='notes');
 };
 
+/* ── MOBILE NAVIGATION ── */
 window.mobileNav=section=>{
   document.querySelectorAll('.bn-btn').forEach(b=>b.classList.remove('active'));
   $('bn-'+section)?.classList.add('active');
@@ -1828,7 +1874,7 @@ function setMobileActive(section){
   $('bn-'+section)?.classList.add('active');
 }
 
-
+/* ── SIDEBAR ── */
 function openSidebar(){
   $('sidebar').classList.add('open');
   $('drawerOverlay').classList.add('show');
@@ -1842,7 +1888,7 @@ $('menuBtn').addEventListener('click',()=>{
 });
 window.closeSidebar=closeSidebar;
 
-
+/* ── GROUPS (messages live in 'messages' with room='g_<id>') ── */
 let myGroups=[],curGroup=null,pickedIcon='👥';
 const CC='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const genCode=()=>Array.from({length:6},()=>CC[Math.floor(Math.random()*CC.length)]).join('');
@@ -1942,7 +1988,7 @@ window.deleteGroup=async()=>{
   closeModal('groupInfoModal');goRoom('global');toast('Group deleted','info');
 };
 
-
+/* ── MOBILE KEYBOARD FIT ── */
 const vv=window.visualViewport;
 function fitKb(){
   if(!vv) return;
@@ -1954,12 +2000,12 @@ function fitKb(){
 if(vv){vv.addEventListener('resize',fitKb);vv.addEventListener('scroll',fitKb);}
 $('msgInput').addEventListener('focus',()=>setTimeout(()=>window.scrollTo(0,0),100));
 
-
+/* ── MODAL UTILS ── */
 window.openModal=id=>{$(id)?.classList.remove('hidden');};
 window.closeModal=id=>{$(id)?.classList.add('hidden');};
 window.bgClose=(e,id)=>{if(e.target.id===id) closeModal(id);};
 
-
+/* ── FIREBASE SETUP GUIDE ── */
 function showSetupGuide(){
   if(window._zapGuideShown) return;
   window._zapGuideShown=true;
