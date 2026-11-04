@@ -202,7 +202,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
       <span class="chip">🌙 Dark Mode</span>
     </div>
 
-    <div class="foot">⚡ Zap · Made with ❤️ · v5 (login page)</div>
+    <div class="foot">⚡ Zap · Made with ❤️ · v7 (login page)</div>
   </div>
 </div>
 
@@ -221,7 +221,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { initializeFirestore, doc, setDoc, getDoc, serverTimestamp }
+import { initializeFirestore, doc, setDoc, getDoc, serverTimestamp, runTransaction }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const app = initializeApp({
@@ -300,6 +300,13 @@ window.signIn=async()=>{
     const ref=doc(db,'users',user.uid),snap=await getDoc(ref),old=snap.exists()?snap.data():{};
     const name=old.username||uname;
     if(!name){ signingIn=false; setLoading(false); setStatus('👋 New here! Pick a username above, then tap Continue.','info'); inp.focus(); return; }
+    if(!old.username){
+      const k=name.toLowerCase();
+      if(['admin','administrator','support','zap','system','everyone','here','mod','moderator'].includes(k)){ signingIn=false;setLoading(false);setStatus('⚠️ That name is reserved — pick another.','err');inp.focus();return; }
+      try{
+        await runTransaction(db,async tx=>{const rf=doc(db,'usernames',k),sn=await tx.get(rf);if(sn.exists()&&sn.data().uid!==user.uid) throw new Error('taken');if(!sn.exists()) tx.set(rf,{uid:user.uid});});
+      }catch(e){ signingIn=false;setLoading(false);setStatus(e.message==='taken'?'⚠️ “'+name+'” is already taken — pick another.':'Error: '+(e.code||e.message),'err');inp.focus();return; }
+    }
     setStatus('✅ Setting up your profile…','ok');
     await setDoc(ref,{uid:user.uid,username:name,displayName:old.displayName||user.displayName||name,photoURL:user.photoURL||'',online:true,status:'online',lastSeen:serverTimestamp(),createdAt:old.createdAt||serverTimestamp()},{merge:true});
     go('dashboard.html');

@@ -734,6 +734,14 @@ body{
   .chat-hdr{padding:9px 10px}
 }
 @media(hover:none){.ma{padding:7px 9px;font-size:18px}}
+.mention{background:rgba(59,130,246,.18);color:var(--accent);border-radius:5px;padding:0 3px;font-weight:600}
+.mention.me{background:rgba(245,158,11,.22);color:var(--yellow)}
+.mg.ment-me{background:rgba(245,158,11,.07);box-shadow:inset 3px 0 0 var(--yellow)}
+.input-area{position:relative}
+.mention-pop{position:absolute;left:10px;right:10px;bottom:100%;background:var(--card);border:1px solid var(--border);border-radius:12px;box-shadow:var(--sh2);overflow:hidden;z-index:40}
+.mp-item{display:flex;align-items:center;gap:10px;padding:10px 12px;cursor:pointer;font-size:14px;font-weight:600;color:var(--text2)}
+.mp-item img{width:26px;height:26px;border-radius:50%;object-fit:cover}
+.mp-item.on,.mp-item:hover{background:rgba(59,130,246,.14);color:var(--accent)}
 .hidden{display:none!important}
 </style>
 </head>
@@ -750,6 +758,7 @@ body{
   </div>
   <div class="nav-spacer"></div>
   <div class="nav-r">
+    <button class="nib" id="mentionBtn" title="Mentions" onclick="openMentions()">🔔<div class="bd hidden" id="mentionBadge">0</div></button>
     <div class="nib" id="dmNotifBtn" title="DMs">💬<div class="bd hidden" id="dmBadge">0</div></div>
     <button class="nib" id="themeBtn" title="Theme">🌙</button>
     <span class="nav-uname-wrap" style="display:flex;align-items:center;gap:6px">
@@ -847,6 +856,7 @@ body{
 
     <!-- Input -->
     <div class="input-area">
+      <div class="mention-pop hidden" id="mentionPop"></div>
       <div class="emoji-tray" id="emojiTray">
         <button class="et-btn" onclick="insEmoji('😀')">😀</button><button class="et-btn" onclick="insEmoji('😂')">😂</button>
         <button class="et-btn" onclick="insEmoji('🥰')">🥰</button><button class="et-btn" onclick="insEmoji('😎')">😎</button>
@@ -1064,6 +1074,16 @@ body{
   </div>
 </div>
 
+<!-- Mentions inbox -->
+<div class="modal-bg hidden" id="mentionsModal" onclick="bgClose(event,'mentionsModal')">
+  <div class="modal"><span class="modal-handle"></span>
+    <div class="modal-title">🔔 Mentions</div>
+    <div class="modal-sub">Messages where someone tagged you</div>
+    <div id="mentionList" style="max-height:55vh;overflow-y:auto"></div>
+    <div class="modal-btns"><button class="mbtn ghost" onclick="closeModal('mentionsModal')">Close</button></div>
+  </div>
+</div>
+
 <!-- Image Zoom -->
 <div class="zoom-bg hidden" id="zoomBg" onclick="closeZoom()">
   <button class="zoom-x" onclick="closeZoom()">✕</button>
@@ -1078,7 +1098,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/fireba
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import {
   initializeFirestore, doc, setDoc, getDoc, addDoc, deleteDoc, updateDoc,
-  collection, query, where, limit, onSnapshot, serverTimestamp, getDocs, runTransaction, arrayUnion, arrayRemove
+  collection, query, where, limit, orderBy, onSnapshot, serverTimestamp, getDocs, runTransaction, arrayUnion, arrayRemove
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 /* ── INIT ── */
@@ -1133,6 +1153,8 @@ onAuthStateChanged(auth, async user=>{
   loadNotes();
   subDMList();
   subGroups();
+  subMentions();
+  ensureClaim().catch(()=>{});
   checkJoinLink();
   getDoc(doc(db,'appAdmins',me.uid)).then(s=>{isAppAdmin=s.exists();}).catch(()=>{});
   swReg();
@@ -1203,6 +1225,7 @@ function fmtTxt(raw){
   t=t.replace(/`([^`]+)`/g,'<code>$1</code>');
   t=t.replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>');
   t=t.replace(/\*([^*]+)\*/g,'<em>$1</em>');
+  t=t.replace(/(^|\s)@(\w{3,24})\b/g,(m,pre,n)=>`${pre}<span class="mention${n.toLowerCase()===(meData?.username||'').toLowerCase()?' me':''}">@${n}</span>`);
   t=t.replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" rel="noopener">$1</a>');
   t=t.replace(/\n/g,'<br>');
   return t;
@@ -1421,10 +1444,11 @@ function renderMsg(data){
 
 function buildMsg(data){
   MSG[data.id]=data;
+  if(data.username&&data.uid&&data.uid!=='system') KNOWN[data.username.toLowerCase()]={uid:data.uid,username:data.username,photoURL:data.photoURL};
   const isMe=data.uid===me?.uid;
   const av=data.photoURL||genAv(data.username||'?');
   const el=document.createElement('div');
-  el.className='mg';el.id='mg-'+data.id;
+  el.className='mg'+((data.mentions||[]).includes(me?.uid)?' ment-me':'');el.id='mg-'+data.id;
   el.style.transition='opacity .2s,transform .2s';
 
   const rqHTML=data.replyTo?`<div class="rq" onclick="jumpMsg('${data.replyTo.id}')"><span class="rq-auth">↩ ${esc(data.replyTo.username)}</span>${esc((data.replyTo.text||'📷').slice(0,80))}</div>`:'';
@@ -1508,24 +1532,32 @@ window.sendMsg=async()=>{
   if(replyTo) data.replyTo={id:replyTo.id,username:replyTo.username,text:replyTo.text};
   if(pendingImg) data.imageURL=pendingImg;
   if(curTtl>0) data.expiresAt=new Date(Date.now()+curTtl*3600000);
+  let ment=await resolveMentions(txt);
+  if(dmUser) ment=ment.filter(u=>u===dmUser.uid);
+  else if(room.startsWith('g_')){const g=myGroup();ment=ment.filter(u=>g&&g.members.includes(u));}
+  if(ment.length) data.mentions=ment;
+  const mref=doc(mcol());
 
   if(dmUser){
     const did=dmId(me.uid,dmUser.uid);
     data.dmId=did;data.room='dm__'+did;
-    await addDoc(mcol(),data);
+    await setDoc(mref,data);
     const mRef=doc(db,'dms_meta',did);
     const ms=await getDoc(mRef);
     const prev=ms.exists()?(ms.data()[`unread_${dmUser.uid}`]||0):0;
     await setDoc(mRef,{participants:[me.uid,dmUser.uid],lastMessage:txt||'📷 Image',lastAt:serverTimestamp(),[`unread_${dmUser.uid}`]:prev+1},{merge:true});
   } else {
     data.room=room;
-    await addDoc(mcol(),data);
+    await setDoc(mref,data);
   }
+  if(ment.length) notifyMentions(ment,mref.id,txt);
+  $('mentionPop').classList.add('hidden');
   inp.value='';inp.style.height='auto';
   cancelReply();cancelImg();updateChar('');clearTypDoc();
 };
 
 $('msgInput').addEventListener('keydown',e=>{
+  if(mentionOpen()&&['Enter','Tab','ArrowDown','ArrowUp'].includes(e.key)){e.preventDefault();mentionKey(e.key);return;}
   if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();window.sendMsg();}
   grow(e.target);
 });
@@ -1685,6 +1717,7 @@ function subOnline(){
   const q=query(collection(db,'users'),where('online','==',true));
   onSnapshot(q,snap=>{
     const users=snap.docs.map(d=>d.data()).filter(u=>!u.lastSeen||Date.now()-u.lastSeen.toMillis()<180000);
+    users.forEach(u=>{if(u.username) KNOWN[u.username.toLowerCase()]={uid:u.uid,username:u.username,photoURL:u.photoURL};});
     $('onlinePill').textContent=users.length+' online';
     $('onlinePill2').textContent=users.length+' online';
     const html=users.map(u=>{
@@ -1714,10 +1747,10 @@ $('dmIn').addEventListener('keydown',e=>{if(e.key==='Enter') startDM();});
 window.startDM=async()=>{
   const uname=$('dmIn').value.trim();
   if(!uname){toast('Enter a username','error');return;}
-  const q=query(collection(db,'users'),where('username','==',uname));
-  const s=await getDocs(q);
-  if(s.empty){toast('⚠️ User not found','error');return;}
-  const ud=s.docs[0].data();
+  const nm=uname.replace(/^@/,'');let ud=null;
+  try{const c=await getDoc(doc(db,'usernames',nm.toLowerCase()));if(c.exists()){const us=await getDoc(doc(db,'users',c.data().uid));if(us.exists()) ud=us.data();}}catch(e){}
+  if(!ud){const s=await getDocs(query(collection(db,'users'),where('username','==',nm)));if(!s.empty) ud=s.docs[0].data();}
+  if(!ud){toast('⚠️ User not found','error');return;}
   if(ud.uid===me.uid){toast("That's you! 😄",'info');return;}
   closeModal('dmModal');openDMChat(ud);
 };
@@ -1830,6 +1863,7 @@ window.saveProfile=async()=>{
   const uname=$('profUname').value.trim();
   const disp=$('profDisplay').value.trim();
   if(!uname||!/^[a-zA-Z0-9_]{3,24}$/.test(uname)){toast('⚠️ Invalid username','error');return;}
+  try{await claimName(uname,meData.username);}catch(e){toast(e.message==='taken'?'⚠️ That username is already taken':e.message==='reserved'?'⚠️ That name is reserved':'⚠️ Could not save username','error');return;}
   await setDoc(doc(db,'users',me.uid),{username:uname,displayName:disp,status:myStatus,online:myStatus!=='invisible'},{merge:true});
   meData={...meData,username:uname,displayName:disp,status:myStatus};
   closeModal('profileModal');toast('✅ Profile saved','success');
@@ -2067,6 +2101,94 @@ window.deleteGroup=async()=>{
   await deleteDoc(doc(db,'codes',g.code));await deleteDoc(doc(db,'groups',g.id));
   closeModal('groupInfoModal');goRoom('general');toast('Group deleted','info');
 };
+
+/* ── UNIQUE USERNAMES ── */
+const RESERVED=['admin','administrator','support','zap','system','everyone','here','mod','moderator'];
+async function claimName(newName,oldName){
+  const nk=newName.toLowerCase(),ok=(oldName||'').toLowerCase();
+  if(RESERVED.includes(nk)&&!isAppAdmin) throw new Error('reserved');
+  await runTransaction(db,async tx=>{
+    const nref=doc(db,'usernames',nk),ns=await tx.get(nref);
+    const oref=ok&&ok!==nk?doc(db,'usernames',ok):null,os=oref?await tx.get(oref):null;
+    if(ns.exists()&&ns.data().uid!==me.uid) throw new Error('taken');
+    if(!ns.exists()) tx.set(nref,{uid:me.uid});
+    if(os&&os.exists()&&os.data().uid===me.uid) tx.delete(oref);
+  });
+}
+async function ensureClaim(){
+  const s=await getDoc(doc(db,'usernames',meData.username.toLowerCase()));
+  if(s.exists()&&s.data().uid===me.uid) return;
+  try{await claimName(meData.username,null);}
+  catch(e){toast('⚠️ Your username belongs to someone else — please pick a new one','error',6000);openModal('profileModal');}
+}
+
+/* ── @MENTIONS ── */
+const KNOWN={};let mentionList=[],mentionIdx=0,mentionItems=[],mentionFirst=true;
+const mentionOpen=()=>!$('mentionPop').classList.contains('hidden');
+async function resolveMentions(txt){
+  const names=[...new Set([...txt.matchAll(/(?:^|\s)@(\w{3,24})\b/g)].map(m=>m[1].toLowerCase()))].slice(0,6),out=[];
+  for(const n of names){
+    let uid=KNOWN[n]&&KNOWN[n].uid;
+    if(!uid){try{const s=await getDoc(doc(db,'usernames',n));if(s.exists()) uid=s.data().uid;}catch(e){}}
+    if(uid&&uid!==me.uid) out.push(uid);
+  }
+  return out;
+}
+function notifyMentions(uids,msgId,txt){
+  const roomName=dmUser?'a DM':(ROOMS[room]||[])[1]||'a chat';
+  uids.forEach(u=>addDoc(collection(db,'users',u,'mentions'),{fromUid:me.uid,fromName:meData.username,text:txt.slice(0,120),room,roomName,msgId,at:serverTimestamp()}).catch(()=>{}));
+}
+function subMentions(){
+  onSnapshot(query(collection(db,'users',me.uid,'mentions'),orderBy('at','desc'),limit(30)),snap=>{
+    mentionItems=snap.docs.map(d=>({id:d.id,...d.data({serverTimestamps:'estimate'})}));
+    if(!mentionFirst) snap.docChanges().forEach(c=>{
+      if(c.type==='added'&&!c.doc.metadata.hasPendingWrites){const m=c.doc.data();toast('🔔 @'+m.fromName+' mentioned you in '+m.roomName,'info',4500);snd();notif(m.fromName,'mentioned you: '+m.text);}
+    });
+    mentionFirst=false;updateMentionBadge();
+  },()=>{});
+}
+const mSeen=()=>+localStorage.getItem('zap-mseen')||0;
+function updateMentionBadge(){
+  const n=mentionItems.filter(m=>m.at&&m.at.toMillis()>mSeen()).length,b=$('mentionBadge');
+  b.textContent=n>9?'9+':n;b.classList.toggle('hidden',!n);
+}
+window.openMentions=()=>{
+  $('mentionList').innerHTML=mentionItems.length?mentionItems.map(m=>`<div class="pin-item" data-mid="${m.id}"><strong style="color:var(--accent)">@${esc(m.fromName)}</strong> <span style="color:var(--muted);font-size:11px">in ${esc(m.roomName||'')} · ${ftime(m.at)}</span><div style="margin-top:3px">${esc(m.text||'')}</div></div>`).join(''):'<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px">Nobody has mentioned you yet</div>';
+  localStorage.setItem('zap-mseen',Date.now());updateMentionBadge();openModal('mentionsModal');
+};
+$('mentionList').addEventListener('click',async e=>{
+  const el=e.target.closest('[data-mid]');if(!el) return;
+  const m=mentionItems.find(x=>x.id===el.dataset.mid);if(!m) return;
+  closeModal('mentionsModal');
+  if(m.room.startsWith('dm__')){const s=await getDoc(doc(db,'users',m.fromUid));if(s.exists()) openDMChat(s.data());}
+  else goRoom(m.room);
+  setTimeout(()=>jumpMsg(m.msgId),900);
+});
+function updateMentionPop(){
+  const ta=$('msgInput'),m=/(?:^|\s)@(\w{0,24})$/.exec(ta.value.slice(0,ta.selectionStart));
+  if(!m){$('mentionPop').classList.add('hidden');return;}
+  const q=m[1].toLowerCase();
+  mentionList=Object.values(KNOWN).filter(u=>u.uid!==me.uid&&u.username.toLowerCase().startsWith(q)).slice(0,5);
+  if(!mentionList.length){$('mentionPop').classList.add('hidden');return;}
+  mentionIdx=Math.min(mentionIdx,mentionList.length-1);
+  $('mentionPop').innerHTML=mentionList.map((u,i)=>`<div class="mp-item${i===mentionIdx?' on':''}" data-i="${i}"><img src="${u.photoURL||genAv(u.username)}" onerror="this.src='${genAv(u.username)}'"/>@${esc(u.username)}</div>`).join('');
+  $('mentionPop').classList.remove('hidden');
+}
+function pickMention(i){
+  const u=mentionList[i];if(!u) return;
+  const ta=$('msgInput'),pos=ta.selectionStart,before=ta.value.slice(0,pos).replace(/@\w*$/,'@'+u.username+' ');
+  ta.value=before+ta.value.slice(pos);ta.selectionStart=ta.selectionEnd=before.length;ta.focus();
+  $('mentionPop').classList.add('hidden');
+}
+function mentionKey(k){
+  if(k==='ArrowDown') mentionIdx=(mentionIdx+1)%mentionList.length;
+  else if(k==='ArrowUp') mentionIdx=(mentionIdx-1+mentionList.length)%mentionList.length;
+  else {pickMention(mentionIdx);return;}
+  updateMentionPop();
+}
+$('mentionPop').addEventListener('mousedown',e=>{e.preventDefault();const it=e.target.closest('.mp-item');if(it) pickMention(+it.dataset.i);});
+$('mentionPop').addEventListener('touchstart',e=>{const it=e.target.closest('.mp-item');if(it){e.preventDefault();pickMention(+it.dataset.i);}},{passive:false});
+$('msgInput').addEventListener('input',()=>{mentionIdx=0;updateMentionPop();});
 
 /* ── TOUCH: tap a message for actions · swipe from the left edge for the menu ── */
 $('msgs').addEventListener('click',e=>{
