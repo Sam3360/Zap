@@ -345,7 +345,7 @@ body{
   padding:3px 4px;box-shadow:var(--sh);z-index:20;
 }
 /* On touch devices always show */
-@media(hover:none){.macts{opacity:1;pointer-events:all;position:static;background:none;border:none;box-shadow:none;padding:4px 0 0}}
+@media(hover:none){.macts{display:none}.mg.sel .macts{display:flex;opacity:1;pointer-events:all;top:-14px}.mg.sel{background:rgba(59,130,246,.07)}}
 .ma{background:none;border:none;cursor:pointer;font-size:15px;
   padding:3px 5px;border-radius:6px;color:var(--text3);transition:all .12s;line-height:1}
 .ma:hover,.ma:active{background:rgba(255,255,255,.08);color:var(--text)}
@@ -716,6 +716,24 @@ body{
 .mi.code{text-transform:uppercase;letter-spacing:4px;font-family:monospace;font-size:18px;text-align:center}
 .mini{background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.3);color:var(--accent);border-radius:8px;padding:4px 8px;font-size:11px;font-weight:700;cursor:pointer;margin-left:4px;flex-shrink:0}
 .mini.bad{color:var(--red);border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.08)}
+.hbt.tab-only{display:none}
+.sb-quick{display:none;gap:8px;padding:10px 8px 4px}
+.sb-quick button{flex:1;padding:12px 8px;border-radius:12px;border:1px solid rgba(59,130,246,.3);background:rgba(59,130,246,.12);color:var(--accent);font-weight:700;font-size:13px;cursor:pointer;font-family:inherit}
+.modal{max-height:92vh;overflow-y:auto}
+@media(max-width:1024px){.hbt.tab-only{display:flex}}
+@media(max-width:640px){
+  .sb-quick{display:flex}
+  .ch{padding:12px;font-size:14.5px}
+  .dm-item,.ou{padding:10px}
+  .sb-lbl button{padding:6px 12px;font-size:12px}
+  .ib-btn{padding:8px;font-size:21px}
+  .send-btn{width:42px;height:42px}
+  .ib-textarea,.mi,.nav-search-wrap input,.note-ta{font-size:16px}
+  .hbt{padding:9px;font-size:18px}
+  .mg-img{max-width:78vw}
+  .chat-hdr{padding:9px 10px}
+}
+@media(hover:none){.ma{padding:7px 9px;font-size:18px}}
 .hidden{display:none!important}
 </style>
 </head>
@@ -745,14 +763,16 @@ body{
 <div class="search-drop" id="searchDrop"></div>
 
 <!-- Drawer overlay -->
-<div class="drawer-overlay" id="drawerOverlay" onclick="closeSidebar()"></div>
+
 
 <!-- ═══ APP SHELL ═══ -->
 <div class="shell">
+  <div class="drawer-overlay" id="drawerOverlay" onclick="closeSidebar()"></div>
 
   <!-- ─── LEFT SIDEBAR ─── -->
   <aside class="sidebar" id="sidebar">
     <div class="sb-scroll">
+      <div class="sb-quick"><button onclick="closeSidebar();openModal('createGroupModal')">✨ Create group</button><button onclick="closeSidebar();openModal('joinGroupModal')">🔑 Join group</button></div>
       <div class="sb-lbl">💬 Community</div>
       <div class="ch active" id="ch-general" data-room="general" data-icon="💬" data-name="General" data-desc="Talk about anything">
         <span class="ch-ic">💬</span><span class="ch-name">General</span><span class="ch-badge">0</span>
@@ -779,6 +799,8 @@ body{
         <div class="hdr-sub" id="chatSub">Everyone is here</div>
       </div>
       <div class="hdr-acts">
+        <button class="hbt tab-only" onclick="openModal('onlineModal')" title="People">👥</button>
+        <button class="hbt tab-only" onclick="openModal('notesModal')" title="Notes">📝</button>
         <button class="hbt" id="ttlBtn" onclick="openModal('ttlModal')" title="Disappearing messages" style="display:none">⏳</button>
         <button class="hbt" id="infoBtn" onclick="showGroupInfo()" title="Group info" style="display:none">ℹ️</button>
         <button class="hbt" id="pinBtn" onclick="showPinned()" title="Pinned">📌</button>
@@ -940,6 +962,7 @@ body{
       <button class="mbtn ghost" onclick="closeModal('profileModal')">Cancel</button>
       <button class="mbtn primary" onclick="saveProfile()">Save ✓</button>
     </div>
+    <button class="mbtn danger" style="width:100%;margin-top:8px" onclick="handleLogout()">Sign out</button>
   </div>
 </div>
 
@@ -1895,7 +1918,7 @@ function closeSidebar(){
 $('menuBtn').addEventListener('click',()=>{
   $('sidebar').classList.contains('open')?closeSidebar():openSidebar();
 });
-window.closeSidebar=closeSidebar;
+window.closeSidebar=closeSidebar;window.goBack=goBack;window.scrollBot=scrollBot;
 
 /* ── PATHS · ROLES · DISAPPEARING MESSAGES ── */
 let isAppAdmin=false,curTtl=0,unsubTtl=null,baseSub='';
@@ -2044,6 +2067,24 @@ window.deleteGroup=async()=>{
   await deleteDoc(doc(db,'codes',g.code));await deleteDoc(doc(db,'groups',g.id));
   closeModal('groupInfoModal');goRoom('general');toast('Group deleted','info');
 };
+
+/* ── TOUCH: tap a message for actions · swipe from the left edge for the menu ── */
+$('msgs').addEventListener('click',e=>{
+  if(!matchMedia('(hover:none)').matches) return;
+  if(e.target.closest('.macts')){setTimeout(()=>document.querySelectorAll('.mg.sel').forEach(x=>x.classList.remove('sel')),50);return;}
+  if(e.target.closest('a,img,audio,button,.react,.rpicker,.rq')) return;
+  const mg=e.target.closest('.mg'),was=mg&&mg.classList.contains('sel');
+  document.querySelectorAll('.mg.sel').forEach(x=>x.classList.remove('sel'));
+  if(mg&&!was) mg.classList.add('sel');
+});
+let tx0=0,ty0=0;
+document.addEventListener('touchstart',e=>{tx0=e.touches[0].clientX;ty0=e.touches[0].clientY;},{passive:true});
+document.addEventListener('touchend',e=>{
+  if(!matchMedia('(max-width:640px)').matches) return;
+  const dx=e.changedTouches[0].clientX-tx0,dy=Math.abs(e.changedTouches[0].clientY-ty0);
+  if(dy>60||Math.abs(dx)<70) return;
+  if(dx>0&&tx0<28) openSidebar(); else if(dx<0&&$('sidebar').classList.contains('open')) closeSidebar();
+},{passive:true});
 
 /* ── MOBILE KEYBOARD FIT ── */
 const vv=window.visualViewport;
