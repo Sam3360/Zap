@@ -742,6 +742,8 @@ body{
 .mp-item{display:flex;align-items:center;gap:10px;padding:10px 12px;cursor:pointer;font-size:14px;font-weight:600;color:var(--text2)}
 .mp-item img{width:26px;height:26px;border-radius:50%;object-fit:cover}
 .mp-item.on,.mp-item:hover{background:rgba(59,130,246,.14);color:var(--accent)}
+.load-more{align-self:center;background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.3);color:var(--accent);border-radius:20px;padding:7px 16px;font-size:12px;font-weight:700;cursor:pointer;margin:6px 0;font-family:inherit}
+body.banned .input-area{opacity:.45;pointer-events:none}
 .hidden{display:none!important}
 </style>
 </head>
@@ -758,6 +760,7 @@ body{
   </div>
   <div class="nav-spacer"></div>
   <div class="nav-r">
+    <button class="nib hidden" id="adminBtn" title="Admin" onclick="openAdmin()">🛡️<div class="bd hidden" id="adminBadge">0</div></button>
     <button class="nib" id="mentionBtn" title="Mentions" onclick="openMentions()">🔔<div class="bd hidden" id="mentionBadge">0</div></button>
     <div class="nib" id="dmNotifBtn" title="DMs">💬<div class="bd hidden" id="dmBadge">0</div></div>
     <button class="nib" id="themeBtn" title="Theme">🌙</button>
@@ -972,6 +975,7 @@ body{
       <button class="mbtn ghost" onclick="closeModal('profileModal')">Cancel</button>
       <button class="mbtn primary" onclick="saveProfile()">Save ✓</button>
     </div>
+    <button class="mbtn ghost" style="width:100%;margin-top:8px" onclick="closeModal('profileModal');openBlocked()">🚫 Blocked users</button>
     <button class="mbtn danger" style="width:100%;margin-top:8px" onclick="handleLogout()">Sign out</button>
   </div>
 </div>
@@ -1055,6 +1059,7 @@ body{
   <div class="modal"><span class="modal-handle"></span>
     <div class="modal-title" id="gi-title">Group</div>
     <div class="modal-sub">Share this code or link to invite people</div>
+    <div id="gi-qr"></div>
     <div class="code-box"><b id="gi-code">------</b><button class="mbtn ghost" style="flex:0;padding:8px 14px" onclick="copyCode()">Copy</button></div>
     <button class="mbtn primary" style="width:100%;margin-bottom:12px" onclick="shareInvite()">🔗 Share invite link</button>
     <label class="ml">Members</label>
@@ -1084,6 +1089,38 @@ body{
   </div>
 </div>
 
+<!-- Report / block -->
+<div class="modal-bg hidden" id="reportModal" onclick="bgClose(event,'reportModal')">
+  <div class="modal"><span class="modal-handle"></span>
+    <div class="modal-title">🚩 Report or block</div>
+    <div class="modal-sub">About a message from <b id="repWho"></b></div>
+    <label class="ml">Report it for</label>
+    <div class="icopts"><span class="icopt" style="font-size:13px;padding:8px 12px" onclick="sendReport('Spam')">Spam</span><span class="icopt" style="font-size:13px;padding:8px 12px" onclick="sendReport('Harassment')">Harassment</span><span class="icopt" style="font-size:13px;padding:8px 12px" onclick="sendReport('Inappropriate')">Inappropriate</span><span class="icopt" style="font-size:13px;padding:8px 12px" onclick="sendReport('Other')">Other</span></div>
+    <div class="modal-btns"><button class="mbtn danger" onclick="blockFromReport()">🚫 Block user</button><button class="mbtn ghost" onclick="closeModal('reportModal')">Cancel</button></div>
+  </div>
+</div>
+<!-- Blocked users -->
+<div class="modal-bg hidden" id="blockedModal" onclick="bgClose(event,'blockedModal')">
+  <div class="modal"><span class="modal-handle"></span>
+    <div class="modal-title">🚫 Blocked users</div>
+    <div id="blockedList" style="max-height:50vh;overflow-y:auto;margin-top:10px"></div>
+    <div class="modal-btns"><button class="mbtn ghost" onclick="closeModal('blockedModal')">Close</button></div>
+  </div>
+</div>
+<!-- Admin -->
+<div class="modal-bg hidden" id="adminModal" onclick="bgClose(event,'adminModal')">
+  <div class="modal"><span class="modal-handle"></span>
+    <div class="modal-title">🛡️ Admin</div>
+    <div class="rp-tabs" id="adminTabs" style="margin:10px 0">
+      <div class="rp-tab active" data-t="reports" onclick="adminShow('reports')">Reports</div>
+      <div class="rp-tab" data-t="groups" onclick="adminShow('groups')">Groups</div>
+      <div class="rp-tab" data-t="users" onclick="adminShow('users')">Users</div>
+    </div>
+    <div id="adminBody" style="max-height:50vh;overflow-y:auto"></div>
+    <div class="modal-btns"><button class="mbtn ghost" onclick="closeModal('adminModal')">Close</button></div>
+  </div>
+</div>
+
 <!-- Image Zoom -->
 <div class="zoom-bg hidden" id="zoomBg" onclick="closeZoom()">
   <button class="zoom-x" onclick="closeZoom()">✕</button>
@@ -1098,7 +1135,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/fireba
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import {
   initializeFirestore, doc, setDoc, getDoc, addDoc, deleteDoc, updateDoc,
-  collection, query, where, limit, orderBy, onSnapshot, serverTimestamp, getDocs, runTransaction, arrayUnion, arrayRemove
+  collection, query, where, limit, orderBy, startAfter, onSnapshot, serverTimestamp, getDocs, runTransaction, arrayUnion, arrayRemove
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 /* ── INIT ── */
@@ -1154,9 +1191,11 @@ onAuthStateChanged(auth, async user=>{
   subDMList();
   subGroups();
   subMentions();
+  onSnapshot(doc(db,'users',me.uid,'prefs','blocks'),s=>{BLOCKED=new Set(s.exists()?(s.data().list||[]):[]);if(STORE.size) rebuild(true);},()=>{});
+  getDoc(doc(db,'bans',me.uid)).then(s=>{if(s.exists()){document.body.classList.add('banned');toast('⛔ Your account is suspended','error',8000);}}).catch(()=>{});
   ensureClaim().catch(()=>{});
   checkJoinLink();
-  getDoc(doc(db,'appAdmins',me.uid)).then(s=>{isAppAdmin=s.exists();}).catch(()=>{});
+  getDoc(doc(db,'appAdmins',me.uid)).then(s=>{isAppAdmin=s.exists();$('adminBtn').classList.toggle('hidden',!isAppAdmin);if(isAppAdmin) subReports();}).catch(()=>{});
   swReg();
   const beat=()=>{ if(!document.hidden) setDoc(doc(db,'users',me.uid),{online:myStatus!=='invisible',lastSeen:serverTimestamp()},{merge:true}); };
   setInterval(beat,60000);
@@ -1323,6 +1362,7 @@ function goRoom(roomId){
   document.querySelectorAll('.ch').forEach(b=>b.classList.remove('active','unread'));
   const ab=$('ch-'+roomId);
   if(ab){ab.classList.add('active');ab.querySelector('.ch-badge').textContent='0';}
+  markRead(roomId);
   subMsgs(roomId);
   subTyping(roomId);
   closeSidebar();
@@ -1354,43 +1394,56 @@ function clearMsgs(){
 
 /* ── SUBSCRIBE MESSAGES ── */
 // Uses single-field query (no composite index needed)
+const PAGE=50;
+let STORE=new Map(),hasMore=false,cursorDoc=null,BLOCKED=new Set();
+const tsOf=m=>m.createdAt&&m.createdAt.toMillis?m.createdAt.toMillis():Date.now();
+const rd=d=>({id:d.id,...d.data({serverTimestamps:'estimate'})});
+function rebuild(keep){
+  const m=$('msgs'),h0=m.scrollHeight,t0=m.scrollTop;
+  Array.from(m.children).forEach(c=>{if(c.id!=='skelWrap'&&c.id!=='scrollFab') c.remove();});
+  lastDate=null;
+  const list=[...STORE.values()].filter(v=>!isExpired(v)).sort((a,b)=>tsOf(a)-tsOf(b));
+  if(!list.length&&!hasMore){showEmpty();return;}
+  if(hasMore){const b=document.createElement('button');b.className='load-more';b.textContent='⬆ Load earlier messages';b.onclick=loadEarlier;m.insertBefore(b,$('scrollFab'));}
+  list.forEach(renderMsg);
+  if(keep) m.scrollTop=m.scrollHeight-h0+t0; else scrollBot(true);
+}
+async function loadEarlier(){
+  if(!cursorDoc) return;
+  const b=document.querySelector('.load-more');if(b) b.textContent='Loading…';
+  try{
+    const s=await getDocs(query(mcol(),orderBy('createdAt','desc'),startAfter(cursorDoc),limit(PAGE)));
+    s.docs.forEach(d=>STORE.set(d.id,rd(d)));
+    if(s.docs.length) cursorDoc=s.docs[s.docs.length-1];
+    hasMore=s.docs.length===PAGE;rebuild(true);
+  }catch(e){toast('⚠️ Could not load earlier messages','error');}
+}
 function subMsgs(roomId){
   if(unsubMsgs) unsubMsgs();
-  const q=(roomId.startsWith('g_')||roomId.startsWith('dm__'))?query(mcol(),limit(120)):query(mcol(),where('room','==',roomId),limit(120));
+  STORE=new Map();hasMore=false;cursorDoc=null;
   let first=true;
-
-  unsubMsgs=onSnapshot(q,snap=>{
+  unsubMsgs=onSnapshot(query(mcol(),orderBy('createdAt','desc'),limit(PAGE)),snap=>{
+    const full=snap.size>=PAGE,oldest=snap.docs.length?snap.docs[snap.docs.length-1]:null;
     if(first){
-      first=false;
-      $('skelWrap').style.display='none';window._zapReady=true;
-      if(snap.empty){showEmpty();return;}
-      // sort client-side, render in order
-      snap.docs
-        .map(d=>({id:d.id,...d.data()}))
-        .sort((a,b)=>(a.createdAt?.seconds||0)-(b.createdAt?.seconds||0))
-        .forEach(d=>{ if(isExpired(d)){reap(d);return;} if(!document.getElementById('mg-'+d.id)) renderMsg(d); });
-      scrollBot(true);
-      return;
+      first=false;$('skelWrap').style.display='none';window._zapReady=true;
+      snap.docs.forEach(d=>{const v=rd(d);if(isExpired(v)) reap(v);else STORE.set(d.id,v);});
+      cursorDoc=oldest;hasMore=full;rebuild(false);return;
     }
+    let again=false;
     snap.docChanges().forEach(ch=>{
-      if(ch.type==='added'){
-        const d={id:ch.doc.id,...ch.doc.data()};
-        if(!document.getElementById('mg-'+d.id)){
-          if(isExpired(d)){reap(d);return;}
-          removeEmpty();
-          renderMsg(d);
-          if(d.uid!==me?.uid){ notif(d.username||'?',d.text||'📷'); bumpBadge(roomId); }
-        }
-      } else if(ch.type==='modified'){
-        const d={id:ch.doc.id,...ch.doc.data()};
-        const el=document.getElementById('mg-'+d.id);
-        if(el) el.replaceWith(buildMsg(d));
-      } else if(ch.type==='removed'){
-        const el=document.getElementById('mg-'+ch.doc.id);
-        if(el){el.style.opacity='0';el.style.transform='scale(.97)';setTimeout(()=>el.remove(),200);}
+      const v=rd(ch.doc);
+      if(ch.type==='removed'){
+        if(!full||tsOf(v)>=tsOf(rd(oldest))){STORE.delete(v.id);const el=document.getElementById('mg-'+v.id);if(el){el.style.opacity='0';setTimeout(()=>el.remove(),200);}}
+        return;
       }
+      if(isExpired(v)){reap(v);return;}
+      const had=STORE.has(v.id);STORE.set(v.id,v);
+      if(ch.type==='modified'||had){const el=document.getElementById('mg-'+v.id);if(el) el.replaceWith(buildMsg(v));return;}
+      const last=[...STORE.values()].reduce((a,b)=>b.id===v.id?a:Math.max(a,tsOf(b)),0);
+      if(tsOf(v)>=last){removeEmpty();renderMsg(v);}else again=true;
+      if(v.uid!==me?.uid&&!BLOCKED.has(v.uid)&&Date.now()-tsOf(v)<20000) notif(v.username||'?',v.text||'📷');
     });
-    scrollBot();
+    if(again) rebuild(true); else scrollBot();
   });
 }
 
@@ -1428,6 +1481,7 @@ function bumpBadge(roomId){
 }
 
 function renderMsg(data){
+  if(BLOCKED.has(data.uid)) return;
   removeEmpty();
   const m=$('msgs'), fab=$('scrollFab');
   // Day divider
@@ -1464,6 +1518,7 @@ function buildMsg(data){
     if(data.text) acts+=`<button class="ma" onclick="startEdit('${data.id}')" title="Edit">✏️</button>`;
     acts+=`<button class="ma del" onclick="delMsg('${data.id}')" title="Delete">🗑️</button>`;
   }
+  if(!isMe) acts+=`<button class="ma" onclick="openReport('${data.id}')" title="Report or block">🚩</button>`;
   if(!isMe&&canMod()) acts+=`<button class="ma del" onclick="delMsg('${data.id}')" title="Delete (moderator)">🛡️</button>`;
   acts+=`<button class="ma" onclick="togglePin('${data.id}')" title="Pin">📌</button>`;
 
@@ -1889,7 +1944,7 @@ async function doSearch(term){
   const sd=$('searchDrop');
   sd.innerHTML='<div style="padding:12px 14px;font-size:13px;color:var(--muted)">Searching…</div>';
   sd.classList.add('open');
-  const q=(room.startsWith('g_')||room.startsWith('dm__'))?query(mcol(),limit(120)):query(mcol(),where('room','==',room),limit(120));
+  const q=query(mcol(),orderBy('createdAt','desc'),limit(150));
   const snap=await getDocs(q);
   const res=snap.docs.map(d=>({id:d.id,...d.data()}))
     .filter(m=>m.text&&m.text.toLowerCase().includes(term.toLowerCase()))
@@ -1958,7 +2013,8 @@ window.closeSidebar=closeSidebar;window.goBack=goBack;window.scrollBot=scrollBot
 let isAppAdmin=false,curTtl=0,unsubTtl=null,baseSub='';
 const TTLS=[[0,'Off'],[1,'1 hour'],[14,'14 hours'],[24,'24 hours'],[168,'7 days'],[336,'14 days']];
 const ttlLabel=h=>(TTLS.find(v=>v[0]===h)||[0,h+'h'])[1];
-const mcol=()=>room.startsWith('dm__')?collection(db,'dmChats',room.slice(4),'messages'):room.startsWith('g_')?collection(db,'groups',room.slice(2),'messages'):collection(db,'messages');
+const mcolFor=k=>k.startsWith('dm__')?collection(db,'dmChats',k.slice(4),'messages'):k.startsWith('g_')?collection(db,'groups',k.slice(2),'messages'):collection(db,'rooms',k,'messages');
+const mcol=()=>mcolFor(room);
 const mdoc=id=>doc(mcol(),id);
 const pinRef=()=>dmUser?doc(db,'dms_meta',dmId(me.uid,dmUser.uid)):room.startsWith('g_')?doc(db,'groups',room.slice(2)):doc(db,'rooms',room);
 const myGroup=()=>myGroups.find(g=>'g_'+g.id===room);
@@ -2004,6 +2060,7 @@ function subGroups(){
     });
     if(!dmUser&&room.startsWith('g_')&&!myGroups.find(g=>'g_'+g.id===room)) goRoom('general');
     if(!dmUser&&room.startsWith('g_')) $('ttlBtn').style.display=ttlAllowed()?'flex':'none';
+    applyBadges();syncUnread();
   });
 }
 window.pickIcon=el=>{document.querySelectorAll('.icopt').forEach(o=>o.classList.remove('active'));el.classList.add('active');pickedIcon=el.textContent;};
@@ -2051,7 +2108,7 @@ window.showGroupInfo=async()=>{
   $('gi-title').textContent=(g.icon||'👥')+' '+g.name;$('gi-code').textContent=g.code;
   $('gi-owner').classList.toggle('hidden',!owner);$('gi-leave').classList.toggle('hidden',owner);
   $('gi-members').innerHTML='<div style="color:var(--muted);font-size:13px">Loading…</div>';
-  openModal('groupInfoModal');
+  openModal('groupInfoModal');makeQR(inviteLink(g.code));
   const us=await Promise.all(g.members.map(u=>getDoc(doc(db,'users',u))));
   $('gi-members').innerHTML=us.filter(s=>s.exists()).map(s=>{
     const u=s.data(),isAd=admins.includes(u.uid),isOw=u.uid===g.ownerUid;let b='';
@@ -2092,7 +2149,7 @@ window.newCode=async()=>{
       if(!code) throw new Error('Try again');
       tx.delete(doc(db,'codes',g.code));tx.set(doc(db,'codes',code),{groupId:g.id,name:g.name,icon:g.icon||'👥'});tx.update(doc(db,'groups',g.id),{code});
     });
-    curGroup.code=code;$('gi-code').textContent=code;toast('🔄 New code — old invites stop working','success',3500);
+    curGroup.code=code;$('gi-code').textContent=code;makeQR(inviteLink(code));toast('🔄 New code — old invites stop working','success',3500);
   }catch(e){toast('⚠️ '+e.message,'error');}
 };
 window.deleteGroup=async()=>{
@@ -2101,6 +2158,97 @@ window.deleteGroup=async()=>{
   await deleteDoc(doc(db,'codes',g.code));await deleteDoc(doc(db,'groups',g.id));
   closeModal('groupInfoModal');goRoom('general');toast('Group deleted','info');
 };
+
+/* ── UNREAD COUNTS (remembered on this device) ── */
+let READ={};try{READ=JSON.parse(localStorage.getItem('zap-read')||'{}');}catch(e){}
+const UNREAD={},unreadSubs=new Map();
+function markRead(k){READ[k]=Date.now();try{localStorage.setItem('zap-read',JSON.stringify(READ));}catch(e){}setBadge(k,0);}
+function setBadge(k,n){
+  UNREAD[k]=n;const el=$('ch-'+k);
+  if(el){el.classList.toggle('unread',n>0);el.querySelector('.ch-badge').textContent=n>9?'9+':n;}
+  const total=Object.values(UNREAD).reduce((a,b)=>a+b,0)+Object.values(dmUnreads).reduce((a,b)=>a+b,0);
+  document.title=(total?'('+total+') ':'')+'⚡ Zap';
+}
+function applyBadges(){Object.keys(UNREAD).forEach(k=>setBadge(k,UNREAD[k]));}
+function syncUnread(){
+  const keys=['general','support',...myGroups.map(g=>'g_'+g.id)];
+  keys.forEach(k=>{
+    if(unreadSubs.has(k)) return;
+    if(!(k in READ)) READ[k]=Date.now();
+    unreadSubs.set(k,onSnapshot(query(mcolFor(k),orderBy('createdAt','desc'),limit(10)),snap=>{
+      if(k===room&&!dmUser&&!document.hidden){markRead(k);return;}
+      setBadge(k,snap.docs.filter(d=>{const v=rd(d);return v.uid!==me.uid&&!BLOCKED.has(v.uid)&&tsOf(v)>(READ[k]||0);}).length);
+    },()=>{}));
+  });
+  [...unreadSubs.keys()].filter(k=>!keys.includes(k)).forEach(k=>{unreadSubs.get(k)();unreadSubs.delete(k);delete UNREAD[k];});
+}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!dmUser) markRead(room);});
+
+/* ── REPORT · BLOCK ── */
+let repT=null;
+window.openReport=id=>{const m=MSG[id];if(!m) return;repT=m;$('repWho').textContent='@'+m.username;openModal('reportModal');};
+window.sendReport=async reason=>{
+  try{
+    await addDoc(collection(db,'reports'),{reporterUid:me.uid,offenderUid:repT.uid,offenderName:repT.username,msgId:repT.id,room,roomName:dmUser?'a DM':(ROOMS[room]||[])[1]||'a chat',text:(repT.text||'(image / voice)').slice(0,200),reason,at:serverTimestamp(),status:'open'});
+    closeModal('reportModal');toast('🚩 Report sent — thank you','success');
+  }catch(e){toast('⚠️ Could not send report','error');}
+};
+window.blockUser=async uid=>{await setDoc(doc(db,'users',me.uid,'prefs','blocks'),{list:arrayUnion(uid)},{merge:true});toast('🚫 Blocked','success');};
+window.unblockUser=async uid=>{await setDoc(doc(db,'users',me.uid,'prefs','blocks'),{list:arrayRemove(uid)},{merge:true});};
+window.blockFromReport=async()=>{await blockUser(repT.uid);closeModal('reportModal');};
+window.openBlocked=async()=>{
+  const l=$('blockedList');l.innerHTML='Loading…';openModal('blockedModal');
+  const ids=[...BLOCKED];
+  if(!ids.length){l.innerHTML='<div style="color:var(--muted);text-align:center;padding:20px">You haven’t blocked anyone</div>';return;}
+  const us=await Promise.all(ids.map(i=>getDoc(doc(db,'users',i))));
+  l.innerHTML=us.map((s,i)=>`<div class="ou" style="cursor:default"><div class="ou-name">@${esc(s.exists()?s.data().username:ids[i])}</div><button class="mini" onclick="unblockUser('${ids[i]}');setTimeout(openBlocked,500)">Unblock</button></div>`).join('');
+};
+
+/* ── ADMIN PANEL (app admins only) ── */
+let reportItems=[];
+function subReports(){
+  onSnapshot(query(collection(db,'reports'),where('status','==','open'),limit(50)),snap=>{
+    reportItems=snap.docs.map(rd);const b=$('adminBadge');b.textContent=reportItems.length;b.classList.toggle('hidden',!reportItems.length);
+    if(!$('adminModal').classList.contains('hidden')&&document.querySelector('#adminTabs .active').dataset.t==='reports') adminShow('reports');
+  },()=>{});
+}
+window.openAdmin=()=>{openModal('adminModal');adminShow('reports');};
+window.adminShow=async tab=>{
+  document.querySelectorAll('#adminTabs .rp-tab').forEach(t=>t.classList.toggle('active',t.dataset.t===tab));
+  const body=$('adminBody');body.innerHTML='<div style="color:var(--muted);font-size:13px;padding:8px">Loading…</div>';
+  try{
+    if(tab==='reports') body.innerHTML=reportItems.length?reportItems.map(r=>`<div class="pin-item" style="cursor:default"><strong style="color:var(--red)">${esc(r.reason)}</strong> · @${esc(r.offenderName)} in ${esc(r.roomName)}<div style="margin:4px 0;color:var(--text2)">${esc(r.text)}</div><button class="mini" data-a="del" data-id="${r.id}">Delete msg</button><button class="mini bad" data-a="ban" data-id="${r.id}">Ban user</button><button class="mini" data-a="dismiss" data-id="${r.id}">Dismiss</button></div>`).join(''):'<div style="color:var(--muted);text-align:center;padding:20px">No open reports 🎉</div>';
+    else if(tab==='groups'){
+      const s=await getDocs(query(collection(db,'groups'),limit(100)));
+      body.innerHTML=s.docs.map(d=>{const g=d.data();return `<div class="pin-item" style="cursor:default">${esc(g.icon||'👥')} <strong>${esc(g.name)}</strong> · ${g.members.length} members<br><button class="mini bad" data-a="delgroup" data-id="${d.id}" data-code="${g.code}">Delete group</button></div>`;}).join('')||'<div style="color:var(--muted);padding:20px;text-align:center">No groups</div>';
+    } else {
+      const [us,bs]=await Promise.all([getDocs(query(collection(db,'users'),limit(200))),getDocs(collection(db,'bans'))]);
+      const banned=new Set(bs.docs.map(d=>d.id));
+      body.innerHTML=us.docs.map(d=>{const u=d.data(),b=banned.has(d.id);return `<div class="ou" style="cursor:default"><div class="ou-name">@${esc(u.username||'?')} ${b?'⛔':''}</div><button class="mini${b?'':' bad'}" data-a="${b?'unban':'banuid'}" data-id="${d.id}">${b?'Unban':'Ban'}</button></div>`;}).join('');
+    }
+  }catch(e){body.innerHTML='<div style="color:var(--red);padding:12px">'+esc(e.code||e.message)+'</div>';}
+};
+$('adminBody').addEventListener('click',async e=>{
+  const b=e.target.closest('[data-a]');if(!b) return;
+  const a=b.dataset.a,id=b.dataset.id,r=reportItems.find(x=>x.id===id);
+  try{
+    if(a==='del'&&r){if(r.room.startsWith('dm__')){toast('DMs are private — can’t delete','error');return;}await deleteDoc(doc(mcolFor(r.room),r.msgId));await updateDoc(doc(db,'reports',id),{status:'actioned'});}
+    else if(a==='dismiss') await updateDoc(doc(db,'reports',id),{status:'dismissed'});
+    else if(a==='ban'&&r){if(!confirm('Ban @'+r.offenderName+'?')) return;await setDoc(doc(db,'bans',r.offenderUid),{at:serverTimestamp(),by:me.uid,name:r.offenderName});await updateDoc(doc(db,'reports',id),{status:'actioned'});}
+    else if(a==='banuid'){if(id===me.uid){toast('You can’t ban yourself','error');return;}if(!confirm('Ban this user?')) return;await setDoc(doc(db,'bans',id),{at:serverTimestamp(),by:me.uid});adminShow('users');}
+    else if(a==='unban'){await deleteDoc(doc(db,'bans',id));adminShow('users');}
+    else if(a==='delgroup'){if(!confirm('Delete this group for everyone?')) return;await deleteDoc(doc(db,'codes',b.dataset.code));await deleteDoc(doc(db,'groups',id));adminShow('groups');}
+    toast('✅ Done','success');
+  }catch(err){toast('🚫 '+(err.code||'failed'),'error');}
+});
+
+/* ── QR INVITE ── */
+function makeQR(url){
+  const el=$('gi-qr');el.innerHTML='';
+  const draw=()=>{Object.assign(el.style,{background:'#fff',padding:'10px',borderRadius:'12px',width:'fit-content',margin:'0 auto 12px'});new QRCode(el,{text:url,width:170,height:170,colorDark:'#0f172a',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});};
+  if(window.QRCode) draw();
+  else{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';s.onload=draw;s.onerror=()=>{el.textContent='QR needs an internet connection';};document.head.appendChild(s);}
+}
 
 /* ── UNIQUE USERNAMES ── */
 const RESERVED=['admin','administrator','support','zap','system','everyone','here','mod','moderator'];
@@ -2142,7 +2290,7 @@ function subMentions(){
   onSnapshot(query(collection(db,'users',me.uid,'mentions'),orderBy('at','desc'),limit(30)),snap=>{
     mentionItems=snap.docs.map(d=>({id:d.id,...d.data({serverTimestamps:'estimate'})}));
     if(!mentionFirst) snap.docChanges().forEach(c=>{
-      if(c.type==='added'&&!c.doc.metadata.hasPendingWrites){const m=c.doc.data();toast('🔔 @'+m.fromName+' mentioned you in '+m.roomName,'info',4500);snd();notif(m.fromName,'mentioned you: '+m.text);}
+      if(c.type==='added'&&!c.doc.metadata.hasPendingWrites){const m=c.doc.data();if(BLOCKED.has(m.fromUid)) return;toast('🔔 @'+m.fromName+' mentioned you in '+m.roomName,'info',4500);snd();notif(m.fromName,'mentioned you: '+m.text);}
     });
     mentionFirst=false;updateMentionBadge();
   },()=>{});
