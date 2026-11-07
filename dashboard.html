@@ -757,6 +757,8 @@ body.banned .input-area{opacity:.45;pointer-events:none}
 .poll-t,.poll-c{position:relative}
 .poll-c{color:var(--muted);font-size:12px;white-space:nowrap}
 .poll-meta{font-size:11px;color:var(--muted)}
+.gif-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;max-height:48vh;overflow-y:auto;margin-top:8px}
+.gif-grid img{width:100%;height:96px;object-fit:cover;border-radius:8px;cursor:pointer;background:var(--card3)}
 .hidden{display:none!important}
 </style>
 </head>
@@ -893,6 +895,7 @@ body.banned .input-area{opacity:.45;pointer-events:none}
           <label class="ib-btn" title="Image" style="cursor:pointer">📎<input type="file" id="fileInput" accept="image/*"/></label>
           <button class="ib-btn" id="voiceBtn" title="Voice">🎤</button>
           <button class="ib-btn" id="pollBtn" title="Create poll" onclick="openPoll()">📊</button>
+          <button class="ib-btn" id="gifBtn" title="GIF" onclick="openGifs()" style="font-size:12px;font-weight:800">GIF</button>
         </div>
         <textarea class="ib-textarea" id="msgInput" placeholder="Message #global…" rows="1" maxlength="2000"></textarea>
         <div class="ib-r">
@@ -1170,6 +1173,15 @@ body.banned .input-area{opacity:.45;pointer-events:none}
   <div class="mf"><label class="ml">Closes</label><select class="mi" id="pollClose"><option value="0">Never</option><option value="1">In 1 hour</option><option value="24">In 24 hours</option><option value="168">In 7 days</option></select></div>
   <div class="modal-btns"><button class="mbtn ghost" onclick="closeModal('pollModal')">Cancel</button><button class="mbtn primary" onclick="createPoll()">Post poll</button></div></div></div>
 
+<!-- GIFs -->
+<div class="modal-bg hidden" id="gifModal" onclick="bgClose(event,'gifModal')"><div class="modal"><span class="modal-handle"></span>
+  <div class="modal-title">🎞️ GIFs</div>
+  <div id="gifSetup" class="hidden"><div class="modal-sub">Paste your GIPHY API key to turn on GIFs for everyone.</div><input class="mi" id="gifKey" placeholder="GIPHY API key" autocomplete="off"/><div class="modal-btns"><button class="mbtn primary" onclick="saveGifKey()">Save key</button></div></div>
+  <div id="gifMsg" class="hidden modal-sub">GIFs aren’t set up yet — ask an admin to add the GIPHY key.</div>
+  <div id="gifTools" class="hidden"><input class="mi" id="gifQ" placeholder="Search GIFs…" autocomplete="off"/><div id="gifGrid" class="gif-grid"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;font-size:11px;color:var(--muted)"><span>Powered by GIPHY</span><button class="mini hidden" id="gifChange" onclick="resetGifKey()">Change key</button></div></div>
+  <div class="modal-btns"><button class="mbtn ghost" onclick="closeModal('gifModal')">Close</button></div></div></div>
+
 <!-- Image Zoom -->
 <div class="zoom-bg hidden" id="zoomBg" onclick="closeZoom()">
   <button class="zoom-x" onclick="closeZoom()">✕</button>
@@ -1240,6 +1252,7 @@ onAuthStateChanged(auth, async user=>{
   loadNotes();
   subDMList();
   subGroups();
+  loadGifKey();
   subMentions();
   onSnapshot(doc(db,'users',me.uid,'prefs','blocks'),s=>{BLOCKED=new Set(s.exists()?(s.data().list||[]):[]);if(STORE.size) rebuild(true);},()=>{});
   getDoc(doc(db,'bans',me.uid)).then(s=>{if(s.exists()){document.body.classList.add('banned');toast('⛔ Your account is suspended','error',8000);}}).catch(()=>{});
@@ -1558,10 +1571,10 @@ function buildMsg(data){
   el.className='mg'+((data.mentions||[]).includes(me?.uid)?' ment-me':'');el.id='mg-'+data.id;
   el.style.transition='opacity .2s,transform .2s';
 
-  const rqHTML=data.replyTo?`<div class="rq" onclick="jumpMsg('${data.replyTo.id}')"><span class="rq-auth">↩ ${esc(data.replyTo.username)}</span>${esc((data.replyTo.text||'📷').slice(0,80))}</div>`:'';
+  const rqHTML=data.replyTo?`<div class="rq" data-jump="${esc(data.replyTo.id)}"><span class="rq-auth">↩ ${esc(data.replyTo.username)}</span>${esc((data.replyTo.text||'📷').slice(0,80))}</div>`:'';
   const txtHTML=data.text?`<div class="mg-txt">${fmtTxt(data.text)}</div>`:'';
-  const imgHTML=data.imageURL?`<img class="mg-img" src="${data.imageURL}" alt="img" onclick="openZoom('${data.imageURL}')" loading="lazy"/>`:'';
-  const audHTML=data.voiceURL?`<div class="mg-audio"><audio controls preload="metadata" src="${data.voiceURL}" onerror="this.outerHTML='<span style=color:var(--muted);font-size:12px>⚠️ Can’t play on this device</span>'"></audio></div>`:'';
+  const imgHTML=data.imageURL?`<img class="mg-img" src="${esc(data.imageURL)}" alt="img" data-zoom="${esc(data.imageURL)}" loading="lazy"/>`:'';
+  const audHTML=data.voiceURL?`<div class="mg-audio"><audio controls preload="metadata" src="${esc(data.voiceURL)}" onerror="this.outerHTML='<span style=color:var(--muted);font-size:12px>⚠️ Can’t play on this device</span>'"></audio></div>`:'';
   const edHTML=data.edited?`<span class="mg-edited">(edited)</span>`:'';
   const rxHTML=buildReacts(data);
 
@@ -2215,6 +2228,54 @@ window.deleteGroup=async()=>{
   await deleteDoc(doc(db,'codes',g.code));await deleteDoc(doc(db,'groups',g.id));
   closeModal('groupInfoModal');goRoom('general');toast('Group deleted','info');
 };
+
+/* ── GIFS (GIPHY) ── */
+let GIPHY_KEY='',gifTimer=null;
+async function loadGifKey(){try{const s=await getDoc(doc(db,'config','giphy'));GIPHY_KEY=s.exists()?(s.data().key||''):'';}catch(e){}}
+async function gifFetch(q){
+  const r=await fetch('https://api.giphy.com/v1/gifs/'+(q?'search':'trending')+'?api_key='+encodeURIComponent(GIPHY_KEY)+'&limit=24&rating=pg-13'+(q?'&q='+encodeURIComponent(q):''));
+  if(!r.ok) throw new Error(r.status);
+  return (await r.json()).data||[];
+}
+window.openGifs=()=>{
+  const ok=!!GIPHY_KEY;$('gifQ').value='';openModal('gifModal');
+  $('gifSetup').classList.toggle('hidden',ok||!isAppAdmin);
+  $('gifMsg').classList.toggle('hidden',ok||isAppAdmin);
+  $('gifTools').classList.toggle('hidden',!ok);
+  $('gifChange').classList.toggle('hidden',!isAppAdmin);
+  if(ok) gifSearch('');
+};
+async function gifSearch(q){
+  const g=$('gifGrid');g.innerHTML='<div style="color:var(--muted);padding:12px">Loading…</div>';
+  try{
+    const list=await gifFetch(q);
+    g.innerHTML=list.length?list.map(x=>{const im=x.images||{};return `<img src="${esc((im.fixed_width_small||im.fixed_width).url)}" data-g="${esc(im.fixed_width.url)}" alt="" loading="lazy"/>`;}).join(''):'<div style="color:var(--muted);padding:12px">No GIFs found</div>';
+  }catch(e){g.innerHTML='<div style="color:var(--muted);padding:12px">'+(String(e.message)==='429'?'GIF limit reached — try again later':'Could not load GIFs (is the key valid?)')+'</div>';}
+}
+$('gifQ').addEventListener('input',e=>{clearTimeout(gifTimer);gifTimer=setTimeout(()=>gifSearch(e.target.value.trim()),400);});
+$('gifGrid').addEventListener('click',e=>{const i=e.target.closest('[data-g]');if(i) postGif(i.dataset.g);});
+window.saveGifKey=async()=>{
+  const k=$('gifKey').value.trim();if(!k) return;
+  try{await setDoc(doc(db,'config','giphy'),{key:k});GIPHY_KEY=k;$('gifKey').value='';openGifs();toast('✅ GIFs enabled','success');}
+  catch(e){toast('🚫 Couldn’t save the key','error');}
+};
+window.resetGifKey=()=>{GIPHY_KEY='';openGifs();};
+async function postGif(url){
+  const isDm=!!dmUser,did=isDm?dmId(me.uid,dmUser.uid):null;
+  const data={uid:me.uid,username:meData.username,displayName:meData.displayName||meData.username,photoURL:meData.photoURL||'',text:'',imageURL:url,gif:true,createdAt:serverTimestamp(),reactions:{},edited:false,room};
+  if(isDm) data.dmId=did;
+  if(replyTo){data.replyTo={id:replyTo.id,username:replyTo.username,text:replyTo.text};cancelReply();}
+  if(curTtl>0) data.expiresAt=new Date(Date.now()+curTtl*3600000);
+  try{
+    await addDoc(mcol(),data);
+    if(isDm) await setDoc(doc(db,'dms_meta',did),{participants:[me.uid,dmUser.uid],lastMessage:'🎞️ GIF',lastAt:serverTimestamp(),['unread_'+dmUser.uid]:increment(1)},{merge:true});
+    closeModal('gifModal');
+  }catch(e){toast('⚠️ Could not send GIF','error');}
+}
+$('msgs').addEventListener('click',e=>{
+  const j=e.target.closest('[data-jump]');if(j) jumpMsg(j.dataset.jump);
+  const z=e.target.closest('[data-zoom]');if(z) openZoom(z.dataset.zoom);
+});
 
 /* ── POLLS ── */
 function pollHTML(d){
