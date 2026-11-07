@@ -748,6 +748,15 @@ body.banned .input-area{opacity:.45;pointer-events:none}
 .fwd-tag{font-size:11px;color:var(--muted);font-style:italic;margin-bottom:2px}
 .thread-chip{display:inline-block;margin-top:4px;font-size:12px;font-weight:700;color:var(--accent);cursor:pointer;background:rgba(59,130,246,.1);border-radius:10px;padding:3px 10px}
 .card-av{width:96px;height:96px;border-radius:50%;object-fit:cover;border:3px solid var(--accent);display:block;margin:0 auto 12px}
+.poll{margin-top:6px;max-width:min(340px,100%);background:var(--card);border:1px solid var(--border);border-radius:12px;padding:10px}
+.poll-q{font-weight:700;font-size:14px;margin-bottom:8px;color:var(--text)}
+.poll-opt{position:relative;display:flex;justify-content:space-between;gap:8px;padding:9px 10px;margin-bottom:6px;border-radius:9px;border:1px solid var(--border2);overflow:hidden;cursor:pointer;font-size:13px}
+.poll-opt.closed{cursor:default}
+.poll-opt.mine{border-color:var(--accent)}
+.poll-bar{position:absolute;left:0;top:0;bottom:0;background:rgba(59,130,246,.18);transition:width .3s}
+.poll-t,.poll-c{position:relative}
+.poll-c{color:var(--muted);font-size:12px;white-space:nowrap}
+.poll-meta{font-size:11px;color:var(--muted)}
 .hidden{display:none!important}
 </style>
 </head>
@@ -883,6 +892,7 @@ body.banned .input-area{opacity:.45;pointer-events:none}
           <button class="ib-btn" id="emojiBtn" title="Emoji">😊</button>
           <label class="ib-btn" title="Image" style="cursor:pointer">📎<input type="file" id="fileInput" accept="image/*"/></label>
           <button class="ib-btn" id="voiceBtn" title="Voice">🎤</button>
+          <button class="ib-btn" id="pollBtn" title="Create poll" onclick="openPoll()">📊</button>
         </div>
         <textarea class="ib-textarea" id="msgInput" placeholder="Message #global…" rows="1" maxlength="2000"></textarea>
         <div class="ib-r">
@@ -1150,6 +1160,15 @@ body.banned .input-area{opacity:.45;pointer-events:none}
   <div class="modal-title">🧵 Thread</div><div id="threadBody" style="max-height:42vh;overflow-y:auto;margin:8px 0"></div>
   <div style="display:flex;gap:8px"><input class="mi" id="threadIn" placeholder="Reply in thread…" maxlength="500"/><button class="mbtn primary" id="thrBtn" style="flex:none;padding:0 16px" onclick="threadSend()">➤</button></div>
   <div class="modal-btns"><button class="mbtn ghost" onclick="closeModal('threadModal')">Close</button></div></div></div>
+
+<!-- New poll -->
+<div class="modal-bg hidden" id="pollModal" onclick="bgClose(event,'pollModal')"><div class="modal"><span class="modal-handle"></span>
+  <div class="modal-title">📊 New poll</div>
+  <div class="mf"><label class="ml">Question</label><input class="mi" id="pollQ" maxlength="120" placeholder="What should we do?"/></div>
+  <div class="mf"><label class="ml">Options</label><div id="pollOpts"></div><button class="mini" style="margin:6px 0 0" onclick="addPollOpt()">+ Add option</button></div>
+  <label style="display:flex;gap:8px;align-items:center;font-size:13px;color:var(--text2);margin-bottom:10px"><input type="checkbox" id="pollMulti"/> Allow multiple answers</label>
+  <div class="mf"><label class="ml">Closes</label><select class="mi" id="pollClose"><option value="0">Never</option><option value="1">In 1 hour</option><option value="24">In 24 hours</option><option value="168">In 7 days</option></select></div>
+  <div class="modal-btns"><button class="mbtn ghost" onclick="closeModal('pollModal')">Cancel</button><button class="mbtn primary" onclick="createPoll()">Post poll</button></div></div></div>
 
 <!-- Image Zoom -->
 <div class="zoom-bg hidden" id="zoomBg" onclick="closeZoom()">
@@ -1564,7 +1583,7 @@ function buildMsg(data){
         <span class="mg-auth ${isMe?'me':'other'}" data-uid="${data.uid}">${esc(data.username||'?')}</span>
         <span class="mg-time">${ftime(data.createdAt)}</span>${edHTML}
       </div>
-      ${rqHTML}${data.fwd?`<div class="fwd-tag">↪ Forwarded from @${esc(data.fwd)}</div>`:''}${txtHTML}${imgHTML}${audHTML}
+      ${rqHTML}${data.fwd?`<div class="fwd-tag">↪ Forwarded from @${esc(data.fwd)}</div>`:''}${txtHTML}${data.poll?pollHTML(data):''}${imgHTML}${audHTML}
       <div class="reacts" id="rx-${data.id}">${rxHTML}</div>${(()=>{const n=[...STORE.values()].filter(v=>v.replyTo&&v.replyTo.id===data.id).length;return n?`<div class="thread-chip" onclick="openThread('${data.id}')">💬 ${n} repl${n>1?'ies':'y'}</div>`:'';})()}
     </div>
     <div class="macts">${acts}</div>`;
@@ -2197,6 +2216,45 @@ window.deleteGroup=async()=>{
   closeModal('groupInfoModal');goRoom('general');toast('Group deleted','info');
 };
 
+/* ── POLLS ── */
+function pollHTML(d){
+  const p=d.poll,votes=d.votes||{},mine=votes[me.uid]||[],closed=p.closes&&Date.now()>p.closes;
+  const total=Object.values(votes).filter(v=>v&&v.length).length;
+  return `<div class="poll"><div class="poll-q">📊 ${esc(p.q)}</div>`+p.opts.map((o,i)=>{
+    const c=Object.values(votes).filter(v=>v&&v.includes(i)).length,pct=total?Math.round(c/total*100):0;
+    return `<div class="poll-opt${mine.includes(i)?' mine':''}${closed?' closed':''}" data-poll="${d.id}" data-i="${i}"><div class="poll-bar" style="width:${pct}%"></div><span class="poll-t">${mine.includes(i)?'✓ ':''}${esc(o)}</span><span class="poll-c">${c} · ${pct}%</span></div>`;
+  }).join('')+`<div class="poll-meta">${total} voter${total===1?'':'s'}${p.multi?' · multiple answers':''}${closed?' · Closed':p.closes?' · closes '+new Date(p.closes).toLocaleString([],{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):''}</div></div>`;
+}
+$('msgs').addEventListener('click',e=>{
+  const o=e.target.closest('.poll-opt');if(!o||o.classList.contains('closed')) return;
+  vote(o.dataset.poll,+o.dataset.i);
+});
+async function vote(id,i){
+  const d=STORE.get(id);if(!d||!d.poll) return;
+  if(d.poll.closes&&Date.now()>d.poll.closes){toast('This poll is closed','info');return;}
+  const cur=(d.votes||{})[me.uid]||[];
+  const next=d.poll.multi?(cur.includes(i)?cur.filter(x=>x!==i):[...cur,i].sort()):(cur.length===1&&cur[0]===i?[]:[i]);
+  try{await updateDoc(mdoc(id),{['votes.'+me.uid]:next});}catch(e){toast('🚫 Couldn’t record your vote','error');}
+}
+window.openPoll=()=>{$('pollQ').value='';$('pollOpts').innerHTML='';addPollOpt();addPollOpt();$('pollMulti').checked=false;$('pollClose').value='0';openModal('pollModal');};
+window.addPollOpt=()=>{
+  const n=$('pollOpts').children.length;if(n>=6){toast('Up to 6 options','info');return;}
+  const i=document.createElement('input');i.className='mi';i.maxLength=60;i.placeholder='Option '+(n+1);i.style.marginBottom='6px';$('pollOpts').appendChild(i);
+};
+window.createPoll=async()=>{
+  const q=$('pollQ').value.trim(),opts=[...$('pollOpts').children].map(i=>i.value.trim()).filter(Boolean);
+  if(!q||opts.length<2){toast('⚠️ Add a question and at least 2 options','error');return;}
+  const h=+$('pollClose').value,isDm=!!dmUser,did=isDm?dmId(me.uid,dmUser.uid):null;
+  const data={uid:me.uid,username:meData.username,displayName:meData.displayName||meData.username,photoURL:meData.photoURL||'',text:'',createdAt:serverTimestamp(),reactions:{},edited:false,room,poll:{q,opts,multi:$('pollMulti').checked,closes:h?Date.now()+h*3600000:0},votes:{}};
+  if(isDm) data.dmId=did;
+  if(curTtl>0) data.expiresAt=new Date(Date.now()+curTtl*3600000);
+  try{
+    await addDoc(mcol(),data);
+    if(isDm) await setDoc(doc(db,'dms_meta',did),{participants:[me.uid,dmUser.uid],lastMessage:'📊 Poll',lastAt:serverTimestamp(),['unread_'+dmUser.uid]:increment(1)},{merge:true});
+    closeModal('pollModal');
+  }catch(e){toast('⚠️ Could not post poll','error');}
+};
+
 /* ── PROFILES · CARD ── */
 const PROFILES=new Map(),DMS=[];let dmSeen=false;
 const avUrl=u=>u.avatar||u.photoURL||genAv(u.username);
@@ -2289,6 +2347,7 @@ $('fwdList').addEventListener('click',async e=>{
   const m=fwdMsg,data={uid:me.uid,username:meData.username,displayName:meData.displayName||meData.username,photoURL:meData.photoURL||'',text:m.text||'',createdAt:serverTimestamp(),reactions:{},edited:false,fwd:m.username,room:isDm?'dm__'+did:k};
   if(m.imageURL) data.imageURL=m.imageURL;
   if(m.voiceURL) data.voiceURL=m.voiceURL;
+  if(m.poll){data.poll=m.poll;data.votes={};}
   if(isDm) data.dmId=did;
   try{
     await addDoc(mcolFor(isDm?'dm__'+did:k),data);
@@ -2480,7 +2539,7 @@ $('msgInput').addEventListener('input',()=>{mentionIdx=0;updateMentionPop();});
 $('msgs').addEventListener('click',e=>{
   if(!matchMedia('(hover:none)').matches) return;
   if(e.target.closest('.macts')){setTimeout(()=>document.querySelectorAll('.mg.sel').forEach(x=>x.classList.remove('sel')),50);return;}
-  if(e.target.closest('a,img,audio,button,.react,.rpicker,.rq')) return;
+  if(e.target.closest('a,img,audio,button,.react,.rpicker,.rq,.poll-opt')) return;
   const mg=e.target.closest('.mg'),was=mg&&mg.classList.contains('sel');
   document.querySelectorAll('.mg.sel').forEach(x=>x.classList.remove('sel'));
   if(mg&&!was) mg.classList.add('sel');
