@@ -744,6 +744,10 @@ body{
 .mp-item.on,.mp-item:hover{background:rgba(59,130,246,.14);color:var(--accent)}
 .load-more{align-self:center;background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.3);color:var(--accent);border-radius:20px;padding:7px 16px;font-size:12px;font-weight:700;cursor:pointer;margin:6px 0;font-family:inherit}
 body.banned .input-area{opacity:.45;pointer-events:none}
+.seen-mark{font-size:10px;color:var(--muted);margin-top:2px}
+.fwd-tag{font-size:11px;color:var(--muted);font-style:italic;margin-bottom:2px}
+.thread-chip{display:inline-block;margin-top:4px;font-size:12px;font-weight:700;color:var(--accent);cursor:pointer;background:rgba(59,130,246,.1);border-radius:10px;padding:3px 10px}
+.card-av{width:96px;height:96px;border-radius:50%;object-fit:cover;border:3px solid var(--accent);display:block;margin:0 auto 12px}
 .hidden{display:none!important}
 </style>
 </head>
@@ -958,11 +962,12 @@ body.banned .input-area{opacity:.45;pointer-events:none}
     <span class="modal-handle"></span>
     <div class="modal-title">👤 Your Profile</div>
     <div class="modal-sub">Edit how others see you in ⚡ Zap</div>
-    <div class="prof-av-area"><img class="prof-av" id="profAv" src="" alt="avatar"/></div>
+    <div class="prof-av-area"><img class="prof-av" id="profAv" src="" alt="avatar"/><br><label class="mbtn ghost" style="display:inline-block;flex:none;margin-top:8px;padding:8px 14px;cursor:pointer">📷 Change photo<input type="file" id="avatarIn" accept="image/*" style="display:none"/></label></div>
     <div class="mf"><label class="ml">Username</label>
       <input class="mi" id="profUname" type="text" placeholder="username" maxlength="24" inputmode="text"/></div>
     <div class="mf"><label class="ml">Display Name</label>
       <input class="mi" id="profDisplay" type="text" placeholder="Display Name" maxlength="40" inputmode="text"/></div>
+    <div class="mf"><label class="ml">Bio</label><input class="mi" id="profBio" maxlength="80" placeholder="A short status line"/></div>
     <div class="mf"><label class="ml">Status</label>
       <div class="status-opts">
         <div class="sopt active" data-s="online" onclick="pickStatus(this)"><span>🟢</span>Online</div>
@@ -1062,6 +1067,11 @@ body.banned .input-area{opacity:.45;pointer-events:none}
     <div id="gi-qr"></div>
     <div class="code-box"><b id="gi-code">------</b><button class="mbtn ghost" style="flex:0;padding:8px 14px" onclick="copyCode()">Copy</button></div>
     <button class="mbtn primary" style="width:100%;margin-bottom:12px" onclick="shareInvite()">🔗 Share invite link</button>
+    <label class="ml">About</label>
+    <input class="mi" id="gi-desc" maxlength="200" placeholder="Description" style="margin-bottom:8px"/>
+    <textarea class="mi ta" id="gi-rules" maxlength="500" placeholder="Group rules" style="min-height:64px;margin-bottom:8px"></textarea>
+    <input class="mi" id="gi-welcome" maxlength="200" placeholder="Welcome message for new members" style="margin-bottom:8px"/>
+    <button class="mbtn primary hidden" id="gi-save" style="width:100%;margin-bottom:12px" onclick="saveGroupAbout()">Save about</button>
     <label class="ml">Members</label>
     <div id="gi-members" style="max-height:30vh;overflow-y:auto"></div>
     <div class="modal-btns" id="gi-owner"><button class="mbtn ghost" onclick="newCode()">🔄 New code</button><button class="mbtn danger" onclick="deleteGroup()">🗑 Delete</button></div>
@@ -1121,6 +1131,26 @@ body.banned .input-area{opacity:.45;pointer-events:none}
   </div>
 </div>
 
+<!-- Profile card -->
+<div class="modal-bg hidden" id="cardModal" onclick="bgClose(event,'cardModal')"><div class="modal" style="text-align:center"><span class="modal-handle"></span>
+  <img class="card-av" id="cardAv" src="" alt=""/><div class="modal-title" id="cardName"></div><div class="modal-sub" id="cardSub" style="margin-bottom:6px"></div>
+  <div id="cardBio" style="font-size:14px;color:var(--text2);margin-bottom:14px"></div>
+  <div class="modal-btns" id="cardBtns"><button class="mbtn primary" id="cardDm">💬 Message</button><button class="mbtn danger" id="cardBlock">🚫 Block</button></div>
+  <div class="modal-btns"><button class="mbtn ghost" onclick="closeModal('cardModal')">Close</button></div></div></div>
+<!-- Group welcome -->
+<div class="modal-bg hidden" id="welcomeModal" onclick="bgClose(event,'welcomeModal')"><div class="modal"><span class="modal-handle"></span>
+  <div class="modal-title" id="wl-title"></div><div id="wl-body" style="font-size:14px;color:var(--text2);margin-top:10px;max-height:50vh;overflow-y:auto"></div>
+  <div class="modal-btns"><button class="mbtn primary" onclick="closeModal('welcomeModal')">Got it 👍</button></div></div></div>
+<!-- Forward -->
+<div class="modal-bg hidden" id="fwdModal" onclick="bgClose(event,'fwdModal')"><div class="modal"><span class="modal-handle"></span>
+  <div class="modal-title">↪️ Forward to…</div><div id="fwdList" style="max-height:50vh;overflow-y:auto;margin-top:10px"></div>
+  <div class="modal-btns"><button class="mbtn ghost" onclick="closeModal('fwdModal')">Cancel</button></div></div></div>
+<!-- Thread -->
+<div class="modal-bg hidden" id="threadModal" onclick="bgClose(event,'threadModal')"><div class="modal"><span class="modal-handle"></span>
+  <div class="modal-title">🧵 Thread</div><div id="threadBody" style="max-height:42vh;overflow-y:auto;margin:8px 0"></div>
+  <div style="display:flex;gap:8px"><input class="mi" id="threadIn" placeholder="Reply in thread…" maxlength="500"/><button class="mbtn primary" id="thrBtn" style="flex:none;padding:0 16px" onclick="threadSend()">➤</button></div>
+  <div class="modal-btns"><button class="mbtn ghost" onclick="closeModal('threadModal')">Close</button></div></div></div>
+
 <!-- Image Zoom -->
 <div class="zoom-bg hidden" id="zoomBg" onclick="closeZoom()">
   <button class="zoom-x" onclick="closeZoom()">✕</button>
@@ -1135,7 +1165,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/fireba
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import {
   initializeFirestore, doc, setDoc, getDoc, addDoc, deleteDoc, updateDoc,
-  collection, query, where, limit, orderBy, startAfter, onSnapshot, serverTimestamp, getDocs, runTransaction, arrayUnion, arrayRemove
+  collection, query, where, limit, orderBy, startAfter, increment, onSnapshot, serverTimestamp, getDocs, runTransaction, arrayUnion, arrayRemove
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 /* ── INIT ── */
@@ -1178,11 +1208,12 @@ onAuthStateChanged(auth, async user=>{
   meData=s.data();
   await setDoc(doc(db,'users',user.uid),{online:true,lastSeen:serverTimestamp()},{merge:true});
 
-  const av=meData.photoURL||genAv(meData.username);
+  const av=avUrl(meData);
   $('navAv').src=av;
   $('profAv').src=av;
   $('profUname').value=meData.username||'';
   $('profDisplay').value=meData.displayName||'';
+  $('profBio').value=meData.bio||'';
 
   initTheme();
   goRoom('general');
@@ -1405,7 +1436,7 @@ function rebuild(keep){
   const list=[...STORE.values()].filter(v=>!isExpired(v)).sort((a,b)=>tsOf(a)-tsOf(b));
   if(!list.length&&!hasMore){showEmpty();return;}
   if(hasMore){const b=document.createElement('button');b.className='load-more';b.textContent='⬆ Load earlier messages';b.onclick=loadEarlier;m.insertBefore(b,$('scrollFab'));}
-  list.forEach(renderMsg);
+  list.forEach(renderMsg);renderSeen();hydrate();
   if(keep) m.scrollTop=m.scrollHeight-h0+t0; else scrollBot(true);
 }
 async function loadEarlier(){
@@ -1441,9 +1472,12 @@ function subMsgs(roomId){
       if(ch.type==='modified'||had){const el=document.getElementById('mg-'+v.id);if(el) el.replaceWith(buildMsg(v));return;}
       const last=[...STORE.values()].reduce((a,b)=>b.id===v.id?a:Math.max(a,tsOf(b)),0);
       if(tsOf(v)>=last){removeEmpty();renderMsg(v);}else again=true;
+      if(v.replyTo){const pe=document.getElementById('mg-'+v.replyTo.id),pd=STORE.get(v.replyTo.id);if(pe&&pd) pe.replaceWith(buildMsg(pd));}
+      if(dmUser&&v.uid!==me.uid&&!document.hidden) clearDmUnread();
       if(v.uid!==me?.uid&&!BLOCKED.has(v.uid)&&Date.now()-tsOf(v)<20000) notif(v.username||'?',v.text||'📷');
     });
     if(again) rebuild(true); else scrollBot();
+    renderSeen();hydrate();
   });
 }
 
@@ -1518,19 +1552,20 @@ function buildMsg(data){
     if(data.text) acts+=`<button class="ma" onclick="startEdit('${data.id}')" title="Edit">✏️</button>`;
     acts+=`<button class="ma del" onclick="delMsg('${data.id}')" title="Delete">🗑️</button>`;
   }
+  acts+=`<button class="ma" onclick="openForward('${data.id}')" title="Forward">↪️</button>`;
   if(!isMe) acts+=`<button class="ma" onclick="openReport('${data.id}')" title="Report or block">🚩</button>`;
   if(!isMe&&canMod()) acts+=`<button class="ma del" onclick="delMsg('${data.id}')" title="Delete (moderator)">🛡️</button>`;
   acts+=`<button class="ma" onclick="togglePin('${data.id}')" title="Pin">📌</button>`;
 
   el.innerHTML=`
-    <img class="mg-av" src="${av}" alt="${esc(data.username)}" onerror="this.src='${genAv(data.username||'?')}'"/>
+    <img class="mg-av" data-uid="${data.uid}" src="${av}" alt="${esc(data.username)}" onerror="this.src='${genAv(data.username||'?')}'"/>
     <div class="mg-body">
       <div class="mg-meta">
-        <span class="mg-auth ${isMe?'me':'other'}">${esc(data.username||'?')}</span>
+        <span class="mg-auth ${isMe?'me':'other'}" data-uid="${data.uid}">${esc(data.username||'?')}</span>
         <span class="mg-time">${ftime(data.createdAt)}</span>${edHTML}
       </div>
-      ${rqHTML}${txtHTML}${imgHTML}${audHTML}
-      <div class="reacts" id="rx-${data.id}">${rxHTML}</div>
+      ${rqHTML}${data.fwd?`<div class="fwd-tag">↪ Forwarded from @${esc(data.fwd)}</div>`:''}${txtHTML}${imgHTML}${audHTML}
+      <div class="reacts" id="rx-${data.id}">${rxHTML}</div>${(()=>{const n=[...STORE.values()].filter(v=>v.replyTo&&v.replyTo.id===data.id).length;return n?`<div class="thread-chip" onclick="openThread('${data.id}')">💬 ${n} repl${n>1?'ies':'y'}</div>`:'';})()}
     </div>
     <div class="macts">${acts}</div>`;
   return el;
@@ -1776,7 +1811,7 @@ function subOnline(){
     $('onlinePill').textContent=users.length+' online';
     $('onlinePill2').textContent=users.length+' online';
     const html=users.map(u=>{
-      const av=u.photoURL||genAv(u.username);
+      const av=avUrl(u);
       const sc={'online':'var(--green)','away':'var(--yellow)','dnd':'var(--red)','invisible':'var(--muted)'}[u.status||'online']||'var(--green)';
       return `<div class="ou" onclick="${u.uid!==me?.uid?`setDMFromOnline('${u.uid}','${esc(u.username)}','${esc(u.photoURL||'')}','${u.online||false}')`:''}" ${u.uid!==me?.uid?'style="cursor:pointer"':''}>
         <div class="ou-avw"><img class="ou-av" src="${av}" alt="${esc(u.username)}" style="border-color:${sc}" onerror="this.src='${genAv(u.username)}'"/><div class="ou-dd" style="background:${sc}"></div></div>
@@ -1839,7 +1874,7 @@ function subDMList(){
   if(!me) return;
   const q=query(collection(db,'dms_meta'),where('participants','array-contains',me.uid));
   onSnapshot(q,async snap=>{
-    const list=$('dmList');list.innerHTML='';
+    const list=$('dmList');list.innerHTML='';DMS.length=0;
     const sorted=snap.docs.sort((a,b)=>(b.data().lastAt?.seconds||0)-(a.data().lastAt?.seconds||0));
     for(const ds of sorted){
       const meta=ds.data();
@@ -1847,10 +1882,10 @@ function subDMList(){
       if(!otherId) continue;
       const us=await getDoc(doc(db,'users',otherId));
       if(!us.exists()) continue;
-      const u=us.data();
+      const u=us.data();DMS.push(u);
       const unread=meta[`unread_${me.uid}`]||0;
       if(unread>0) dmUnreads[u.uid]=unread;
-      const av=u.photoURL||genAv(u.username);
+      const av=avUrl(u);
       const item=document.createElement('div');
       item.className='dm-item';item.id='dm-item-'+u.uid;
       if(dmUser?.uid===u.uid) item.classList.add('active');
@@ -1919,8 +1954,8 @@ window.saveProfile=async()=>{
   const disp=$('profDisplay').value.trim();
   if(!uname||!/^[a-zA-Z0-9_]{3,24}$/.test(uname)){toast('⚠️ Invalid username','error');return;}
   try{await claimName(uname,meData.username);}catch(e){toast(e.message==='taken'?'⚠️ That username is already taken':e.message==='reserved'?'⚠️ That name is reserved':'⚠️ Could not save username','error');return;}
-  await setDoc(doc(db,'users',me.uid),{username:uname,displayName:disp,status:myStatus,online:myStatus!=='invisible'},{merge:true});
-  meData={...meData,username:uname,displayName:disp,status:myStatus};
+  await setDoc(doc(db,'users',me.uid),{username:uname,displayName:disp,bio:$('profBio').value.trim().slice(0,80),status:myStatus,online:myStatus!=='invisible'},{merge:true});
+  meData={...meData,username:uname,displayName:disp,bio:$('profBio').value.trim().slice(0,80),status:myStatus};
   closeModal('profileModal');toast('✅ Profile saved','success');
 };
 
@@ -2028,7 +2063,7 @@ function watchTtl(){
   if(unsubTtl){unsubTtl();unsubTtl=null;} curTtl=0;renderSub();
   $('ttlBtn').style.display=ttlAllowed()?'flex':'none';
   const ref=dmUser?doc(db,'dms_meta',dmId(me.uid,dmUser.uid)):room.startsWith('g_')?doc(db,'groups',room.slice(2)):null;
-  if(ref) unsubTtl=onSnapshot(ref,s=>{curTtl=s.exists()?(s.data().ttl||0):0;renderSub();},()=>{});
+  if(ref) unsubTtl=onSnapshot(ref,s=>{curTtl=s.exists()?(s.data().ttl||0):0;renderSub();if(dmUser){dmSeen=s.exists()&&(s.data()['unread_'+dmUser.uid]||0)===0;renderSeen();}},()=>{});
 }
 window.setTtl=async h=>{
   try{
@@ -2087,12 +2122,14 @@ async function joinByCode(raw){
   const cs=await getDoc(doc(db,'codes',code));
   if(!cs.exists()){toast('⚠️ No group with that code','error');return false;}
   const {groupId:gid,name,icon}=cs.data();
-  if(!myGroups.some(x=>x.id===gid)){
+  const was=myGroups.some(x=>x.id===gid);
+  if(!was){
     try{await updateDoc(doc(db,'groups',gid),{members:arrayUnion(me.uid),joinCode:code});}
     catch(e){toast('⚠️ Could not join — ask for a fresh code','error');return false;}
   }
   ROOMS['g_'+gid]=[icon||'👥',name||'Group','Group'];
   goRoom('g_'+gid);toast('✅ Joined '+(name||'group'),'success');
+  if(!was) showWelcome(gid);
   return true;
 }
 window.joinGroup=async()=>{if(await joinByCode($('joinCode').value)){$('joinCode').value='';closeModal('joinGroupModal');}};
@@ -2109,6 +2146,7 @@ window.showGroupInfo=async()=>{
   $('gi-owner').classList.toggle('hidden',!owner);$('gi-leave').classList.toggle('hidden',owner);
   $('gi-members').innerHTML='<div style="color:var(--muted);font-size:13px">Loading…</div>';
   openModal('groupInfoModal');makeQR(inviteLink(g.code));
+  ['desc','rules','welcome'].forEach(f=>{const el=$('gi-'+f);el.value=g[f]||'';el.readOnly=!adm;});$('gi-save').classList.toggle('hidden',!adm);
   const us=await Promise.all(g.members.map(u=>getDoc(doc(db,'users',u))));
   $('gi-members').innerHTML=us.filter(s=>s.exists()).map(s=>{
     const u=s.data(),isAd=admins.includes(u.uid),isOw=u.uid===g.ownerUid;let b='';
@@ -2116,7 +2154,7 @@ window.showGroupInfo=async()=>{
       if(owner) b+=`<button class="mini" data-act="${isAd?'unadmin':'admin'}" data-uid="${u.uid}">${isAd?'Demote':'Make admin'}</button>`;
       if(owner||(adm&&!isAd)) b+=`<button class="mini bad" data-act="kick" data-uid="${u.uid}">Kick</button>`;
     }
-    return `<div class="ou"><div class="ou-avw"><img class="ou-av" style="border-color:var(--border)" src="${u.photoURL||genAv(u.username)}" onerror="this.src='${genAv(u.username)}'"/></div><div class="ou-name">@${esc(u.username)} ${isOw?'👑':isAd?'🛡️':''}</div>${b}</div>`;
+    return `<div class="ou"><div class="ou-avw"><img class="ou-av" style="border-color:var(--border)" src="${avUrl(u)}" onerror="this.src='${genAv(u.username)}'"/></div><div class="ou-name">@${esc(u.username)} ${isOw?'👑':isAd?'🛡️':''}</div>${b}</div>`;
   }).join('');
 };
 $('gi-members').addEventListener('click',e=>{const b=e.target.closest('[data-act]');if(b) memberAct(b.dataset.act,b.dataset.uid);});
@@ -2159,6 +2197,106 @@ window.deleteGroup=async()=>{
   closeModal('groupInfoModal');goRoom('general');toast('Group deleted','info');
 };
 
+/* ── PROFILES · CARD ── */
+const PROFILES=new Map(),DMS=[];let dmSeen=false;
+const avUrl=u=>u.avatar||u.photoURL||genAv(u.username);
+async function getProfile(uid){
+  if(PROFILES.has(uid)) return PROFILES.get(uid);
+  try{const s=await getDoc(doc(db,'users',uid));const p=s.exists()?s.data():null;PROFILES.set(uid,p);return p;}catch(e){return null;}
+}
+async function hydrate(){
+  const imgs=[...document.querySelectorAll('img[data-uid]')],ids=[...new Set(imgs.map(i=>i.dataset.uid))].filter(u=>u&&u!=='system');
+  await Promise.all(ids.map(getProfile));
+  imgs.forEach(i=>{const p=PROFILES.get(i.dataset.uid);if(p) i.src=avUrl(p);});
+}
+$('avatarIn').addEventListener('change',e=>{
+  const f=e.target.files[0];e.target.value='';if(!f) return;
+  const img=new Image(),url=URL.createObjectURL(f);
+  img.onload=async()=>{
+    const s=Math.min(img.width,img.height),c=document.createElement('canvas');c.width=c.height=128;
+    c.getContext('2d').drawImage(img,(img.width-s)/2,(img.height-s)/2,s,s,0,0,128,128);URL.revokeObjectURL(url);
+    const data=c.toDataURL('image/jpeg',.8);
+    try{await setDoc(doc(db,'users',me.uid),{avatar:data},{merge:true});meData.avatar=data;PROFILES.delete(me.uid);$('navAv').src=data;$('profAv').src=data;toast('📷 Photo updated','success');hydrate();}
+    catch(err){toast('⚠️ Could not save photo','error');}
+  };
+  img.src=url;
+});
+window.openCard=async uid=>{
+  const p=await getProfile(uid);if(!p) return;
+  $('cardAv').src=avUrl(p);$('cardName').textContent='@'+p.username;
+  $('cardSub').textContent=p.displayName&&p.displayName!==p.username?p.displayName:'';
+  $('cardBio').textContent=p.bio||'No bio yet';
+  $('cardBtns').classList.toggle('hidden',uid===me.uid);
+  $('cardDm').onclick=()=>{closeModal('cardModal');openDMChat(p);};
+  $('cardBlock').onclick=async()=>{await blockUser(uid);closeModal('cardModal');};
+  openModal('cardModal');
+};
+$('msgs').addEventListener('click',e=>{const a=e.target.closest('.mg-av,.mg-auth');if(a&&a.dataset.uid&&a.dataset.uid!=='system') openCard(a.dataset.uid);});
+
+/* ── DM "SEEN" ── */
+function renderSeen(){
+  document.querySelectorAll('.seen-mark').forEach(e=>e.remove());
+  if(!dmUser) return;
+  const all=[...document.querySelectorAll('#msgs .mg')],last=all[all.length-1];
+  if(!last||MSG[last.id.slice(3)]?.uid!==me.uid) return;
+  const d=document.createElement('div');d.className='seen-mark';d.textContent=dmSeen?'✓✓ Seen':'✓ Sent';
+  last.querySelector('.mg-body').appendChild(d);
+}
+function clearDmUnread(){
+  if(!dmUser) return;
+  setDoc(doc(db,'dms_meta',dmId(me.uid,dmUser.uid)),{participants:[me.uid,dmUser.uid],['unread_'+me.uid]:0},{merge:true}).catch(()=>{});
+  if(dmUnreads[dmUser.uid]){dmUnreads[dmUser.uid]=0;updateDMBadge();}
+}
+
+/* ── GROUP ABOUT · WELCOME ── */
+window.saveGroupAbout=async()=>{
+  try{await updateDoc(doc(db,'groups',curGroup.id),{desc:$('gi-desc').value.trim(),rules:$('gi-rules').value.trim(),welcome:$('gi-welcome').value.trim()});toast('✅ Saved','success');}
+  catch(e){toast('🚫 Only admins can edit this','error');}
+};
+async function showWelcome(gid){
+  try{
+    const s=await getDoc(doc(db,'groups',gid));if(!s.exists()) return;const g=s.data();
+    if(!(g.welcome||g.rules||g.desc)) return;
+    $('wl-title').textContent=(g.icon||'👥')+' Welcome to '+g.name;
+    $('wl-body').innerHTML=(g.welcome?`<p style="margin-bottom:10px">${esc(g.welcome)}</p>`:'')+(g.desc?`<div class="ml">About</div><p style="margin-bottom:10px">${esc(g.desc)}</p>`:'')+(g.rules?`<div class="ml">Rules</div><p style="white-space:pre-wrap">${esc(g.rules)}</p>`:'');
+    openModal('welcomeModal');
+  }catch(e){}
+}
+
+/* ── THREADS · FORWARD ── */
+window.openThread=id=>{
+  const root=STORE.get(id);if(!root) return;
+  const all=[root],seen=new Set([id]);
+  for(let i=0;i<all.length;i++) STORE.forEach(v=>{if(v.replyTo&&v.replyTo.id===all[i].id&&!seen.has(v.id)){seen.add(v.id);all.push(v);}});
+  all.sort((a,b)=>tsOf(a)-tsOf(b));
+  $('threadBody').innerHTML=all.map(v=>`<div style="padding:8px 0;border-bottom:1px solid var(--border)"><strong style="color:var(--accent)">@${esc(v.username)}</strong> <span style="color:var(--muted);font-size:11px">${ftime(v.createdAt)}</span><div class="mg-txt">${v.text?fmtTxt(v.text):'📎 attachment'}</div></div>`).join('');
+  $('thrBtn').dataset.id=id;openModal('threadModal');
+};
+window.threadSend=async()=>{
+  const id=$('thrBtn').dataset.id,t=$('threadIn').value.trim(),root=STORE.get(id);if(!t||!root) return;
+  $('msgInput').value=t;replyTo={id:root.id,username:root.username,text:(root.text||'').slice(0,80)};
+  await window.sendMsg();$('threadIn').value='';setTimeout(()=>openThread(id),500);
+};
+let fwdMsg=null;
+window.openForward=id=>{
+  const m=MSG[id];if(!m) return;fwdMsg=m;
+  const items=[['general','💬','General'],['support','🛟','Support & Bugs'],...myGroups.map(g=>['g_'+g.id,g.icon||'👥',g.name]),...DMS.map(u=>['dm:'+u.uid,'💌','@'+u.username])];
+  $('fwdList').innerHTML=items.map(i=>`<div class="pin-item" data-k="${i[0]}">${esc(i[1])} ${esc(i[2])}</div>`).join('');openModal('fwdModal');
+};
+$('fwdList').addEventListener('click',async e=>{
+  const el=e.target.closest('[data-k]');if(!el||!fwdMsg) return;
+  const k=el.dataset.k,isDm=k.startsWith('dm:'),other=isDm?k.slice(3):null,did=isDm?dmId(me.uid,other):null;
+  const m=fwdMsg,data={uid:me.uid,username:meData.username,displayName:meData.displayName||meData.username,photoURL:meData.photoURL||'',text:m.text||'',createdAt:serverTimestamp(),reactions:{},edited:false,fwd:m.username,room:isDm?'dm__'+did:k};
+  if(m.imageURL) data.imageURL=m.imageURL;
+  if(m.voiceURL) data.voiceURL=m.voiceURL;
+  if(isDm) data.dmId=did;
+  try{
+    await addDoc(mcolFor(isDm?'dm__'+did:k),data);
+    if(isDm) await setDoc(doc(db,'dms_meta',did),{participants:[me.uid,other],lastMessage:'↪ Forwarded',lastAt:serverTimestamp(),['unread_'+other]:increment(1)},{merge:true});
+    closeModal('fwdModal');toast('↪ Forwarded','success');
+  }catch(err){toast('⚠️ Could not forward','error');}
+});
+
 /* ── UNREAD COUNTS (remembered on this device) ── */
 let READ={};try{READ=JSON.parse(localStorage.getItem('zap-read')||'{}');}catch(e){}
 const UNREAD={},unreadSubs=new Map();
@@ -2182,7 +2320,7 @@ function syncUnread(){
   });
   [...unreadSubs.keys()].filter(k=>!keys.includes(k)).forEach(k=>{unreadSubs.get(k)();unreadSubs.delete(k);delete UNREAD[k];});
 }
-document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!dmUser) markRead(room);});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden){if(dmUser) clearDmUnread(); else markRead(room);}});
 
 /* ── REPORT · BLOCK ── */
 let repT=null;
@@ -2319,7 +2457,7 @@ function updateMentionPop(){
   mentionList=Object.values(KNOWN).filter(u=>u.uid!==me.uid&&u.username.toLowerCase().startsWith(q)).slice(0,5);
   if(!mentionList.length){$('mentionPop').classList.add('hidden');return;}
   mentionIdx=Math.min(mentionIdx,mentionList.length-1);
-  $('mentionPop').innerHTML=mentionList.map((u,i)=>`<div class="mp-item${i===mentionIdx?' on':''}" data-i="${i}"><img src="${u.photoURL||genAv(u.username)}" onerror="this.src='${genAv(u.username)}'"/>@${esc(u.username)}</div>`).join('');
+  $('mentionPop').innerHTML=mentionList.map((u,i)=>`<div class="mp-item${i===mentionIdx?' on':''}" data-i="${i}"><img src="${avUrl(u)}" onerror="this.src='${genAv(u.username)}'"/>@${esc(u.username)}</div>`).join('');
   $('mentionPop').classList.remove('hidden');
 }
 function pickMention(i){
